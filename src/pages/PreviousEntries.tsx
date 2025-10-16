@@ -103,9 +103,9 @@ export function PreviousEntries() {
   const errorTone = getSemanticColor("error");
 
   return (
-    <div className="py-6">
+    <>
       <Container>
-        <div className="space-y-6">
+        <div className="py-6 space-y-6">
           {/* Page Header */}
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Previous Entries</h1>
@@ -317,7 +317,7 @@ export function PreviousEntries() {
         onClose={() => setAddModalOpen(false)}
         onSave={(saleData) => addSale(saleData)}
       />
-    </div>
+    </>
   );
 }
 

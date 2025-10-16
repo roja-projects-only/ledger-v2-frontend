@@ -54,8 +54,14 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
   return (
     <header className="sticky top-0 z-50 flex h-14 items-center justify-between border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-3 md:hidden">
       {/* Hamburger Menu Button */}
-      <Button variant="ghost" size="icon" onClick={onMenuClick} className="h-9 w-9">
-        <Menu className="h-5 w-5" />
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        onClick={onMenuClick} 
+        className="h-11 w-11 -ml-2"
+        aria-label="Open menu"
+      >
+        <Menu className="h-6 w-6" />
         <span className="sr-only">Open menu</span>
       </Button>
 
