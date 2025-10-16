@@ -44,10 +44,12 @@ import {
 } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { LocationBadge } from "@/components/shared/LocationBadge";
+import { Badge } from "@/components/ui/badge";
 import { getLocationColor, getSemanticColor } from "@/lib/colors";
 import { notify } from "@/lib/notifications";
 import { cn, formatCurrency, formatDate, formatLocation } from "@/lib/utils";
 import { useSettings } from "@/lib/contexts/SettingsContext";
+import { usePricing } from "@/lib/hooks/usePricing";
 import type { Customer, Sale, Location } from "@/lib/types";
 import { LOCATIONS } from "@/lib/constants";
 
@@ -77,6 +79,7 @@ export function AddEntryModal({
   onSave,
 }: AddEntryModalProps) {
   const { settings } = useSettings();
+  const { getEffectivePrice, isCustomPriceActive } = usePricing();
   const [locationFilter, setLocationFilter] = useState<Location | "all">("all");
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [containers, setContainers] = useState<string>("");
@@ -96,9 +99,12 @@ export function AddEntryModal({
   // Get selected customer
   const selectedCustomer = customers.find((c) => c.id === selectedCustomerId);
 
-  // Calculate amount
+  // Calculate amount with effective pricing
   const containersNum = parseFloat(containers) || 0;
-  const amount = containersNum * settings.unitPrice;
+  const effectivePrice = selectedCustomer 
+    ? getEffectivePrice(selectedCustomer)
+    : settings.unitPrice;
+  const amount = containersNum * effectivePrice;
 
   // Reset form when modal opens/closes
   useEffect(() => {
@@ -141,7 +147,7 @@ export function AddEntryModal({
       customerId: selectedCustomerId,
       date,
       quantity: containersValue,
-      unitPrice: settings.unitPrice,
+      unitPrice: effectivePrice, // Use effective price (custom or global)
       total: amount,
       notes: notes.trim() || undefined,
     };
@@ -260,6 +266,16 @@ export function AddEntryModal({
                 </Command>
               </PopoverContent>
             </Popover>
+            {selectedCustomer && isCustomPriceActive(selectedCustomer) && (
+              <Badge 
+                variant="outline" 
+                className="text-emerald-400 border-emerald-500/30 bg-emerald-500/10 mt-2"
+              >
+                <span className="text-xs">
+                  Custom: {formatCurrency(selectedCustomer.customUnitPrice!)}/gal
+                </span>
+              </Badge>
+            )}
             {errors.customer && (
               <p
                 id="previous-entry-customer-error"
@@ -316,7 +332,7 @@ export function AddEntryModal({
             />
             <p className="text-xs text-muted-foreground">
               {containersNum > 0
-                ? `${containersNum} × ${formatCurrency(settings.unitPrice)}`
+                ? `${containersNum} × ${formatCurrency(effectivePrice)}`
                 : "Please select a customer to calculate amount"}
             </p>
           </div>
