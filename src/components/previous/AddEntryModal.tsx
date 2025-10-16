@@ -45,6 +45,7 @@ import {
 import { Check, ChevronsUpDown } from "lucide-react";
 import { LocationBadge } from "@/components/shared/LocationBadge";
 import { Badge } from "@/components/ui/badge";
+import { NumberInput } from "@/components/shared/NumberInput";
 import { getLocationColor, getSemanticColor } from "@/lib/colors";
 import { notify } from "@/lib/notifications";
 import { cn, formatCurrency, formatDate, formatLocation } from "@/lib/utils";
@@ -307,20 +308,18 @@ export function AddEntryModal({
           {/* Containers Input */}
           <div className="space-y-2">
             <Label htmlFor="containers">Containers *</Label>
-            <Input
-              ref={containersInputRef}
-              id="containers"
-              type="number"
-              min="0"
-              step="1"
-              placeholder="0"
+            <NumberInput
               value={containers}
-              onChange={(e) => setContainers(e.target.value)}
+              onChange={setContainers}
+              min={1}
+              step={1}
+              quickValues={[5, 10, 15, 20]}
+              placeholder="0"
               disabled={!selectedCustomerId}
-              aria-invalid={errors.containers ? "true" : "false"}
+              inputRef={containersInputRef}
+              aria-label="Number of containers"
               aria-describedby={errors.containers ? "previous-entry-containers-error" : undefined}
               className={cn(
-                "w-full",
                 errors.containers && cn(errorTone.border, errorTone.ring)
               )}
             />

@@ -44,6 +44,7 @@ import { useSettings } from "@/lib/contexts/SettingsContext";
 import { usePricing } from "@/lib/hooks/usePricing";
 import { Plus, Check, ChevronsUpDown, DollarSign, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { NumberInput } from "@/components/shared/NumberInput";
 
 // ============================================================================
 // Types
@@ -277,20 +278,18 @@ export function QuickAddForm({ customers, userId, onSave, loading = false }: Qui
             <Label htmlFor="containers">
               Containers <span className={errorTone.text}>*</span>
             </Label>
-            <Input
-              ref={containersInputRef}
-              id="containers"
-              type="number"
-              min="1"
-              step="1"
-              placeholder="Enter number of containers"
+            <NumberInput
               value={containers}
-              onChange={(e) => setContainers(e.target.value)}
+              onChange={setContainers}
+              min={1}
+              step={1}
+              quickValues={[5, 10, 15, 20]}
+              placeholder="0"
               disabled={loading}
-              aria-invalid={errors.containers ? "true" : "false"}
+              inputRef={containersInputRef}
+              aria-label="Number of containers"
               aria-describedby={errors.containers ? "quick-add-containers-error" : undefined}
               className={cn(
-                "w-full",
                 errors.containers && cn(errorTone.border, errorTone.ring)
               )}
             />
