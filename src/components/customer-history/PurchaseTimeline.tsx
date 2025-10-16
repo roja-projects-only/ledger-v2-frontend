@@ -1,18 +1,16 @@
 /**
- * PurchaseTimeline - Display customer's purchase history grouped by date
+ * PurchaseTimeline - Display customer's purchase history as flat list
  * 
  * Features:
- * - Groups sales by date (most recent first)
- * - Each date section shows:
- *   - Date header
- *   - List of entry cards for that date
- *   - Day total
- * - Responsive design
- * - Button pagination (instead of infinite scroll)
+ * - Simple flat list of sales (one sale per date per customer)
+ * - Sorted by date (most recent first)
+ * - Compact single-line rows
+ * - Virtual scrolling for large datasets
+ * - Pagination for smaller lists
  */
 
 import { useMemo, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Pagination,
   PaginationContent,
@@ -20,12 +18,10 @@ import {
   PaginationPrevious,
   PaginationNext,
 } from "@/components/ui/pagination";
-import { EntryCard } from "@/components/shared/EntryCard";
+import { SaleRow } from "@/components/customer-history/SaleRow";
 import { VirtualList } from "@/components/shared/VirtualList";
 import type { Sale, Customer } from "@/lib/types";
-import { formatDate, formatCurrency } from "@/lib/utils";
 import { Calendar } from "lucide-react";
-import { usePricing } from "@/lib/hooks/usePricing";
 
 // ============================================================================
 // Types
@@ -37,13 +33,6 @@ interface PurchaseTimelineProps {
   onDelete?: (sale: Sale) => void;
 }
 
-interface DateGroup {
-  date: string; // ISO date string
-  displayDate: string; // Formatted date
-  sales: Sale[];
-  total: number;
-}
-
 // ============================================================================
 // Component
 // ============================================================================
@@ -53,54 +42,30 @@ export function PurchaseTimeline({
   customer,
   onDelete,
 }: PurchaseTimelineProps) {
-  const { getEffectivePrice } = usePricing();
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5; // Show 5 date groups per page
+  const itemsPerPage = 15; // Show 15 sales per page
 
-  // Group sales by date
-  const dateGroups = useMemo(() => {
-    const groups = new Map<string, Sale[]>();
+  // Sort sales by date (most recent first)
+  const sortedSales = useMemo(() => {
+    return [...sales].sort((a, b) => b.date.localeCompare(a.date));
+  }, [sales]);
 
-    sales.forEach((sale) => {
-      const existing = groups.get(sale.date) || [];
-      groups.set(sale.date, [...existing, sale]);
-    });
-
-    // Convert to array and sort descending (most recent first)
-    const result: DateGroup[] = [];
-    groups.forEach((dateSales, date) => {
-      // Calculate total with effective pricing
-      const effectivePrice = getEffectivePrice(customer);
-      const total = dateSales.reduce((sum, sale) => sum + sale.quantity * effectivePrice, 0);
-      result.push({
-        date,
-        displayDate: formatDate(date),
-        sales: dateSales.sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        ),
-        total,
-      });
-    });
-
-    return result.sort((a, b) => b.date.localeCompare(a.date));
-  }, [sales, customer, getEffectivePrice]);
-
-  // Use virtual scrolling for lists with 20+ date groups, pagination for smaller lists
-  const useVirtualScrolling = dateGroups.length >= 20;
+  // Use virtual scrolling for large lists (50+ sales)
+  const useVirtualScrolling = sortedSales.length >= 50;
 
   // Pagination calculations (only used for small lists)
-  const totalPages = Math.ceil(dateGroups.length / itemsPerPage);
+  const totalPages = Math.ceil(sortedSales.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedGroups = dateGroups.slice(startIndex, endIndex);
+  const paginatedSales = sortedSales.slice(startIndex, endIndex);
 
   // Reset to page 1 when customer changes
   useMemo(() => {
     setCurrentPage(1);
   }, [customer.id]);
 
-  if (dateGroups.length === 0) {
+  // Empty state
+  if (sortedSales.length === 0) {
     return (
       <Card>
         <CardContent className="py-12">
@@ -116,89 +81,66 @@ export function PurchaseTimeline({
     );
   }
 
-  // Render a single date group card
-  const renderDateGroup = (group: DateGroup) => (
-    <Card key={group.date} className="mb-4">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            {group.displayDate}
-          </CardTitle>
-          <div className="text-lg font-semibold text-primary">
-            {formatCurrency(group.total)}
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          {group.sales.map((sale) => (
-            <EntryCard
-              key={sale.id}
-              sale={sale}
-              customer={customer}
-              onDelete={onDelete ? () => onDelete(sale) : undefined}
-            />
-          ))}
-        </div>
-        <div className="mt-4 pt-4 border-t border-border flex justify-between items-center text-sm">
-          <span className="text-muted-foreground">
-            {group.sales.length} {group.sales.length === 1 ? "entry" : "entries"}
-          </span>
-          <span className="font-medium">
-            Day Total: {formatCurrency(group.total)}
-          </span>
-        </div>
-      </CardContent>
-    </Card>
+  // Render a single sale row
+  const renderSaleRow = (sale: Sale) => (
+    <SaleRow
+      key={sale.id}
+      sale={sale}
+      customer={customer}
+      onDelete={onDelete ? () => onDelete(sale) : undefined}
+    />
   );
 
-  // Use virtual scrolling for large lists (20+ date groups)
+  // Use virtual scrolling for large lists (50+ sales)
   if (useVirtualScrolling) {
     return (
-      <VirtualList
-        items={dateGroups}
-        estimateSize={250} // Estimated height of each date group card
-        renderItem={(group) => renderDateGroup(group)}
-        className="h-[600px]"
-        overscan={3}
-      />
+      <Card className="overflow-hidden">
+        <VirtualList
+          items={sortedSales}
+          estimateSize={40} // Estimated height of each sale row
+          renderItem={(sale) => renderSaleRow(sale)}
+          className="h-[600px]"
+          overscan={5}
+        />
+      </Card>
     );
   }
 
-  // Use pagination for smaller lists (< 20 date groups)
+  // Use pagination for smaller lists (< 50 sales)
   return (
-    <div className="space-y-6">
-      {/* Date groups */}
-      {paginatedGroups.map((group) => renderDateGroup(group))}
+    <div className="space-y-4">
+      {/* Sales List */}
+      <Card className="overflow-hidden">
+        <div className="divide-y">
+          {paginatedSales.map((sale) => renderSaleRow(sale))}
+        </div>
+      </Card>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="pt-4">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                />
-              </PaginationItem>
-              
-              <PaginationItem>
-                <span className="text-sm text-muted-foreground px-4">
-                  Page {currentPage} of {totalPages} ({dateGroups.length} dates total)
-                </span>
-              </PaginationItem>
-              
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+            
+            <PaginationItem>
+              <span className="text-sm text-muted-foreground px-4">
+                Page {currentPage} of {totalPages} ({sortedSales.length} sales total)
+              </span>
+            </PaginationItem>
+            
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       )}
     </div>
   );
