@@ -127,6 +127,8 @@ export function AddEntryModal({
   useKeyboardShortcut({
     key: 's',
     ctrl: true,
+    shift: true,
+    alt: true,
     handler: () => {
       if (open) {
         // Programmatically trigger form submit
@@ -136,7 +138,7 @@ export function AddEntryModal({
         }
       }
     },
-    description: 'Save entry',
+    description: 'Save entry (Ctrl+Shift+Alt+S)',
   });
 
   const handleSubmit = (e: React.FormEvent) => {

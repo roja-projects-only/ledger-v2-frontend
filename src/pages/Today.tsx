@@ -59,15 +59,16 @@ export function Today() {
   // Keyboard shortcuts
   useKeyboardShortcut([
     {
-      key: 'k',
+      key: 'n',
       ctrl: true,
       shift: true,
+      alt: true,
       handler: () => {
         // Focus first input in form (customer search)
         const customerSearch = document.querySelector<HTMLInputElement>('[role="combobox"]');
         customerSearch?.click();
       },
-      description: 'New entry',
+      description: 'New entry (Ctrl+Shift+Alt+N)',
     },
     {
       key: '/',
@@ -76,7 +77,7 @@ export function Today() {
         const customerSearch = document.querySelector<HTMLInputElement>('[role="combobox"]');
         customerSearch?.click();
       },
-      description: 'Focus search',
+      description: 'Focus search (/)',
     },
   ]);
 

@@ -19,8 +19,8 @@ export function KeyboardShortcutsDialog({
   const modKey = isMac ? '⌘' : 'Ctrl';
 
   const shortcuts = [
-    { keys: `${modKey} + Shift + K`, action: 'New entry' },
-    { keys: `${modKey} + S`, action: 'Save' },
+    { keys: `${modKey} + Shift + Alt + N`, action: 'New entry' },
+    { keys: `${modKey} + Shift + Alt + S`, action: 'Save' },
     { keys: 'Esc', action: 'Close modal' },
     { keys: '/', action: 'Focus search' },
     { keys: '?', action: 'Show this help' },

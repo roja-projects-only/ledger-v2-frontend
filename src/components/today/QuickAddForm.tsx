@@ -45,6 +45,7 @@ import { usePricing } from "@/lib/hooks/usePricing";
 import { Plus, Check, ChevronsUpDown, DollarSign, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { NumberInput } from "@/components/shared/NumberInput";
+import { useKeyboardShortcut } from "@/lib/hooks/useKeyboardShortcut";
 
 // ============================================================================
 // Types
@@ -158,6 +159,19 @@ export function QuickAddForm({ customers, userId, onSave, loading = false }: Qui
       containersInputRef.current?.focus();
     }, 100);
   };
+
+  // Keyboard shortcut for save
+  useKeyboardShortcut({
+    key: 's',
+    ctrl: true,
+    shift: true,
+    alt: true,
+    handler: (e) => {
+      e.preventDefault();
+      handleSubmit(e as unknown as React.FormEvent);
+    },
+    description: 'Save (Ctrl+Shift+Alt+S)',
+  });
 
   return (
     <Card>

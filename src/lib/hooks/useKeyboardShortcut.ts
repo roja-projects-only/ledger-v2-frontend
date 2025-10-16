@@ -61,9 +61,9 @@ export function useKeyboardShortcut(config: ShortcutConfig | ShortcutConfig[]) {
 
 // Export shortcut configs for documentation
 export const GLOBAL_SHORTCUTS = {
-  NEW_ENTRY: { key: 'k', ctrl: true, shift: true, description: 'New entry' },
-  SAVE: { key: 's', ctrl: true, description: 'Save' },
-  CLOSE: { key: 'Escape', description: 'Close modal' },
-  SEARCH: { key: '/', description: 'Focus search' },
-  HELP: { key: '?', shift: true, description: 'Show shortcuts' },
+  NEW_ENTRY: { key: 'n', ctrl: true, shift: true, alt: true, description: 'New entry (Ctrl+Shift+Alt+N)' },
+  SAVE: { key: 's', ctrl: true, shift: true, alt: true, description: 'Save (Ctrl+Shift+Alt+S)' },
+  CLOSE: { key: 'Escape', description: 'Close modal (Esc)' },
+  SEARCH: { key: '/', description: 'Focus search (/)' },
+  HELP: { key: '?', shift: true, description: 'Show shortcuts (?)' },
 } as const;

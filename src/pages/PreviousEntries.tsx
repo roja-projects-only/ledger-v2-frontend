@@ -124,13 +124,14 @@ export function PreviousEntries() {
   // Keyboard shortcuts
   useKeyboardShortcut([
     {
-      key: 'k',
+      key: 'n',
       ctrl: true,
       shift: true,
+      alt: true,
       handler: () => {
         setAddModalOpen(true);
       },
-      description: 'New entry',
+      description: 'New entry (Ctrl+Shift+Alt+N)',
     },
     {
       key: 'Escape',
@@ -139,7 +140,7 @@ export function PreviousEntries() {
           setAddModalOpen(false);
         }
       },
-      description: 'Close modal',
+      description: 'Close modal (Esc)',
     },
     {
       key: '/',
@@ -148,7 +149,7 @@ export function PreviousEntries() {
         const filterSelect = document.querySelector<HTMLButtonElement>('[role="combobox"]');
         filterSelect?.click();
       },
-      description: 'Focus search',
+      description: 'Focus search (/)',
     },
   ]);
 
