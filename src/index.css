@@ -106,8 +106,21 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
+  
+  html, body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+  
+  body {
+    position: relative;
+    width: 100%;
+  }
+  
+  #root {
+    overflow-x: hidden;
+    max-width: 100vw;
   }
 
   /* Custom Scrollbar Styling - Dark Theme */

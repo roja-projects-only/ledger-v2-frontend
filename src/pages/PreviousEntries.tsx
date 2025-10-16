@@ -135,17 +135,17 @@ export function PreviousEntries() {
           {/* Three-Card Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Date Selector Card */}
-            <Card>
+            <Card className="overflow-hidden">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <CalendarIcon className="h-5 w-5" />
-                  Select Date
+                  <CalendarIcon className="h-5 w-5 shrink-0" />
+                  <span className="truncate">Select Date</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Selected Date</p>
-                  <p className="text-2xl font-semibold tracking-tight text-foreground">
+                  <p className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground break-words">
                     {formatDate(selectedDateISO)}
                   </p>
                 </div>
@@ -153,17 +153,19 @@ export function PreviousEntries() {
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className="w-full justify-start gap-2"
+                      className="w-full justify-between min-w-0"
                       aria-label="Change selected date"
                     >
-                      <CalendarIcon className="h-4 w-4" />
-                      <span className="font-medium">Change Date</span>
-                      <span className="ml-auto text-sm text-muted-foreground">
+                      <span className="flex items-center gap-2 min-w-0 flex-1">
+                        <CalendarIcon className="h-4 w-4 shrink-0" />
+                        <span className="font-medium truncate">Change Date</span>
+                      </span>
+                      <span className="text-sm text-muted-foreground shrink-0 ml-2 hidden sm:inline">
                         {formatDate(selectedDateISO)}
                       </span>
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="p-0" align="start" matchTriggerWidth>
+                  <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
                       selected={selectedDate}
@@ -183,11 +185,11 @@ export function PreviousEntries() {
             <DateSummaryCard sales={filteredSales} loading={loading} />
 
             {/* Filters Card */}
-            <Card>
-              <CardHeader className="pb-3 flex flex-row items-start justify-between gap-2">
-                <div>
-                  <CardTitle className="text-lg">Filters</CardTitle>
-                  <p className="text-xs text-muted-foreground">
+            <Card className="overflow-hidden">
+              <CardHeader className="pb-3 flex flex-row items-start justify-between gap-2 min-w-0">
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="text-lg truncate">Filters</CardTitle>
+                  <p className="text-xs text-muted-foreground break-words">
                     Narrow the list by customer or delivery location.
                   </p>
                 </div>
@@ -195,7 +197,7 @@ export function PreviousEntries() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="mt-1 h-7 w-7 text-muted-foreground hover:text-foreground"
+                    className="mt-1 h-7 w-7 text-muted-foreground hover:text-foreground shrink-0"
                     onClick={() => {
                       setCustomerFilter("all");
                       setLocationFilter("all");
@@ -209,14 +211,14 @@ export function PreviousEntries() {
               </CardHeader>
               <CardContent className="space-y-4 pt-0">
                 {/* Customer Filter */}
-                <div className="space-y-2">
+                <div className="space-y-2 min-w-0">
                   <Label htmlFor="customer-filter">Customer</Label>
                   <Select
                     value={customerFilter}
                     onValueChange={setCustomerFilter}
                     disabled={loading}
                   >
-                    <SelectTrigger id="customer-filter" className="w-full justify-between">
+                    <SelectTrigger id="customer-filter" className="w-full">
                       <SelectValue
                         placeholder={loading ? "Loading customers..." : "All Customers"}
                       />
@@ -241,14 +243,14 @@ export function PreviousEntries() {
                 </div>
 
                 {/* Location Filter */}
-                <div className="space-y-2">
+                <div className="space-y-2 min-w-0">
                   <Label htmlFor="location-filter">Location</Label>
                   <Select
                     value={locationFilter}
                     onValueChange={(value) => setLocationFilter(value as Location | "all")}
                     disabled={loading}
                   >
-                    <SelectTrigger id="location-filter" className="w-full justify-between">
+                    <SelectTrigger id="location-filter" className="w-full">
                       <SelectValue
                         placeholder={loading ? "Loading locations..." : "All Locations"}
                       />
@@ -259,15 +261,15 @@ export function PreviousEntries() {
                         const colors = getLocationColor(location);
                         return (
                           <SelectItem key={location} value={location}>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
                               <span
                                 className={cn(
-                                  "h-2.5 w-2.5 rounded-full border",
+                                  "h-2.5 w-2.5 rounded-full border shrink-0",
                                   colors.bg,
                                   colors.border,
                                 )}
                               />
-                              <span className="capitalize">{formatLocation(location).toLowerCase()}</span>
+                              <span className="capitalize truncate">{formatLocation(location).toLowerCase()}</span>
                             </div>
                           </SelectItem>
                         );

@@ -72,16 +72,16 @@ export function DateSummaryCard({ sales, loading = false }: DateSummaryCardProps
 
   if (loading) {
     return (
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle className="text-lg">Summary</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="space-y-2">
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-6 w-24" />
+              <div key={i} className="space-y-2 min-w-0">
+                <Skeleton className="h-4 w-16 sm:w-20" />
+                <Skeleton className="h-6 w-20 sm:w-24" />
               </div>
             ))}
           </div>
@@ -91,21 +91,21 @@ export function DateSummaryCard({ sales, loading = false }: DateSummaryCardProps
   }
 
   return (
-    <Card>
+    <Card className="overflow-hidden">
       <CardHeader>
         <CardTitle className="text-lg">Summary</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
           {metrics.map((metric) => {
             const Icon = metric.icon;
             return (
-              <div key={metric.label} className="space-y-1">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Icon className="h-4 w-4" />
-                  <span>{metric.label}</span>
+              <div key={metric.label} className="space-y-1 min-w-0">
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                  <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                  <span className="truncate">{metric.label}</span>
                 </div>
-                <div className="text-xl font-semibold">
+                <div className="text-lg sm:text-xl font-semibold truncate">
                   {metric.format(metric.value)}
                 </div>
               </div>

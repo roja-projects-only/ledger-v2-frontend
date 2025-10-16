@@ -18,6 +18,7 @@ import { DateRangeAnalysis } from "@/pages/DateRangeAnalysis";
 import { CustomerHistory } from "@/pages/CustomerHistory";
 import { Settings } from "@/pages/Settings";
 import { Customers } from "@/pages/Customers";
+import { NotFound } from "@/pages/NotFound";
 import { Toaster } from "@/components/ui/sonner";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { SettingsProvider } from "@/lib/contexts/SettingsContext";
@@ -59,11 +60,11 @@ function AppLayout() {
   });
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-background overflow-x-hidden">
       {/* Desktop Sidebar */}
       <Sidebar />
 
-      <div className="flex flex-col flex-1 md:ml-64">
+      <div className="flex flex-col flex-1 md:ml-64 min-w-0">
         {/* Swipe indicator - subtle edge glow on mobile (120px hitbox) */}
         <div 
           className="md:hidden fixed left-0 top-0 bottom-0 w-[2px] bg-gradient-to-r from-primary/30 to-transparent pointer-events-none z-40"
@@ -80,7 +81,7 @@ function AppLayout() {
           <Navbar />
         </div>
 
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto min-w-0">
           <Routes>
             {/* Today Page - Primary data entry */}
             <Route path="/" element={<Today />} />
@@ -107,8 +108,8 @@ function AppLayout() {
             {/* Customer History Page */}
             <Route path="/history" element={<CustomerHistory />} />
             
-            {/* Catch-all redirect */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            {/* 404 Page - Catch-all for unknown routes */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
       </div>

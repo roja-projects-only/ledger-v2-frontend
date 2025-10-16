@@ -408,13 +408,13 @@ export function Customers() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="pl-6 w-[25%]">Name</TableHead>
-                          <TableHead className="w-[15%]">Location</TableHead>
-                          <TableHead className="w-[15%]">Phone</TableHead>
-                          <TableHead className="w-[15%]">Custom Price</TableHead>
-                          <TableHead className="text-right w-[10%]">Entries</TableHead>
-                          <TableHead className="text-right w-[10%]">Total Sales</TableHead>
-                          <TableHead className="text-right pr-6 w-[10%]">Actions</TableHead>
+                          <TableHead className="pl-6 min-w-[180px]">Name</TableHead>
+                          <TableHead className="min-w-[120px]">Location</TableHead>
+                          <TableHead className="min-w-[120px]">Phone</TableHead>
+                          <TableHead className="min-w-[120px]">Custom Price</TableHead>
+                          <TableHead className="text-right min-w-[80px]">Entries</TableHead>
+                          <TableHead className="text-right min-w-[100px]">Total Sales</TableHead>
+                          <TableHead className="text-right pr-6 min-w-[80px]">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -502,32 +502,32 @@ export function Customers() {
                 {displayedCustomers.map((customer) => {
                   const stats = customerStats[customer.id] || { entries: 0, totalSales: 0 };
                   return (
-                    <Card key={customer.id} className="max-w-full">
+                    <Card key={customer.id} className="overflow-hidden">
                       <CardContent className="p-4 space-y-3">
                         {/* Row 1: Name + Location Badge */}
-                        <div className="flex items-start justify-between gap-2">
-                          <h3 className="font-semibold truncate flex-1">{customer.name}</h3>
-                          <LocationBadge location={customer.location} size="sm" />
+                        <div className="flex items-start justify-between gap-2 min-w-0">
+                          <h3 className="font-semibold truncate flex-1 min-w-0">{customer.name}</h3>
+                          <LocationBadge location={customer.location} size="sm" className="shrink-0" />
                         </div>
 
                         {/* Row 2: Phone (if exists) */}
                         {customer.phone && (
-                          <div className="flex items-center gap-2 text-sm">
+                          <div className="flex items-center gap-2 text-sm min-w-0">
                             <Phone className="h-4 w-4 shrink-0 text-muted-foreground" />
-                            <span className="truncate">{customer.phone}</span>
+                            <span className="truncate min-w-0 flex-1">{customer.phone}</span>
                           </div>
                         )}
 
                         {/* Row 3: Custom Price (if exists) */}
                         {customer.customUnitPrice != null && (
-                          <div className="flex items-center gap-2 text-sm">
+                          <div className="flex items-center gap-2 text-sm flex-wrap">
                             {isCustomPriceActive(customer) ? (
                               <>
                                 <Badge variant="default" className="shrink-0">
                                   <DollarSign className="h-3 w-3 mr-1" />
                                   Custom
                                 </Badge>
-                                <span className="font-medium">
+                                <span className="font-medium whitespace-nowrap">
                                   {formatCurrency(customer.customUnitPrice)}/gal
                                 </span>
                               </>
@@ -537,7 +537,7 @@ export function Customers() {
                                   <AlertCircle className="h-3 w-3 mr-1" />
                                   Inactive
                                 </Badge>
-                                <span className="text-muted-foreground text-sm line-through">
+                                <span className="text-muted-foreground text-sm line-through whitespace-nowrap">
                                   {formatCurrency(customer.customUnitPrice)}/gal
                                 </span>
                               </>
@@ -546,8 +546,9 @@ export function Customers() {
                         )}
 
                         {/* Row 4: Stats */}
-                        <div className="flex gap-4 text-sm text-muted-foreground">
-                          <span>{stats.entries} entries</span>
+                        <div className="flex gap-4 text-sm text-muted-foreground flex-wrap"
+>
+                          <span className="whitespace-nowrap">{stats.entries} entries</span>
                           <span className="font-medium">
                             {formatCurrency(stats.totalSales)}
                           </span>

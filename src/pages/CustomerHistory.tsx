@@ -87,7 +87,7 @@ export function CustomerHistory() {
           </div>
 
           {/* Customer Selector */}
-          <Card>
+          <Card className="overflow-hidden">
             <CardHeader>
               <CardTitle className="text-lg">Select Customer</CardTitle>
             </CardHeader>
@@ -98,23 +98,23 @@ export function CustomerHistory() {
                     variant="outline"
                     role="combobox"
                     aria-expanded={customerSearchOpen}
-                    className="w-full justify-between"
+                    className="w-full justify-between min-w-0"
                   >
                     {selectedCustomer ? (
-                      <span className="flex items-center gap-2">
-                        <User className="h-4 w-4" />
-                        {selectedCustomer.name}
-                        <span className="text-muted-foreground text-sm">
+                      <span className="flex items-center gap-2 min-w-0 flex-1">
+                        <User className="h-4 w-4 shrink-0" />
+                        <span className="truncate">{selectedCustomer.name}</span>
+                        <span className="text-muted-foreground text-sm shrink-0 hidden sm:inline">
                           ({selectedCustomer.location})
                         </span>
                       </span>
                     ) : (
-                      "Select a customer..."
+                      <span className="truncate">Select a customer...</span>
                     )}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-full p-0" align="start">
+                <PopoverContent className="w-[calc(100vw-2rem)] sm:w-[500px] p-0" align="start">
                   <Command>
                     <CommandInput placeholder="Search customer..." />
                     <CommandList>
@@ -128,19 +128,20 @@ export function CustomerHistory() {
                               setSelectedCustomerId(customer.id);
                               setCustomerSearchOpen(false);
                             }}
+                            className="min-w-0"
                           >
                             <Check
                               className={cn(
-                                "mr-2 h-4 w-4",
+                                "mr-2 h-4 w-4 shrink-0",
                                 selectedCustomerId === customer.id
                                   ? "opacity-100"
                                   : "opacity-0"
                               )}
                             />
-                            <div className="flex items-center gap-2">
-                              <User className="h-4 w-4" />
-                              <span>{customer.name}</span>
-                              <span className="text-muted-foreground text-sm">
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              <User className="h-4 w-4 shrink-0" />
+                              <span className="truncate flex-1">{customer.name}</span>
+                              <span className="text-muted-foreground text-sm shrink-0 hidden sm:inline">
                                 ({customer.location})
                               </span>
                             </div>
@@ -158,16 +159,16 @@ export function CustomerHistory() {
           {selectedCustomer && (
             <>
               {/* Customer Info Card */}
-              <Card>
+              <Card className="overflow-hidden">
                 <CardHeader>
-                  <CardTitle className="text-lg">Customer Information</CardTitle>
+                  <CardTitle className="text-lg truncate">Customer Information</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-start gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <User className="h-5 w-5 text-muted-foreground" />
-                        <span className="text-lg font-semibold">
+                  <div className="flex items-start gap-4 min-w-0">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2 min-w-0">
+                        <User className="h-5 w-5 text-muted-foreground shrink-0" />
+                        <span className="text-lg font-semibold truncate">
                           {selectedCustomer.name}
                         </span>
                       </div>

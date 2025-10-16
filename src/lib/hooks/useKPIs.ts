@@ -157,6 +157,7 @@ export function useKPIs(sales: Sale[], customers: Customer[]) {
           label: "Total Entries",
           value: customerSales.length,
           icon: Receipt,
+          variant: "customers", // Amber color for entries count
         },
         {
           label: "Average per Entry",

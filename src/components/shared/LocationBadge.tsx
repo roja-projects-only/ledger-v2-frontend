@@ -17,9 +17,9 @@ const SIZE_CLASSES: Record<Required<LocationBadgeProps>["size"], string> = {
 };
 
 const ICON_SIZES: Record<Required<LocationBadgeProps>["size"], string> = {
-  sm: "h-3 w-3",
-  md: "h-3.5 w-3.5",
-  lg: "h-4 w-4",
+  sm: "h-3 w-3 shrink-0",
+  md: "h-3.5 w-3.5 shrink-0",
+  lg: "h-4 w-4 shrink-0",
 };
 
 export function LocationBadge({
@@ -36,7 +36,7 @@ export function LocationBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full font-medium border",
+        "inline-flex items-center gap-1 rounded-full font-medium border max-w-full",
         colors.bg,
         colors.text,
         colors.border,
@@ -46,7 +46,7 @@ export function LocationBadge({
       aria-label={`Location: ${displayName}`}
     >
       {showIcon && <MapPin className={ICON_SIZES[size]} />}
-      <span className="capitalize">{displayName}</span>
+      <span className="capitalize truncate">{displayName}</span>
     </span>
   );
 }

@@ -111,7 +111,6 @@ export function Settings() {
   const {
     settings,
     updateSettings,
-    updateEnableCustomPricing,
     resetToDefaults,
     loading: settingsLoading,
     error: settingsError,
@@ -168,8 +167,13 @@ export function Settings() {
   const loading = settingsLoading || usersLoading;
   const apiError = settingsError || usersError;
   const errorTone = getSemanticColor("error");
+  const warningTone = getSemanticColor("warning");
 
-
+  // Check if settings have unsaved changes
+  const hasUnsavedChanges = 
+    businessName !== (settings.businessName || "") ||
+    unitPrice !== formatCurrency(settings.unitPrice) ||
+    enableCustomPricing !== settings.enableCustomPricing;
 
   // Update form when settings load
 
@@ -190,9 +194,7 @@ export function Settings() {
 
   // ============================================================================
 
-
-
-  const handleSaveSettings = () => {
+  const handleSaveSettings = async () => {
 
     if (apiError) {
       notify.error("Cannot save settings. Server connection error.");
@@ -211,20 +213,20 @@ export function Settings() {
 
     }
 
-
-
-    updateSettings({
+    // Save all settings together
+    const success = await updateSettings({
 
       businessName: businessName.trim() || undefined,
 
       unitPrice: parsedPrice,
-
+      enableCustomPricing: enableCustomPricing,
     });
 
-
-
-    notify.success("Settings saved successfully");
-
+    if (success) {
+      notify.success("Settings saved successfully");
+    } else {
+      notify.error("Failed to save settings");
+    }
   };
 
 
@@ -239,12 +241,10 @@ export function Settings() {
 
   };
 
-  const handleToggleCustomPricing = async (checked: boolean) => {
+  const handleToggleCustomPricing = (checked: boolean) => {
+    // Only update local state, don't save immediately
     setEnableCustomPricing(checked);
-    const success = await updateEnableCustomPricing(checked);
-    if (success) {
-      notify.success(checked ? "Custom pricing enabled" : "Custom pricing disabled");
-    }
+    // User must click "Save Settings" to persist the change
   };
 
   // Calculate customers with custom prices
@@ -710,33 +710,44 @@ export function Settings() {
 
 
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                {hasUnsavedChanges && !loading && (
+                  <div className={cn(
+                    "flex items-center gap-2 px-3 py-2 rounded-md text-sm",
+                    warningTone.bg,
+                    warningTone.border,
+                    warningTone.text
+                  )}>
+                    <span className="font-medium">Unsaved changes</span>
+                  </div>
+                )}
+                
+                <div className="flex gap-2">
+                  <Button
 
-                <Button
+                    onClick={handleSaveSettings}
 
-                  onClick={handleSaveSettings}
+                    disabled={loading || !!apiError || !hasUnsavedChanges}
 
-                  disabled={loading || !!apiError}
+                  >
 
-                >
+                    {loading ? (
 
-                  {loading ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
 
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
 
-                  ) : (
+                      <Save className="mr-2 h-4 w-4" />
 
-                    <Save className="mr-2 h-4 w-4" />
+                    )}
 
-                  )}
+                    Save Settings
 
-                  Save Settings
+                  </Button>
 
-                </Button>
+                  <Button
 
-                <Button
-
-                  variant="outline"
+                    variant="outline"
 
                   onClick={() => setResetDialogOpen(true)}
 
@@ -749,6 +760,7 @@ export function Settings() {
                   Reset to Defaults
 
                 </Button>
+                </div>
 
               </div>
 

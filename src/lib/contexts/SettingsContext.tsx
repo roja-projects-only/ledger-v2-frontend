@@ -106,8 +106,31 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
    * Update only the custom pricing toggle
    */
   const updateEnableCustomPricing = useCallback(async (enableCustomPricing: boolean): Promise<boolean> => {
-    return await updateSettings({ enableCustomPricing });
-  }, [updateSettings]);
+    try {
+      setError(null);
+      // Don't set loading state for this quick toggle operation
+
+      // Update via API
+      await settingsApi.upsert({
+        key: 'enableCustomPricing',
+        value: String(enableCustomPricing),
+        type: 'boolean',
+      });
+
+      // Update local state immediately for responsive UI
+      setSettings(prev => ({
+        ...prev,
+        enableCustomPricing,
+      }));
+
+      return true;
+    } catch (err) {
+      const apiError = handleApiError(err);
+      setError(apiError.message);
+      console.error("Failed to update custom pricing:", apiError);
+      return false;
+    }
+  }, []);
 
   /**
    * Reset settings to default values
