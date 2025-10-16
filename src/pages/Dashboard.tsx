@@ -11,6 +11,7 @@
 
 import { Container } from "@/components/layout/Container";
 import { StatCard } from "@/components/dashboard/StatCard";
+import { RevenueOverviewChart } from "@/components/dashboard/RevenueOverviewChart";
 import { useDashboardData } from "@/lib/hooks/useDashboardData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getSemanticColor } from "@/lib/colors";
@@ -162,10 +163,21 @@ export function Dashboard() {
                 />
               </div>
 
-              {/* Placeholder for future components */}
+              {/* Revenue Overview Chart */}
+              <RevenueOverviewChart 
+                data={{
+                  "7D": data.chartData7D,
+                  "30D": data.chartData30D,
+                  "90D": data.chartData90D,
+                  "1Y": data.chartData1Y,
+                }}
+                loading={loading} 
+              />
+
+              {/* Placeholder for Phase 4 analytics */}
               <div className="bg-card border rounded-lg p-6">
                 <p className="text-sm text-muted-foreground">
-                  Revenue overview chart and analytics coming in Phase 2-4...
+                  Location and customer analytics coming in Phase 4...
                 </p>
               </div>
             </div>

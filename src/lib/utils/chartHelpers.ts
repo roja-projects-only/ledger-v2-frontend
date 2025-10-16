@@ -16,6 +16,7 @@ import type { DailyMetric } from "./analytics";
 export interface ChartDataPoint {
   date: string;
   displayDate: string;
+  value: number; // Primary value for charts (usually revenue)
   revenue: number;
   quantity: number;
 }
@@ -30,6 +31,7 @@ export function formatChartData(
   return dailyData.map((day) => ({
     date: day.date,
     displayDate: formatDateAxis(day.date, period),
+    value: day.revenue, // Primary value for area/line charts
     revenue: day.revenue,
     quantity: day.quantity,
   }));

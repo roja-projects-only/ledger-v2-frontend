@@ -25,6 +25,7 @@ import {
   type LocationStats,
   type CustomerStats,
 } from "@/lib/utils/analytics";
+import { formatChartData, type ChartDataPoint } from "@/lib/utils/chartHelpers";
 
 // ============================================================================
 // Types
@@ -53,10 +54,10 @@ export interface DashboardData {
   
   // Time series data
   sparklineData: DailyMetric[]; // Last 7 days
-  chartData7D: DailyMetric[];
-  chartData30D: DailyMetric[];
-  chartData90D: DailyMetric[];
-  chartData1Y: DailyMetric[];
+  chartData7D: ChartDataPoint[];
+  chartData30D: ChartDataPoint[];
+  chartData90D: ChartDataPoint[];
+  chartData1Y: ChartDataPoint[];
   
   // Analytics
   topLocations: LocationStats[];
@@ -127,10 +128,10 @@ export function useDashboardData() {
 
     // Get time series data
     const sparklineData = getLast7DaysData(sales);
-    const chartData7D = getLast7DaysData(sales);
-    const chartData30D = getLast30DaysData(sales);
-    const chartData90D = getLast90DaysData(sales);
-    const chartData1Y = getLastYearData(sales);
+    const chartData7D = formatChartData(getLast7DaysData(sales), "7D");
+    const chartData30D = formatChartData(getLast30DaysData(sales), "30D");
+    const chartData90D = formatChartData(getLast90DaysData(sales), "90D");
+    const chartData1Y = formatChartData(getLastYearData(sales), "1Y");
 
     // Get location analytics
     const allLocations = aggregateSalesByLocation(sales, customers);
