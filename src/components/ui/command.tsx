@@ -64,6 +64,9 @@ function CommandInput({
   className,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Input>) {
+  // Disable auto-focus on mobile to prevent keyboard from popping up
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  
   return (
     <div
       data-slot="command-input-wrapper"
@@ -76,6 +79,7 @@ function CommandInput({
           "placeholder:text-muted-foreground flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50",
           className
         )}
+        autoFocus={!isMobile}
         {...props}
       />
     </div>
