@@ -140,7 +140,7 @@ export function Customers() {
   }, [customers, searchQuery, locationFilter]);
 
   // Pagination for customer list
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  // Use consistent pagination across all devices for simplicity
   const {
     currentPage,
     totalPages,
@@ -154,7 +154,7 @@ export function Customers() {
     endIndex,
     totalItems,
   } = usePagination(filteredCustomers, {
-    itemsPerPage: isMobile ? 10 : 20,
+    itemsPerPage: 15, // Balanced for both mobile and desktop
   });
 
   // ============================================================================
