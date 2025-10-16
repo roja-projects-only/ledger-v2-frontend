@@ -3,8 +3,10 @@
  * 
  * Simple SVG line chart showing 7-day trend data.
  * No axes, labels, or grid - just a smooth trend line.
+ * Memoized for performance optimization.
  */
 
+import { memo } from "react";
 import type { DailyMetric } from "@/lib/utils/analytics";
 
 // ============================================================================
@@ -86,3 +88,6 @@ export function MiniSparkline({
     </svg>
   );
 }
+
+// Export memoized version for performance
+export default memo(MiniSparkline);

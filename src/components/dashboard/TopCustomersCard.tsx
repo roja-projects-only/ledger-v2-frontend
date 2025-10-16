@@ -78,8 +78,8 @@ export function TopCustomersCard({
         </div>
       ) : (
         <div className="space-y-1">
-          {/* Table Header */}
-          <div className="grid grid-cols-12 gap-3 px-3 py-2 text-xs font-medium text-muted-foreground border-b border-slate-700">
+          {/* Table Header - Hidden on mobile */}
+          <div className="hidden sm:grid grid-cols-12 gap-3 px-3 py-2 text-xs font-medium text-muted-foreground border-b border-slate-700">
             <div className="col-span-1">#</div>
             <div className="col-span-5">Customer</div>
             <div className="col-span-3">Location</div>
@@ -98,7 +98,7 @@ export function TopCustomersCard({
                 key={customer.customerId}
                 onClick={() => onCustomerClick?.(customer.customerId)}
                 className={cn(
-                  "w-full grid grid-cols-12 gap-3 px-3 py-2.5 rounded-lg",
+                  "w-full grid grid-cols-12 gap-2 sm:gap-3 px-3 py-2.5 rounded-lg",
                   "text-left text-sm transition-colors",
                   "hover:bg-slate-800/50",
                   onCustomerClick && "cursor-pointer group",
@@ -117,24 +117,24 @@ export function TopCustomersCard({
                 </div>
 
                 {/* Customer Name */}
-                <div className="col-span-5 flex items-center min-w-0">
+                <div className="col-span-7 sm:col-span-5 flex items-center min-w-0">
                   <span className="font-medium truncate group-hover:text-sky-400 transition-colors">
                     {customer.customerName}
                   </span>
                 </div>
 
-                {/* Location */}
-                <div className="col-span-3 flex items-center text-slate-400 text-xs">
+                {/* Location - Hidden on mobile */}
+                <div className="hidden sm:flex col-span-3 items-center text-slate-400 text-xs">
                   {formattedLocation}
                 </div>
 
                 {/* Revenue */}
-                <div className="col-span-3 flex items-center justify-end gap-2">
-                  <span className="font-semibold tabular-nums">
+                <div className="col-span-4 sm:col-span-3 flex items-center justify-end gap-2">
+                  <span className="font-semibold tabular-nums text-xs sm:text-sm">
                     {formatCurrency(customer.revenue)}
                   </span>
                   {onCustomerClick && (
-                    <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-slate-400 transition-colors" />
+                    <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-slate-400 transition-colors flex-shrink-0" />
                   )}
                 </div>
               </button>

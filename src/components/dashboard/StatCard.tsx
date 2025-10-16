@@ -7,8 +7,10 @@
  * - Trend indicator (arrow + percentage + comparison text)
  * - Mini sparkline showing 7-day trend
  * - Loading skeleton state
+ * - Memoized for performance optimization
  */
 
+import { memo } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MiniSparkline } from "./MiniSparkline";
@@ -152,3 +154,6 @@ export function StatCard({
     </Card>
   );
 }
+
+// Export memoized version for performance
+export default memo(StatCard);
