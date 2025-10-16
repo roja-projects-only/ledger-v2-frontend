@@ -68,3 +68,34 @@ export function usePricing() {
     customPricingEnabled: settings.enableCustomPricing ?? true,
   };
 }
+
+// ============================================================================
+// Utility Functions (Non-Hook)
+// ============================================================================
+
+/**
+ * Get effective price without React hook context (for use in utility functions)
+ * 
+ * @param customer Customer object (may be undefined if customer not found)
+ * @param globalUnitPrice Global unit price fallback
+ * @param customPricingEnabled Whether custom pricing feature is enabled
+ * @returns Effective price (custom or global based on settings)
+ */
+export function getEffectivePriceFromData(
+  customer: Customer | undefined,
+  globalUnitPrice: number,
+  customPricingEnabled: boolean = true
+): number {
+  // If custom pricing is disabled, always use global price
+  if (!customPricingEnabled) {
+    return globalUnitPrice;
+  }
+  
+  // If customer has custom price, use it
+  if (customer?.customUnitPrice != null) {
+    return customer.customUnitPrice;
+  }
+  
+  // Fall back to global price
+  return globalUnitPrice;
+}

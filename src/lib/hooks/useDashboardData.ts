@@ -127,11 +127,11 @@ export function useDashboardData() {
     const activeCustomersTrend = getTrendDirection(activeCustomersGrowth);
 
     // Get time series data
-    const sparklineData = getLast7DaysData(sales);
-    const chartData7D = formatChartData(getLast7DaysData(sales), "7D");
-    const chartData30D = formatChartData(getLast30DaysData(sales), "30D");
-    const chartData90D = formatChartData(getLast90DaysData(sales), "90D");
-    const chartData1Y = formatChartData(getLastYearData(sales), "1Y");
+    const sparklineData = getLast7DaysData(sales, customers);
+    const chartData7D = formatChartData(getLast7DaysData(sales, customers), "7D");
+    const chartData30D = formatChartData(getLast30DaysData(sales, customers), "30D");
+    const chartData90D = formatChartData(getLast90DaysData(sales, customers), "90D");
+    const chartData1Y = formatChartData(getLastYearData(sales, customers), "1Y");
 
     // Get location analytics
     const allLocations = aggregateSalesByLocation(sales, customers);

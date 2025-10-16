@@ -90,7 +90,7 @@ export function formatDateToISO(date: Date): string {
  */
 export function calculatePeriodMetrics(
   sales: Sale[],
-  _customers: Customer[],
+  customers: Customer[],
   startDate: Date,
   endDate: Date
 ): PeriodMetrics {
@@ -103,8 +103,20 @@ export function calculatePeriodMetrics(
     return saleDate >= startISO && saleDate <= endISO;
   });
 
-  // Calculate totals
-  const revenue = periodSales.reduce((sum, sale) => sum + sale.total, 0);
+  // Create customer lookup for faster access
+  const customerLookup = new Map(customers.map((c) => [c.id, c]));
+
+  // Calculate totals with effective pricing
+  const revenue = periodSales.reduce((sum, sale) => {
+    const customer = customerLookup.get(sale.customerId);
+    // If customer not found, fallback to stored total
+    if (!customer) return sum + sale.total;
+    
+    // Recalculate with effective price (custom or global)
+    const effectivePrice = customer.customUnitPrice ?? sale.unitPrice;
+    return sum + (sale.quantity * effectivePrice);
+  }, 0);
+  
   const quantity = periodSales.reduce((sum, sale) => sum + sale.quantity, 0);
   const transactionCount = periodSales.length;
 
@@ -157,6 +169,7 @@ export function getTrendDirection(
  */
 export function getLastNDaysData(
   sales: Sale[],
+  customers: Customer[],
   days: number
 ): DailyMetric[] {
   const today = new Date();
@@ -178,12 +191,23 @@ export function getLastNDaysData(
     });
   }
 
-  // Aggregate sales by date
+  // Create customer lookup for faster access
+  const customerLookup = new Map(customers.map((c) => [c.id, c]));
+
+  // Aggregate sales by date with effective pricing
   sales.forEach((sale) => {
     const saleDate = sale.date.split('T')[0];
     const existing = dailyData.get(saleDate);
     if (existing) {
-      existing.revenue += sale.total;
+      const customer = customerLookup.get(sale.customerId);
+      // If customer not found, use stored total
+      if (!customer) {
+        existing.revenue += sale.total;
+      } else {
+        // Recalculate with effective price
+        const effectivePrice = customer.customUnitPrice ?? sale.unitPrice;
+        existing.revenue += sale.quantity * effectivePrice;
+      }
       existing.quantity += sale.quantity;
       existing.transactionCount += 1;
     }
@@ -198,29 +222,29 @@ export function getLastNDaysData(
 /**
  * Get last 7 days data for sparklines
  */
-export function getLast7DaysData(sales: Sale[]): DailyMetric[] {
-  return getLastNDaysData(sales, 7);
+export function getLast7DaysData(sales: Sale[], customers: Customer[]): DailyMetric[] {
+  return getLastNDaysData(sales, customers, 7);
 }
 
 /**
  * Get last 30 days data for main chart
  */
-export function getLast30DaysData(sales: Sale[]): DailyMetric[] {
-  return getLastNDaysData(sales, 30);
+export function getLast30DaysData(sales: Sale[], customers: Customer[]): DailyMetric[] {
+  return getLastNDaysData(sales, customers, 30);
 }
 
 /**
  * Get last 90 days data (may need weekly aggregation)
  */
-export function getLast90DaysData(sales: Sale[]): DailyMetric[] {
-  return getLastNDaysData(sales, 90);
+export function getLast90DaysData(sales: Sale[], customers: Customer[]): DailyMetric[] {
+  return getLastNDaysData(sales, customers, 90);
 }
 
 /**
  * Get last year data (may need monthly aggregation)
  */
-export function getLastYearData(sales: Sale[]): DailyMetric[] {
-  return getLastNDaysData(sales, 365);
+export function getLastYearData(sales: Sale[], customers: Customer[]): DailyMetric[] {
+  return getLastNDaysData(sales, customers, 365);
 }
 
 // ============================================================================
@@ -239,7 +263,7 @@ export function aggregateSalesByLocation(
   // Create customer lookup
   const customerLookup = new Map(customers.map((c) => [c.id, c]));
 
-  // Aggregate by location
+  // Aggregate by location with effective pricing
   sales.forEach((sale) => {
     const customer = customerLookup.get(sale.customerId);
     if (!customer) return;
@@ -247,13 +271,17 @@ export function aggregateSalesByLocation(
     const location = customer.location;
     const existing = locationMap.get(location);
 
+    // Calculate revenue with effective price
+    const effectivePrice = customer.customUnitPrice ?? sale.unitPrice;
+    const revenue = sale.quantity * effectivePrice;
+
     if (existing) {
-      existing.revenue += sale.total;
+      existing.revenue += revenue;
       existing.quantity += sale.quantity;
       existing.transactionCount += 1;
     } else {
       locationMap.set(location, {
-        revenue: sale.total,
+        revenue: revenue,
         quantity: sale.quantity,
         transactionCount: 1,
         color: getLocationHex(location),
@@ -294,25 +322,32 @@ export function rankCustomersByRevenue(
 ): CustomerStats[] {
   const customerMap = new Map<string, Omit<CustomerStats, 'customerId' | 'customerName' | 'location'>>();
 
-  // Aggregate by customer
+  // Create customer lookup
+  const customerLookup = new Map(customers.map((c) => [c.id, c]));
+
+  // Aggregate by customer with effective pricing
   sales.forEach((sale) => {
+    const customer = customerLookup.get(sale.customerId);
+    if (!customer) return; // Skip if customer not found
+
     const existing = customerMap.get(sale.customerId);
 
+    // Calculate revenue with effective price
+    const effectivePrice = customer.customUnitPrice ?? sale.unitPrice;
+    const revenue = sale.quantity * effectivePrice;
+
     if (existing) {
-      existing.revenue += sale.total;
+      existing.revenue += revenue;
       existing.quantity += sale.quantity;
       existing.transactionCount += 1;
     } else {
       customerMap.set(sale.customerId, {
-        revenue: sale.total,
+        revenue: revenue,
         quantity: sale.quantity,
         transactionCount: 1,
       });
     }
   });
-
-  // Create customer lookup
-  const customerLookup = new Map(customers.map((c) => [c.id, c]));
 
   // Convert to array with customer details
   const customerStats: CustomerStats[] = Array.from(customerMap.entries())
