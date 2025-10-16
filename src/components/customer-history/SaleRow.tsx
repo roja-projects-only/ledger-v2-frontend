@@ -59,7 +59,7 @@ export function SaleRow({ sale, customer, onDelete }: SaleRowProps) {
   return (
     <div
       className={cn(
-        "flex items-center gap-3 py-2 px-3 hover:bg-muted/40 transition-colors",
+        "flex items-center gap-2 sm:gap-3 py-2 px-2 sm:px-3 hover:bg-muted/40 transition-colors",
         "min-h-[40px]"
       )}
     >
@@ -71,30 +71,30 @@ export function SaleRow({ sale, customer, onDelete }: SaleRowProps) {
       />
 
       {/* Date */}
-      <span className="font-medium text-sm min-w-[100px] flex-shrink-0">
+      <span className="font-medium text-xs sm:text-sm min-w-[70px] sm:min-w-[100px] flex-shrink-0">
         {formatDate(sale.date)}
       </span>
 
       {/* Amount */}
-      <span className="font-semibold text-base text-primary min-w-[90px] flex-shrink-0">
+      <span className="font-semibold text-sm sm:text-base text-primary min-w-[70px] sm:min-w-[90px] flex-shrink-0">
         {formatCurrency(sale.total)}
       </span>
 
-      {/* Quantity */}
-      <span className="text-sm text-muted-foreground min-w-[100px] flex-shrink-0">
+      {/* Quantity - hide on very small screens */}
+      <span className="hidden xs:inline text-xs sm:text-sm text-muted-foreground min-w-[80px] sm:min-w-[100px] flex-shrink-0">
         {sale.quantity} {sale.quantity === 1 ? "container" : "containers"}
       </span>
 
-      {/* Time */}
-      <span className="text-xs text-muted-foreground min-w-[70px] flex-shrink-0">
+      {/* Time - hide on small screens */}
+      <span className="hidden sm:inline text-xs text-muted-foreground min-w-[70px] flex-shrink-0">
         {formatTime(sale.createdAt)}
       </span>
 
-      {/* Custom Pricing Badge */}
+      {/* Custom Pricing Badge - hide on small screens */}
       {hasCustomPricing && (
         <Badge
           variant="default"
-          className="h-5 px-1.5 text-[10px] flex-shrink-0"
+          className="hidden sm:flex h-5 px-1.5 text-[10px] flex-shrink-0"
         >
           <DollarSign className="h-3 w-3 mr-0.5" />
           Custom

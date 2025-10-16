@@ -29,7 +29,6 @@ import {
 } from "@/components/ui/popover";
 import { Check, ChevronsUpDown, User, CalendarIcon } from "lucide-react";
 import { KPICard } from "@/components/shared/KPICard";
-import { LocationBadge } from "@/components/shared/LocationBadge";
 import { PurchaseTimeline } from "@/components/customer-history/PurchaseTimeline";
 import { useSales } from "@/lib/hooks/useSales";
 import { useCustomers } from "@/lib/hooks/useCustomers";
@@ -311,29 +310,6 @@ export function CustomerHistory() {
           {/* Customer Summary (only show if customer selected) */}
           {selectedCustomer && (
             <>
-              {/* Customer Info Card */}
-              <Card className="overflow-hidden">
-                <CardHeader>
-                  <CardTitle className="text-lg truncate">Customer Information</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-start gap-4 min-w-0">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2 min-w-0">
-                        <User className="h-5 w-5 text-muted-foreground shrink-0" />
-                        <span className="text-lg font-semibold truncate">
-                          {selectedCustomer.name}
-                        </span>
-                      </div>
-                      <LocationBadge
-                        location={selectedCustomer.location}
-                        showIcon
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
               {/* KPI Row */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {customerKPIs.map((kpi, index) => (
