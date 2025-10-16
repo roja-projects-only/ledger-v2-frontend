@@ -1,0 +1,144 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --radius: 0.625rem;
+  
+  /* Base Backgrounds - Slate-900 (matching Yaris Ledger) */
+  --background: oklch(0.158 0.013 256.85);      /* #0f172a - slate-900 */
+  --foreground: oklch(0.984 0.003 247.86);      /* #f1f5f9 - slate-100 */
+  
+  /* Card Surfaces - Slate-800 */
+  --card: oklch(0.235 0.015 256.85);            /* #1e293b - slate-800 */
+  --card-foreground: oklch(0.984 0.003 247.86); /* #f1f5f9 - slate-100 */
+  
+  /* Popovers - Slate-800 with higher opacity */
+  --popover: oklch(0.235 0.015 256.85);         /* #1e293b - slate-800 */
+  --popover-foreground: oklch(0.984 0.003 247.86); /* #f1f5f9 - slate-100 */
+  
+  /* Primary - Sky-500 cyan (matching Yaris Ledger) */
+  --primary: oklch(0.702 0.139 235.62);         /* #0ea5e9 - sky-500 */
+  --primary-foreground: oklch(0.984 0.003 247.86); /* #f1f5f9 - white text */
+  
+  /* Secondary - Slate-700 */
+  --secondary: oklch(0.303 0.017 256.85);       /* #334155 - slate-700 */
+  --secondary-foreground: oklch(0.984 0.003 247.86); /* #f1f5f9 - slate-100 */
+  
+  /* Muted - Between slate-800 and slate-700 */
+  --muted: oklch(0.269 0.016 256.85);           /* ~#293548 - between levels */
+  --muted-foreground: oklch(0.637 0.011 256.85); /* #64748b - slate-500 */
+  
+  /* Accent - Slate-700 for hover states */
+  --accent: oklch(0.303 0.017 256.85);          /* #334155 - slate-700 */
+  --accent-foreground: oklch(0.984 0.003 247.86); /* #f1f5f9 - slate-100 */
+  
+  /* Destructive - Red-500 */
+  --destructive: oklch(0.578 0.245 27.33);      /* #ef4444 - red-500 */
+  
+  /* Borders - Slate-700 */
+  --border: oklch(0.303 0.017 256.85);          /* #334155 - slate-700 */
+  
+  /* Inputs - Slate-600 */
+  --input: oklch(0.420 0.016 256.85);           /* #475569 - slate-600 */
+  
+  /* Focus Ring - Sky-500 cyan */
+  --ring: oklch(0.702 0.139 235.62);            /* #0ea5e9 - sky-500 */
+  
+  /* Chart Colors - Vibrant and harmonious */
+  --chart-1: oklch(0.702 0.139 235.62);         /* #0ea5e9 - sky-500 */
+  --chart-2: oklch(0.679 0.172 162.48);         /* #10b981 - emerald-500 */
+  --chart-3: oklch(0.696 0.197 301.36);         /* #a855f7 - purple-500 */
+  --chart-4: oklch(0.749 0.160 84.43);          /* #f59e0b - amber-500 */
+  --chart-5: oklch(0.679 0.216 27.33);          /* #f97316 - orange-500 */
+  
+  /* Sidebar - Slate-800 (same as card) */
+  --sidebar: oklch(0.235 0.015 256.85);         /* #1e293b - slate-800 */
+  --sidebar-foreground: oklch(0.984 0.003 247.86); /* #f1f5f9 - slate-100 */
+  --sidebar-primary: oklch(0.702 0.139 235.62); /* #0ea5e9 - sky-500 */
+  --sidebar-primary-foreground: oklch(0.984 0.003 247.86); /* #f1f5f9 */
+  --sidebar-accent: oklch(0.303 0.017 256.85);  /* #334155 - slate-700 hover */
+  --sidebar-accent-foreground: oklch(0.984 0.003 247.86); /* #f1f5f9 */
+  --sidebar-border: oklch(0.303 0.017 256.85);  /* #334155 - slate-700 */
+  --sidebar-ring: oklch(0.702 0.139 235.62);    /* #0ea5e9 - sky-500 */
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Custom Scrollbar Styling - Dark Theme */
+  /* Works for Chromium browsers (Chrome, Edge, Brave, etc.) */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: oklch(0.235 0.015 256.85); /* slate-800 - matches card */
+    border-radius: 0.5rem;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: oklch(0.420 0.016 256.85); /* slate-600 */
+    border-radius: 0.5rem;
+    border: 2px solid oklch(0.235 0.015 256.85); /* slate-800 border for spacing */
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.502 0.015 256.85); /* slate-500 - lighter on hover */
+  }
+
+  ::-webkit-scrollbar-thumb:active {
+    background: oklch(0.702 0.139 235.62); /* sky-500 - primary color when dragging */
+  }
+
+  /* Firefox Scrollbar Styling */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: oklch(0.420 0.016 256.85) oklch(0.235 0.015 256.85); /* thumb track */
+  }
+}
