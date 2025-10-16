@@ -30,14 +30,13 @@ import { Label } from "@/components/ui/label";
 import { Plus, CalendarIcon } from "lucide-react";
 import { DateSummaryCard } from "@/components/previous/DateSummaryCard";
 import { AddEntryModal } from "@/components/previous/AddEntryModal";
-import { TodayEntriesList } from "@/components/today/TodayEntriesList";
 import { useSales } from "@/lib/hooks/useSales";
 import { useCustomers } from "@/lib/hooks/useCustomers";
 import { useAuth } from "@/lib/hooks/useAuth";
 import type { Location } from "@/lib/types";
 import { LOCATIONS } from "@/lib/constants";
 import { getLocationColor, getSemanticColor } from "@/lib/colors";
-import { cn, formatDate, formatLocation, getTodayISO } from "@/lib/utils";
+import { cn, formatDate, formatLocation, formatCurrency, getTodayISO } from "@/lib/utils";
 
 // ============================================================================
 // Previous Entries Page Component
@@ -297,12 +296,98 @@ export function PreviousEntries() {
           {/* Entries List */}
           <Card>
             <CardContent className="pt-6">
-              <TodayEntriesList
-                sales={filteredSales}
-                customers={customers || []}
-                onDelete={(sale) => deleteSale(sale.id)}
-                loading={loading}
-              />
+              <div className="space-y-3">
+                {loading ? (
+                  // Loading skeleton
+                  <>
+                    {[...Array(3)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="h-24 rounded-lg bg-muted animate-pulse"
+                      />
+                    ))}
+                  </>
+                ) : filteredSales.length === 0 ? (
+                  // Empty state
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <Plus className="h-12 w-12 text-muted-foreground mb-3" />
+                    <h3 className="text-lg font-semibold">No entries for this date</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Click "Add Entry" above to record a sale
+                    </p>
+                  </div>
+                ) : (
+                  // Entries list - no fixed height, flows with page scroll
+                  <>
+                    {filteredSales.map((sale) => {
+                      const customer = customers?.find((c) => c.id === sale.customerId);
+                      return (
+                        <div key={sale.id}>
+                          <div className="rounded-lg border bg-card p-4 space-y-3">
+                            {/* Customer info */}
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0 flex-1">
+                                <h3 className="font-semibold text-lg truncate">
+                                  {customer?.name || "Unknown Customer"}
+                                </h3>
+                                {customer && (
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <span
+                                      className={cn(
+                                        "h-2 w-2 rounded-full shrink-0",
+                                        getLocationColor(customer.location).bg,
+                                        getLocationColor(customer.location).border,
+                                        "border",
+                                      )}
+                                    />
+                                    <span className="text-sm text-muted-foreground truncate">
+                                      {formatLocation(customer.location)}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => deleteSale(sale.id)}
+                                className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                                aria-label="Delete entry"
+                              >
+                                ×
+                              </button>
+                            </div>
+
+                            {/* Sale details */}
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                              <div>
+                                <p className="text-muted-foreground">Quantity</p>
+                                <p className="font-medium">{sale.quantity} gallons</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Total</p>
+                                <p className="font-semibold text-lg">
+                                  {formatCurrency(sale.total)}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Notes if present */}
+                            {sale.notes && (
+                              <div className="pt-2 border-t">
+                                <p className="text-xs text-muted-foreground">Note:</p>
+                                <p className="text-sm mt-1">{sale.notes}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    
+                    {/* Total count */}
+                    <p className="text-center text-xs text-muted-foreground pt-2">
+                      {filteredSales.length} {filteredSales.length === 1 ? "entry" : "entries"} total
+                    </p>
+                  </>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
