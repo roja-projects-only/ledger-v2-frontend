@@ -21,6 +21,7 @@ import {
   PaginationNext,
 } from "@/components/ui/pagination";
 import { EntryCard } from "@/components/shared/EntryCard";
+import { VirtualList } from "@/components/shared/VirtualList";
 import type { Sale, Customer } from "@/lib/types";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { Calendar } from "lucide-react";
@@ -85,7 +86,10 @@ export function PurchaseTimeline({
     return result.sort((a, b) => b.date.localeCompare(a.date));
   }, [sales, customer, getEffectivePrice]);
 
-  // Pagination calculations
+  // Use virtual scrolling for lists with 20+ date groups, pagination for smaller lists
+  const useVirtualScrolling = dateGroups.length >= 20;
+
+  // Pagination calculations (only used for small lists)
   const totalPages = Math.ceil(dateGroups.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -112,44 +116,61 @@ export function PurchaseTimeline({
     );
   }
 
+  // Render a single date group card
+  const renderDateGroup = (group: DateGroup) => (
+    <Card key={group.date} className="mb-4">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            {group.displayDate}
+          </CardTitle>
+          <div className="text-lg font-semibold text-primary">
+            {formatCurrency(group.total)}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {group.sales.map((sale) => (
+            <EntryCard
+              key={sale.id}
+              sale={sale}
+              customer={customer}
+              onDelete={onDelete ? () => onDelete(sale) : undefined}
+            />
+          ))}
+        </div>
+        <div className="mt-4 pt-4 border-t border-border flex justify-between items-center text-sm">
+          <span className="text-muted-foreground">
+            {group.sales.length} {group.sales.length === 1 ? "entry" : "entries"}
+          </span>
+          <span className="font-medium">
+            Day Total: {formatCurrency(group.total)}
+          </span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  // Use virtual scrolling for large lists (20+ date groups)
+  if (useVirtualScrolling) {
+    return (
+      <VirtualList
+        items={dateGroups}
+        estimateSize={250} // Estimated height of each date group card
+        renderItem={(group) => renderDateGroup(group)}
+        className="h-[600px]"
+        overscan={3}
+      />
+    );
+  }
+
+  // Use pagination for smaller lists (< 20 date groups)
   return (
     <div className="space-y-6">
       {/* Date groups */}
-      {paginatedGroups.map((group) => (
-        <Card key={group.date}>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                {group.displayDate}
-              </CardTitle>
-              <div className="text-lg font-semibold text-primary">
-                {formatCurrency(group.total)}
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {group.sales.map((sale) => (
-                <EntryCard
-                  key={sale.id}
-                  sale={sale}
-                  customer={customer}
-                  onDelete={onDelete ? () => onDelete(sale) : undefined}
-                />
-              ))}
-            </div>
-            <div className="mt-4 pt-4 border-t border-border flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">
-                {group.sales.length} {group.sales.length === 1 ? "entry" : "entries"}
-              </span>
-              <span className="font-medium">
-                Day Total: {formatCurrency(group.total)}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+      {paginatedGroups.map((group) => renderDateGroup(group))}
 
       {/* Pagination */}
       {totalPages > 1 && (
