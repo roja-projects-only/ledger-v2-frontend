@@ -81,13 +81,25 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
       // Update each setting via API
       await Promise.all(
-        Object.entries(updates).map(([key, value]) =>
-          settingsApi.upsert({
+        Object.entries(updates).map(([key, value]) => {
+          // Detect the type before converting to string
+          let type: "string" | "number" | "boolean" | "json";
+          if (typeof value === "number") {
+            type = "number";
+          } else if (typeof value === "boolean") {
+            type = "boolean";
+          } else if (typeof value === "object" && value !== null) {
+            type = "json";
+          } else {
+            type = "string";
+          }
+
+          return settingsApi.upsert({
             key,
             value: String(value),
-            type: typeof value === "number" ? "number" : "string",
-          })
-        )
+            type,
+          });
+        })
       );
 
       // Refresh settings after updates
