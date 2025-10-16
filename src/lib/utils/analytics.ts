@@ -5,6 +5,7 @@
  */
 
 import type { Sale, Customer, Location } from "@/lib/types";
+import { getLocationHex } from "@/lib/colors";
 
 // ============================================================================
 // Types
@@ -31,6 +32,7 @@ export interface LocationStats {
   quantity: number;
   transactionCount: number;
   percentage: number;
+  color: string; // Hex color for visual representation
 }
 
 export interface CustomerStats {
@@ -254,6 +256,7 @@ export function aggregateSalesByLocation(
         revenue: sale.total,
         quantity: sale.quantity,
         transactionCount: 1,
+        color: getLocationHex(location),
       });
     }
   });

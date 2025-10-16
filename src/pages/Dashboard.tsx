@@ -12,11 +12,15 @@
 import { Container } from "@/components/layout/Container";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { RevenueOverviewChart } from "@/components/dashboard/RevenueOverviewChart";
+import { TopLocationsCard } from "@/components/dashboard/TopLocationsCard";
+import { SalesDistributionChart } from "@/components/dashboard/SalesDistributionChart";
+import { TopCustomersCard } from "@/components/dashboard/TopCustomersCard";
 import { useDashboardData } from "@/lib/hooks/useDashboardData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getSemanticColor } from "@/lib/colors";
 import { cn, formatCurrency } from "@/lib/utils";
 import { DollarSign, Droplet, TrendingUp, Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 // ============================================================================
 // Dashboard Page Component
@@ -24,6 +28,7 @@ import { DollarSign, Droplet, TrendingUp, Users } from "lucide-react";
 
 export function Dashboard() {
   const { data, loading, error } = useDashboardData();
+  const navigate = useNavigate();
 
   const errorTone = getSemanticColor("error");
 
@@ -174,12 +179,29 @@ export function Dashboard() {
                 loading={loading} 
               />
 
-              {/* Placeholder for Phase 4 analytics */}
-              <div className="bg-card border rounded-lg p-6">
-                <p className="text-sm text-muted-foreground">
-                  Location and customer analytics coming in Phase 4...
-                </p>
+              {/* Location & Customer Analytics Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Top Locations */}
+                <TopLocationsCard
+                  locations={data.topLocations}
+                  loading={loading}
+                  onViewAll={() => navigate("/analysis")}
+                />
+
+                {/* Sales Distribution */}
+                <SalesDistributionChart
+                  locations={data.allLocations}
+                  totalRevenue={data.thisMonth.revenue}
+                  loading={loading}
+                />
               </div>
+
+              {/* Top Customers - Full Width */}
+              <TopCustomersCard
+                customers={data.topCustomers}
+                loading={loading}
+                onCustomerClick={(customerId) => navigate(`/customers?id=${customerId}`)}
+              />
             </div>
           )}
         </div>
