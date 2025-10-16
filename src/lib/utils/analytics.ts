@@ -92,7 +92,8 @@ export function calculatePeriodMetrics(
   sales: Sale[],
   customers: Customer[],
   startDate: Date,
-  endDate: Date
+  endDate: Date,
+  customPricingEnabled: boolean = true
 ): PeriodMetrics {
   const startISO = formatDateToISO(startDate);
   const endISO = formatDateToISO(endDate);
@@ -112,8 +113,10 @@ export function calculatePeriodMetrics(
     // If customer not found, fallback to stored total
     if (!customer) return sum + sale.total;
     
-    // Recalculate with effective price (custom or global)
-    const effectivePrice = customer.customUnitPrice ?? sale.unitPrice;
+    // Recalculate with effective price (respect custom pricing toggle)
+    const effectivePrice = customPricingEnabled && customer.customUnitPrice != null
+      ? customer.customUnitPrice
+      : sale.unitPrice;
     return sum + (sale.quantity * effectivePrice);
   }, 0);
   
@@ -170,7 +173,8 @@ export function getTrendDirection(
 export function getLastNDaysData(
   sales: Sale[],
   customers: Customer[],
-  days: number
+  days: number,
+  customPricingEnabled: boolean = true
 ): DailyMetric[] {
   const today = new Date();
   const startDate = new Date(today);
@@ -204,8 +208,10 @@ export function getLastNDaysData(
       if (!customer) {
         existing.revenue += sale.total;
       } else {
-        // Recalculate with effective price
-        const effectivePrice = customer.customUnitPrice ?? sale.unitPrice;
+        // Recalculate with effective price (respect custom pricing toggle)
+        const effectivePrice = customPricingEnabled && customer.customUnitPrice != null
+          ? customer.customUnitPrice
+          : sale.unitPrice;
         existing.revenue += sale.quantity * effectivePrice;
       }
       existing.quantity += sale.quantity;
@@ -222,29 +228,29 @@ export function getLastNDaysData(
 /**
  * Get last 7 days data for sparklines
  */
-export function getLast7DaysData(sales: Sale[], customers: Customer[]): DailyMetric[] {
-  return getLastNDaysData(sales, customers, 7);
+export function getLast7DaysData(sales: Sale[], customers: Customer[], customPricingEnabled: boolean = true): DailyMetric[] {
+  return getLastNDaysData(sales, customers, 7, customPricingEnabled);
 }
 
 /**
  * Get last 30 days data for main chart
  */
-export function getLast30DaysData(sales: Sale[], customers: Customer[]): DailyMetric[] {
-  return getLastNDaysData(sales, customers, 30);
+export function getLast30DaysData(sales: Sale[], customers: Customer[], customPricingEnabled: boolean = true): DailyMetric[] {
+  return getLastNDaysData(sales, customers, 30, customPricingEnabled);
 }
 
 /**
  * Get last 90 days data (may need weekly aggregation)
  */
-export function getLast90DaysData(sales: Sale[], customers: Customer[]): DailyMetric[] {
-  return getLastNDaysData(sales, customers, 90);
+export function getLast90DaysData(sales: Sale[], customers: Customer[], customPricingEnabled: boolean = true): DailyMetric[] {
+  return getLastNDaysData(sales, customers, 90, customPricingEnabled);
 }
 
 /**
  * Get last year data (may need monthly aggregation)
  */
-export function getLastYearData(sales: Sale[], customers: Customer[]): DailyMetric[] {
-  return getLastNDaysData(sales, customers, 365);
+export function getLastYearData(sales: Sale[], customers: Customer[], customPricingEnabled: boolean = true): DailyMetric[] {
+  return getLastNDaysData(sales, customers, 365, customPricingEnabled);
 }
 
 // ============================================================================
@@ -256,7 +262,8 @@ export function getLastYearData(sales: Sale[], customers: Customer[]): DailyMetr
  */
 export function aggregateSalesByLocation(
   sales: Sale[],
-  customers: Customer[]
+  customers: Customer[],
+  customPricingEnabled: boolean = true
 ): LocationStats[] {
   const locationMap = new Map<Location, Omit<LocationStats, 'location' | 'percentage'>>();
 
@@ -271,8 +278,10 @@ export function aggregateSalesByLocation(
     const location = customer.location;
     const existing = locationMap.get(location);
 
-    // Calculate revenue with effective price
-    const effectivePrice = customer.customUnitPrice ?? sale.unitPrice;
+    // Calculate revenue with effective price (respect custom pricing toggle)
+    const effectivePrice = customPricingEnabled && customer.customUnitPrice != null
+      ? customer.customUnitPrice
+      : sale.unitPrice;
     const revenue = sale.quantity * effectivePrice;
 
     if (existing) {
@@ -318,7 +327,8 @@ export function aggregateSalesByLocation(
 export function rankCustomersByRevenue(
   sales: Sale[],
   customers: Customer[],
-  limit: number = 10
+  limit: number = 10,
+  customPricingEnabled: boolean = true
 ): CustomerStats[] {
   const customerMap = new Map<string, Omit<CustomerStats, 'customerId' | 'customerName' | 'location'>>();
 
@@ -332,8 +342,10 @@ export function rankCustomersByRevenue(
 
     const existing = customerMap.get(sale.customerId);
 
-    // Calculate revenue with effective price
-    const effectivePrice = customer.customUnitPrice ?? sale.unitPrice;
+    // Calculate revenue with effective price (respect custom pricing toggle)
+    const effectivePrice = customPricingEnabled && customer.customUnitPrice != null
+      ? customer.customUnitPrice
+      : sale.unitPrice;
     const revenue = sale.quantity * effectivePrice;
 
     if (existing) {
