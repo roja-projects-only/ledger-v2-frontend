@@ -8,7 +8,7 @@
  * - Empty state with CTA
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Container } from "@/components/layout/Container";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -110,6 +110,27 @@ export function Customers() {
   const [customerCustomPrice, setCustomerCustomPrice] = useState("");
   const [customerNotes, setCustomerNotes] = useState("");
 
+  // Responsive items per page
+  const [itemsPerPage, setItemsPerPage] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 768 ? 4 : 15;
+    }
+    return 15;
+  });
+
+  // Update items per page on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      const newItemsPerPage = window.innerWidth < 768 ? 4 : 15;
+      if (newItemsPerPage !== itemsPerPage) {
+        setItemsPerPage(newItemsPerPage);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [itemsPerPage]);
+
   // ============================================================================
   // Computed Values
   // ============================================================================
@@ -140,7 +161,7 @@ export function Customers() {
   }, [customers, searchQuery, locationFilter]);
 
   // Pagination for customer list
-  // Use consistent pagination across all devices for simplicity
+  // Responsive: 4 items on mobile, 15 on desktop
   const {
     currentPage,
     totalPages,
@@ -154,7 +175,7 @@ export function Customers() {
     endIndex,
     totalItems,
   } = usePagination(filteredCustomers, {
-    itemsPerPage: 15, // Balanced for both mobile and desktop
+    itemsPerPage,
   });
 
   // ============================================================================
