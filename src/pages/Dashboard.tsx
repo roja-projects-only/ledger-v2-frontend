@@ -10,10 +10,12 @@
  */
 
 import { Container } from "@/components/layout/Container";
+import { StatCard } from "@/components/dashboard/StatCard";
 import { useDashboardData } from "@/lib/hooks/useDashboardData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getSemanticColor } from "@/lib/colors";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
+import { DollarSign, Droplet, TrendingUp, Users } from "lucide-react";
 
 // ============================================================================
 // Dashboard Page Component
@@ -61,11 +63,16 @@ export function Dashboard() {
               {/* Summary Stats Skeleton */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="bg-card border rounded-lg p-6">
-                    <Skeleton className="h-4 w-24 mb-4" />
-                    <Skeleton className="h-8 w-32 mb-2" />
-                    <Skeleton className="h-3 w-20" />
-                  </div>
+                  <StatCard
+                    key={i}
+                    label="Loading"
+                    value={0}
+                    icon={DollarSign}
+                    variant="revenue"
+                    trend={{ direction: "neutral", percentage: 0, label: "vs last month" }}
+                    sparklineData={[]}
+                    loading={true}
+                  />
                 ))}
               </div>
 
@@ -98,57 +105,61 @@ export function Dashboard() {
             <div className="space-y-6">
               {/* Summary Stats */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-card border rounded-lg p-6">
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    Total Revenue
-                  </p>
-                  <p className="text-3xl font-bold mt-2">
-                    ₱{data.thisMonth.revenue.toLocaleString()}
-                  </p>
-                  <p className="text-sm mt-1 text-emerald-500">
-                    {data.growth.revenue > 0 ? "↑" : "↓"}{" "}
-                    {Math.abs(data.growth.revenue).toFixed(1)}% vs last month
-                  </p>
-                </div>
+                {/* Total Revenue */}
+                <StatCard
+                  label="Total Revenue"
+                  value={formatCurrency(data.thisMonth.revenue)}
+                  icon={DollarSign}
+                  variant="revenue"
+                  trend={{
+                    direction: data.trends.revenue,
+                    percentage: data.growth.revenue,
+                    label: "vs last month",
+                  }}
+                  sparklineData={data.sparklineData}
+                />
 
-                <div className="bg-card border rounded-lg p-6">
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    Gallons Sold
-                  </p>
-                  <p className="text-3xl font-bold mt-2">
-                    {data.thisMonth.quantity.toLocaleString()}
-                  </p>
-                  <p className="text-sm mt-1 text-sky-500">
-                    {data.growth.quantity > 0 ? "↑" : "↓"}{" "}
-                    {Math.abs(data.growth.quantity).toFixed(1)}% vs last month
-                  </p>
-                </div>
+                {/* Gallons Sold */}
+                <StatCard
+                  label="Gallons Sold"
+                  value={data.thisMonth.quantity.toLocaleString()}
+                  icon={Droplet}
+                  variant="quantity"
+                  trend={{
+                    direction: data.trends.quantity,
+                    percentage: data.growth.quantity,
+                    label: "vs last month",
+                  }}
+                  sparklineData={data.sparklineData}
+                />
 
-                <div className="bg-card border rounded-lg p-6">
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    Avg Sale Value
-                  </p>
-                  <p className="text-3xl font-bold mt-2">
-                    ₱{data.thisMonth.averageSale.toFixed(2)}
-                  </p>
-                  <p className="text-sm mt-1 text-amber-500">
-                    {data.growth.averageSale > 0 ? "↑" : "↓"}{" "}
-                    {Math.abs(data.growth.averageSale).toFixed(1)}% vs last month
-                  </p>
-                </div>
+                {/* Avg Sale Value */}
+                <StatCard
+                  label="Avg Sale Value"
+                  value={formatCurrency(data.thisMonth.averageSale)}
+                  icon={TrendingUp}
+                  variant="average"
+                  trend={{
+                    direction: data.trends.averageSale,
+                    percentage: data.growth.averageSale,
+                    label: "vs last month",
+                  }}
+                  sparklineData={data.sparklineData}
+                />
 
-                <div className="bg-card border rounded-lg p-6">
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    Active Customers
-                  </p>
-                  <p className="text-3xl font-bold mt-2">
-                    {data.thisMonth.activeCustomers}
-                  </p>
-                  <p className="text-sm mt-1 text-purple-500">
-                    {data.growth.activeCustomers > 0 ? "↑" : "↓"}{" "}
-                    {Math.abs(data.growth.activeCustomers).toFixed(1)}% vs last month
-                  </p>
-                </div>
+                {/* Active Customers */}
+                <StatCard
+                  label="Active Customers"
+                  value={data.thisMonth.activeCustomers.toString()}
+                  icon={Users}
+                  variant="customers"
+                  trend={{
+                    direction: data.trends.activeCustomers,
+                    percentage: data.growth.activeCustomers,
+                    label: "vs last month",
+                  }}
+                  sparklineData={data.sparklineData}
+                />
               </div>
 
               {/* Placeholder for future components */}
