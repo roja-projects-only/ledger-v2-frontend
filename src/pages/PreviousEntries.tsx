@@ -20,6 +20,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationPrevious,
+  PaginationNext,
+} from "@/components/ui/pagination";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -66,6 +73,8 @@ export function PreviousEntries() {
   const [customerFilter, setCustomerFilter] = useState<string>("all");
   const [locationFilter, setLocationFilter] = useState<Location | "all">("all");
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; // Show 10 entries per page
 
   // Get selected date in ISO format (use local date, not UTC)
   const year = selectedDate.getFullYear();
@@ -95,6 +104,17 @@ export function PreviousEntries() {
 
     return filtered;
   }, [dateSales, customerFilter, locationFilter, customers]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredSales.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedSales = filteredSales.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters or date changes
+  useMemo(() => {
+    setCurrentPage(1);
+  }, [selectedDateISO, customerFilter, locationFilter]);
 
   const loading = customersLoading || salesLoading;
   const hasCustomers = Array.isArray(customers) && customers.length > 0;
@@ -319,7 +339,7 @@ export function PreviousEntries() {
                 ) : (
                   // Entries list - no fixed height, flows with page scroll
                   <>
-                    {filteredSales.map((sale) => {
+                    {paginatedSales.map((sale) => {
                       const customer = customers?.find((c) => c.id === sale.customerId);
                       return (
                         <div key={sale.id}>
@@ -381,10 +401,34 @@ export function PreviousEntries() {
                       );
                     })}
                     
-                    {/* Total count */}
-                    <p className="text-center text-xs text-muted-foreground pt-2">
-                      {filteredSales.length} {filteredSales.length === 1 ? "entry" : "entries"} total
-                    </p>
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="pt-4">
+                        <Pagination>
+                          <PaginationContent>
+                            <PaginationItem>
+                              <PaginationPrevious
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                              />
+                            </PaginationItem>
+                            
+                            <PaginationItem>
+                              <span className="text-sm text-muted-foreground px-4">
+                                Page {currentPage} of {totalPages} ({filteredSales.length} total)
+                              </span>
+                            </PaginationItem>
+                            
+                            <PaginationItem>
+                              <PaginationNext
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                              />
+                            </PaginationItem>
+                          </PaginationContent>
+                        </Pagination>
+                      </div>
+                    )}
                   </>
                 )}
               </div>

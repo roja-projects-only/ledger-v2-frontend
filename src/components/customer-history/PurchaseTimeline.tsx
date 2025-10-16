@@ -8,17 +8,22 @@
  *   - List of entry cards for that date
  *   - Day total
  * - Responsive design
- * - Infinite scroll pagination
+ * - Button pagination (instead of infinite scroll)
  */
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationPrevious,
+  PaginationNext,
+} from "@/components/ui/pagination";
 import { EntryCard } from "@/components/shared/EntryCard";
-import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 import type { Sale, Customer } from "@/lib/types";
 import { formatDate, formatCurrency } from "@/lib/utils";
-import { Calendar, Loader2 } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { usePricing } from "@/lib/hooks/usePricing";
 
 // ============================================================================
@@ -48,6 +53,8 @@ export function PurchaseTimeline({
   onDelete,
 }: PurchaseTimelineProps) {
   const { getEffectivePrice } = usePricing();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5; // Show 5 date groups per page
 
   // Group sales by date
   const dateGroups = useMemo(() => {
@@ -78,19 +85,16 @@ export function PurchaseTimeline({
     return result.sort((a, b) => b.date.localeCompare(a.date));
   }, [sales, customer, getEffectivePrice]);
 
-  // Infinite scroll for date groups (5 date groups per load on mobile, 10 on desktop)
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
-  const {
-    displayedItems: displayedGroups,
-    hasMore,
-    loadMore,
-    observerRef,
-    totalItems,
-    displayedCount,
-  } = useInfiniteScroll(dateGroups, { 
-    itemsPerPage: isMobile ? 5 : 10,
-    autoLoad: true 
-  });
+  // Pagination calculations
+  const totalPages = Math.ceil(dateGroups.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedGroups = dateGroups.slice(startIndex, endIndex);
+
+  // Reset to page 1 when customer changes
+  useMemo(() => {
+    setCurrentPage(1);
+  }, [customer.id]);
 
   if (dateGroups.length === 0) {
     return (
@@ -111,7 +115,7 @@ export function PurchaseTimeline({
   return (
     <div className="space-y-6">
       {/* Date groups */}
-      {displayedGroups.map((group) => (
+      {paginatedGroups.map((group) => (
         <Card key={group.date}>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -147,30 +151,33 @@ export function PurchaseTimeline({
         </Card>
       ))}
 
-      {/* Load more section */}
-      {hasMore && (
-        <div className="flex flex-col items-center gap-3">
-          {/* Intersection observer trigger */}
-          <div ref={observerRef} className="h-1" />
-          
-          {/* Load More button */}
-          <Button
-            onClick={loadMore}
-            variant="outline"
-            className="w-full max-w-md"
-            size="sm"
-          >
-            <Loader2 className="h-4 w-4 mr-2 animate-spin opacity-50" />
-            Load More Dates ({displayedCount} of {totalItems})
-          </Button>
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="pt-4">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+              
+              <PaginationItem>
+                <span className="text-sm text-muted-foreground px-4">
+                  Page {currentPage} of {totalPages} ({dateGroups.length} dates total)
+                </span>
+              </PaginationItem>
+              
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
-      )}
-
-      {/* All loaded message */}
-      {!hasMore && totalItems > (isMobile ? 5 : 10) && (
-        <p className="text-center text-sm text-muted-foreground">
-          Showing all {totalItems} dates
-        </p>
       )}
     </div>
   );

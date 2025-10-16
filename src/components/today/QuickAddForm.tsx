@@ -80,9 +80,13 @@ export function QuickAddForm({ customers, userId, onSave, loading = false }: Qui
   const [comboboxOpen, setComboboxOpen] = useState(false);
   const [errors, setErrors] = useState<{ customer?: string; containers?: string }>({});
 
-  // Auto-focus containers input on mount
+  // Auto-focus containers input on mount (desktop only, not mobile)
   useEffect(() => {
-    containersInputRef.current?.focus();
+    // Only auto-focus on desktop (screen width > 768px)
+    const isDesktop = window.matchMedia('(min-width: 768px)').matches;
+    if (isDesktop) {
+      containersInputRef.current?.focus();
+    }
   }, []);
 
   // Filtered customers based on location filter
