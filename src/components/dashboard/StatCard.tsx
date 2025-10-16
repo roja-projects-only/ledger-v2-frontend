@@ -89,8 +89,8 @@ export function StatCard({
 
   if (loading) {
     return (
-      <Card className={cn("h-full", className)}>
-        <CardHeader className="pb-2">
+      <Card className={cn("h-full gap-0", className)}>
+        <CardHeader className="pb-0">
           <div className="flex items-center gap-2">
             <Skeleton className="h-8 w-8 rounded-md" />
             <Skeleton className="h-4 w-28" />
@@ -106,8 +106,8 @@ export function StatCard({
   }
 
   return (
-    <Card className={cn("h-full", className)}>
-      <CardHeader className="pb-2">
+    <Card className={cn("h-full gap-0", className)}>
+      <CardHeader className="pb-0">
         <div className="flex items-center gap-2">
           {/* Icon Badge */}
           <div

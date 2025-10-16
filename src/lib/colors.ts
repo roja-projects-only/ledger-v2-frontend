@@ -109,16 +109,16 @@ export const KPI_VARIANTS: Record<
     iconBg: "bg-blue-500/15",
   },
   average: {
-    bg: "bg-purple-500/10",
-    border: "border-purple-500/30",
-    icon: "text-purple-400",
-    iconBg: "bg-purple-500/15",
-  },
-  customers: {
     bg: "bg-amber-500/10",
     border: "border-amber-500/30",
     icon: "text-amber-400",
     iconBg: "bg-amber-500/15",
+  },
+  customers: {
+    bg: "bg-purple-500/10",
+    border: "border-purple-500/30",
+    icon: "text-purple-400",
+    iconBg: "bg-purple-500/15",
   },
 };
 
