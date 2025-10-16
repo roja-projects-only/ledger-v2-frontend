@@ -2,8 +2,9 @@
  * useSwipeGesture - Custom hook for detecting swipe gestures
  * 
  * Optimized for mobile sidebar opening:
- * - Only detects right swipe from left edge (0-50px)
- * - Prevents Safari back gesture conflicts
+ * - Detects right swipe from anywhere on screen
+ * - Stricter horizontal detection to avoid conflicts
+ * - Prevents Safari back gesture conflicts on left edge
  * - Handles touch events properly on iOS/Android
  * - Ignores horizontal scrolling elements
  */
@@ -12,15 +13,15 @@ import { useEffect, useRef, useCallback } from 'react';
 
 interface SwipeGestureOptions {
   onSwipeRight?: () => void;
-  edgeThreshold?: number; // Distance from left edge to trigger (default: 50px)
-  swipeThreshold?: number; // Minimum swipe distance (default: 80px)
+  edgeThreshold?: number; // Distance from left edge for special handling (default: 50px)
+  swipeThreshold?: number; // Minimum swipe distance (default: 100px)
   enabled?: boolean;
 }
 
 export function useSwipeGesture({
   onSwipeRight,
   edgeThreshold = 50,
-  swipeThreshold = 80,
+  swipeThreshold = 100,
   enabled = true,
 }: SwipeGestureOptions) {
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
@@ -32,11 +33,6 @@ export function useSwipeGesture({
     const touch = e.touches[0];
     if (!touch) return;
 
-    // Only detect swipes starting from left edge
-    if (touch.clientX > edgeThreshold) {
-      return;
-    }
-
     // Check if target is horizontally scrollable
     const target = e.target as HTMLElement;
     const scrollableParent = findScrollableParent(target);
@@ -44,13 +40,14 @@ export function useSwipeGesture({
       return;
     }
 
+    // Accept swipes from anywhere on screen
     touchStartRef.current = {
       x: touch.clientX,
       y: touch.clientY,
       time: Date.now(),
     };
     isSwipingRef.current = false;
-  }, [enabled, onSwipeRight, edgeThreshold]);
+  }, [enabled, onSwipeRight]);
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
     if (!enabled || !onSwipeRight || !touchStartRef.current) return;
@@ -61,12 +58,12 @@ export function useSwipeGesture({
     const deltaX = touch.clientX - touchStartRef.current.x;
     const deltaY = touch.clientY - touchStartRef.current.y;
     
-    // Detect if this is a horizontal swipe (not vertical scroll)
-    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+    // Detect if this is a horizontal swipe (stricter ratio to avoid conflicts)
+    if (Math.abs(deltaX) > Math.abs(deltaY) * 2 && Math.abs(deltaX) > 15) {
       isSwipingRef.current = true;
       
-      // Prevent default only for horizontal swipes from edge
-      // This prevents Safari's back gesture
+      // Prevent default only for horizontal right swipes from left edge
+      // This prevents Safari's back gesture on iOS
       if (touchStartRef.current.x < edgeThreshold && deltaX > 0) {
         e.preventDefault();
       }
@@ -87,25 +84,26 @@ export function useSwipeGesture({
     const velocity = Math.abs(deltaX) / deltaTime;
 
     // Only trigger if:
-    // 1. Started from left edge area
-    // 2. Swipe is primarily horizontal (not vertical) - stricter ratio
-    // 3. Swipe distance meets threshold
-    // 4. Swipe direction is right
-    // 5. Gesture completed quickly (< 400ms) with good velocity
-    // 6. Avoid very edge (< 20px) to prevent Android nav conflicts
-    const isHorizontal = Math.abs(deltaX) > Math.abs(deltaY) * 1.5; // Stricter horizontal requirement
-    const isFromEdge = touchStartRef.current.x < edgeThreshold && touchStartRef.current.x > 20;
+    // 1. Swipe is primarily horizontal (stricter 2:1 ratio)
+    // 2. Swipe distance meets threshold
+    // 3. Swipe direction is right (left to right)
+    // 4. Gesture completed quickly (< 500ms)
+    // 5. Has minimum velocity OR meets longer distance for slower swipes
+    // 6. If from very left edge (< 20px), avoid to prevent Android nav conflicts
+    const isHorizontal = Math.abs(deltaX) > Math.abs(deltaY) * 2; // Strict 2:1 horizontal ratio
     const isRightSwipe = deltaX > swipeThreshold;
-    const isQuickEnough = deltaTime < 400;
-    const hasGoodVelocity = velocity > 0.3; // Minimum velocity (px/ms)
+    const isQuickEnough = deltaTime < 500;
+    const hasGoodVelocity = velocity > 0.25; // Minimum velocity (px/ms)
+    const isLongSwipe = deltaX > swipeThreshold * 1.5; // Allow slower but longer swipes
+    const notFromVeryEdge = touchStartRef.current.x > 20; // Avoid Android nav gesture
 
-    if (isFromEdge && isHorizontal && isRightSwipe && isQuickEnough && hasGoodVelocity) {
+    if (isHorizontal && isRightSwipe && isQuickEnough && (hasGoodVelocity || isLongSwipe) && notFromVeryEdge) {
       onSwipeRight();
     }
 
     touchStartRef.current = null;
     isSwipingRef.current = false;
-  }, [enabled, onSwipeRight, edgeThreshold, swipeThreshold]);
+  }, [enabled, onSwipeRight, swipeThreshold]);
 
   useEffect(() => {
     if (!enabled) return;
