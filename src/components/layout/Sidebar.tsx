@@ -18,7 +18,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { KeyboardShortcutsDialog } from "@/components/shared/KeyboardShortcutsDialog";
 import { useAuth } from "@/lib/hooks/useAuth";
+import { useKeyboardShortcut } from "@/lib/hooks/useKeyboardShortcut";
 import { cn } from "@/lib/utils";
 import {
   Home,
@@ -31,7 +33,9 @@ import {
   LogOut,
   ChevronRight,
   BarChart3,
+  Keyboard,
 } from "lucide-react";
+import { useState } from "react";
 
 // ============================================================================
 // Types
@@ -66,11 +70,20 @@ export function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
   // Filter navigation links based on user role
   const visibleLinks = NAV_LINKS.filter(
     (link) => !link.adminOnly || user?.role === "ADMIN"
   );
+
+  // Keyboard shortcut to show help
+  useKeyboardShortcut({
+    key: '?',
+    shift: true,
+    handler: () => setShowShortcuts(true),
+    description: 'Show shortcuts',
+  });
 
   const handleLogout = async () => {
     await logout();
@@ -121,7 +134,18 @@ export function Sidebar() {
       </nav>
 
       {/* User Profile Section */}
-      <div className="border-t p-4 flex-shrink-0">
+      <div className="border-t p-4 flex-shrink-0 space-y-2">
+        {/* Keyboard Shortcuts Button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowShortcuts(true)}
+          className="w-full justify-start"
+        >
+          <Keyboard className="mr-2 h-4 w-4" />
+          Keyboard Shortcuts
+        </Button>
+
         {user ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -155,6 +179,12 @@ export function Sidebar() {
           </div>
         )}
       </div>
+
+      {/* Keyboard Shortcuts Dialog */}
+      <KeyboardShortcutsDialog
+        open={showShortcuts}
+        onOpenChange={setShowShortcuts}
+      />
     </aside>
   );
 }

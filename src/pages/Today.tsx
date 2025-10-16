@@ -19,6 +19,7 @@ import { useSales } from "@/lib/hooks/useSales";
 import { useCustomers } from "@/lib/hooks/useCustomers";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useKPIs } from "@/lib/hooks/useKPIs";
+import { useKeyboardShortcut } from "@/lib/hooks/useKeyboardShortcut";
 import { getSemanticColor } from "@/lib/colors";
 import { cn, formatCurrency, formatDate, getTodayISO } from "@/lib/utils";
 import type { KPI } from "@/lib/types";
@@ -54,6 +55,30 @@ export function Today() {
   const loading = customersLoading || salesLoading;
   const apiError = customersError || salesError;
   const errorTone = getSemanticColor("error");
+
+  // Keyboard shortcuts
+  useKeyboardShortcut([
+    {
+      key: 'k',
+      ctrl: true,
+      shift: true,
+      handler: () => {
+        // Focus first input in form (customer search)
+        const customerSearch = document.querySelector<HTMLInputElement>('[role="combobox"]');
+        customerSearch?.click();
+      },
+      description: 'New entry',
+    },
+    {
+      key: '/',
+      handler: () => {
+        // Focus customer search in form
+        const customerSearch = document.querySelector<HTMLInputElement>('[role="combobox"]');
+        customerSearch?.click();
+      },
+      description: 'Focus search',
+    },
+  ]);
 
   const formatKpiValue = (kpi: KPI) => {
     if (typeof kpi.value !== "number") {

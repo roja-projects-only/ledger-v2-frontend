@@ -41,6 +41,7 @@ import { AddEntryModal } from "@/components/previous/AddEntryModal";
 import { useSales } from "@/lib/hooks/useSales";
 import { useCustomers } from "@/lib/hooks/useCustomers";
 import { useAuth } from "@/lib/hooks/useAuth";
+import { useKeyboardShortcut } from "@/lib/hooks/useKeyboardShortcut";
 import type { Location } from "@/lib/types";
 import { LOCATIONS } from "@/lib/constants";
 import { getLocationColor, getSemanticColor } from "@/lib/colors";
@@ -119,6 +120,37 @@ export function PreviousEntries() {
   useMemo(() => {
     setCurrentPage(1);
   }, [selectedDateISO, customerFilter, locationFilter]);
+
+  // Keyboard shortcuts
+  useKeyboardShortcut([
+    {
+      key: 'k',
+      ctrl: true,
+      shift: true,
+      handler: () => {
+        setAddModalOpen(true);
+      },
+      description: 'New entry',
+    },
+    {
+      key: 'Escape',
+      handler: () => {
+        if (addModalOpen) {
+          setAddModalOpen(false);
+        }
+      },
+      description: 'Close modal',
+    },
+    {
+      key: '/',
+      handler: () => {
+        // Focus customer filter dropdown
+        const filterSelect = document.querySelector<HTMLButtonElement>('[role="combobox"]');
+        filterSelect?.click();
+      },
+      description: 'Focus search',
+    },
+  ]);
 
   const loading = customersLoading || salesLoading;
   const hasCustomers = Array.isArray(customers) && customers.length > 0;

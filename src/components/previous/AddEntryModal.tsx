@@ -50,6 +50,7 @@ import { notify } from "@/lib/notifications";
 import { cn, formatCurrency, formatDate, formatLocation } from "@/lib/utils";
 import { useSettings } from "@/lib/contexts/SettingsContext";
 import { usePricing } from "@/lib/hooks/usePricing";
+import { useKeyboardShortcut } from "@/lib/hooks/useKeyboardShortcut";
 import type { Customer, Sale, Location } from "@/lib/types";
 import { LOCATIONS } from "@/lib/constants";
 
@@ -120,6 +121,22 @@ export function AddEntryModal({
       }, 100);
     }
   }, [open]);
+
+  // Keyboard shortcuts
+  useKeyboardShortcut({
+    key: 's',
+    ctrl: true,
+    handler: () => {
+      if (open) {
+        // Programmatically trigger form submit
+        const form = document.querySelector<HTMLFormElement>('form');
+        if (form) {
+          form.requestSubmit();
+        }
+      }
+    },
+    description: 'Save entry',
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
