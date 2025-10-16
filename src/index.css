@@ -154,4 +154,42 @@
     scrollbar-width: thin;
     scrollbar-color: oklch(0.420 0.016 256.85) oklch(0.235 0.015 256.85); /* thumb track */
   }
+
+  /* Custom Number Input Arrows - Dark Theme */
+  /* Remove default styling and use filter to invert colors for dark theme */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    opacity: 1;
+    cursor: pointer;
+    filter: invert(1) hue-rotate(180deg);
+  }
+
+  input[type="number"]::-webkit-inner-spin-button:hover {
+    filter: invert(1) hue-rotate(180deg) brightness(1.2);
+  }
+
+  /* Firefox - hide arrows for consistency */
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+}
+
+@layer components {
+  /* Sidebar Navigation Link Spacing Fix */
+  /* Prevent highlight overlap by ensuring proper spacing */
+  aside nav a {
+    display: block;
+    margin-bottom: 0.25rem; /* 4px gap between links */
+  }
+
+  aside nav a:last-child {
+    margin-bottom: 0; /* No margin on last item */
+  }
+
+  /* Sidebar active link refinement - prevent background bleed */
+  aside nav button[data-variant="secondary"] {
+    position: relative;
+    isolation: isolate;
+  }
 }

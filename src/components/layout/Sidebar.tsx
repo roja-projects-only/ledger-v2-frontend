@@ -88,31 +88,34 @@ export function Sidebar() {
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 space-y-1 p-4 overflow-y-auto" aria-label="Main navigation">
-        {visibleLinks.map((link) => {
-          const isActive = location.pathname === link.path;
-          const Icon = link.icon;
+      <nav className="flex-1 p-4 overflow-y-auto" aria-label="Main navigation">
+        <div className="space-y-1">
+          {visibleLinks.map((link) => {
+            const isActive = location.pathname === link.path;
+            const Icon = link.icon;
 
-          return (
-            <Link
-              key={link.path}
-              to={link.path}
-              aria-current={isActive ? "page" : undefined}
-            >
-              <Button
-                variant={isActive ? "secondary" : "ghost"}
-                className={cn(
-                  "w-full justify-start gap-3 h-12 text-base",
-                  isActive && "bg-secondary font-medium"
-                )}
+            return (
+              <Link
+                key={link.path}
+                to={link.path}
+                aria-current={isActive ? "page" : undefined}
+                className="block"
               >
-                <Icon className="h-5 w-5" />
-                {link.label}
-                {isActive && <ChevronRight className="ml-auto h-5 w-5" />}
-              </Button>
-            </Link>
-          );
-        })}
+                <Button
+                  variant={isActive ? "secondary" : "ghost"}
+                  className={cn(
+                    "w-full justify-start gap-3 h-12 text-base",
+                    isActive && "bg-secondary font-medium"
+                  )}
+                >
+                  <Icon className="h-5 w-5" />
+                  {link.label}
+                  {isActive && <ChevronRight className="ml-auto h-5 w-5" />}
+                </Button>
+              </Link>
+            );
+          })}
+        </div>
       </nav>
 
       {/* User Profile Section */}
