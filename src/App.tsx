@@ -12,6 +12,7 @@ import { MobileHeader } from "@/components/layout/MobileHeader";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { Navbar } from "@/components/layout/Navbar";
 import { Login } from "@/pages/Login";
+import { Dashboard } from "@/pages/Dashboard";
 import { Today } from "@/pages/Today";
 import { PreviousEntries } from "@/pages/PreviousEntries";
 import { DateRangeAnalysis } from "@/pages/DateRangeAnalysis";
@@ -83,8 +84,11 @@ function AppLayout() {
 
         <main className="flex-1 overflow-x-hidden overflow-y-auto min-w-0">
           <Routes>
+            {/* Dashboard Page - Home/Analytics */}
+            <Route path="/" element={<Dashboard />} />
+            
             {/* Today Page - Primary data entry */}
-            <Route path="/" element={<Today />} />
+            <Route path="/today" element={<Today />} />
             
             {/* Settings Page - Admin Only */}
             <Route 

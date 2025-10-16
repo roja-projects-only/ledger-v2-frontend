@@ -30,6 +30,7 @@ import {
   User,
   LogOut,
   ChevronRight,
+  BarChart3,
 } from "lucide-react";
 
 // ============================================================================
@@ -48,7 +49,8 @@ interface NavLink {
 // ============================================================================
 
 const NAV_LINKS: NavLink[] = [
-  { label: "Today", path: "/", icon: Home },
+  { label: "Dashboard", path: "/", icon: BarChart3 },
+  { label: "Today", path: "/today", icon: Home },
   { label: "Previous", path: "/previous", icon: Calendar },
   { label: "Analysis", path: "/analysis", icon: TrendingUp },
   { label: "Customers", path: "/customers", icon: Users },
