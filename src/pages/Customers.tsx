@@ -10,6 +10,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { Container } from "@/components/layout/Container";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -31,16 +32,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import {
   Table,
   TableBody,
@@ -81,7 +72,10 @@ export function Customers() {
     customers,
     addCustomer,
     updateCustomer,
-    deleteCustomer,
+    requestDeleteCustomer,
+    confirmDeleteCustomer,
+    cancelDeleteCustomer,
+    deleteConfirmation,
     loading: customersLoading,
     error: customersError,
   } = useCustomers();
@@ -99,9 +93,7 @@ export function Customers() {
 
   // Dialog state
   const [customerDialogOpen, setCustomerDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
-  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
 
   // Customer form state
   const [customerName, setCustomerName] = useState("");
@@ -203,8 +195,7 @@ export function Customers() {
   };
 
   const handleDeleteCustomer = (customer: Customer) => {
-    setCustomerToDelete(customer);
-    setDeleteDialogOpen(true);
+    requestDeleteCustomer(customer.id, customer.name);
   };
 
   const handleSaveCustomer = async () => {
@@ -258,25 +249,6 @@ export function Customers() {
     setCustomerCustomPrice("");
     setCustomerNotes("");
     setEditingCustomer(null);
-  };
-
-  const confirmDeleteCustomer = async () => {
-    if (!customerToDelete) return;
-
-    // Check if customer has sales
-    const customerSales = customerStats[customerToDelete.id];
-    if (customerSales && customerSales.entries > 0) {
-      notify.error(
-        `Cannot delete customer with ${customerSales.entries} sale entries. Delete sales first.`
-      );
-      setDeleteDialogOpen(false);
-      setCustomerToDelete(null);
-      return;
-    }
-
-    await deleteCustomer(customerToDelete.id);
-    setDeleteDialogOpen(false);
-    setCustomerToDelete(null);
   };
 
   // ============================================================================
@@ -797,26 +769,20 @@ export function Customers() {
       </Dialog>
 
       {/* Delete Customer Confirmation */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Customer</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete <strong>{customerToDelete?.name}</strong>?
-              {customerToDelete && customerStats[customerToDelete.id]?.entries > 0 && (
-                <span className="block mt-2 text-red-600">
-                  This customer has {customerStats[customerToDelete.id].entries} sale entries.
-                  You must delete those sales first.
-                </span>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDeleteCustomer}>Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={deleteConfirmation.open}
+        onOpenChange={(open) => !open && cancelDeleteCustomer()}
+        title="Delete Customer"
+        description={
+          deleteConfirmation.salesCount > 0
+            ? `Cannot delete ${deleteConfirmation.customerName}.\n\nThis customer has ${deleteConfirmation.salesCount} sale(s). Please delete all sales first.`
+            : `Are you sure you want to delete ${deleteConfirmation.customerName}?\n\nThis action cannot be undone.`
+        }
+        confirmText={deleteConfirmation.salesCount > 0 ? 'OK' : 'Delete'}
+        cancelText="Cancel"
+        onConfirm={confirmDeleteCustomer}
+        variant="destructive"
+      />
     </div>
   );
 }

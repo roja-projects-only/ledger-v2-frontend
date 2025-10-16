@@ -5,7 +5,7 @@
  * Provides the same interface as before, but with optimized caching.
  */
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { salesApi, handleApiError } from "@/lib/api";
 import type { Sale } from "@/lib/types";
 import { getTodayISO } from "@/lib/utils";
@@ -31,6 +31,17 @@ export function useSales() {
 
   // Convert React Query error to string
   const error = queryError ? (queryError as Error).message : null;
+
+  // Delete confirmation state
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    open: boolean;
+    saleId: string | null;
+    saleDetails: { customer: string; amount: string; date: string } | null;
+  }>({
+    open: false,
+    saleId: null,
+    saleDetails: null,
+  });
 
   /**
    * Get all sales sorted by date (most recent first)
@@ -191,6 +202,37 @@ export function useSales() {
     }
   }, []);
 
+  /**
+   * Request delete sale (show confirmation dialog)
+   */
+  const requestDeleteSale = useCallback(
+    (saleId: string, customer: string, amount: string, date: string) => {
+      setDeleteConfirmation({
+        open: true,
+        saleId,
+        saleDetails: { customer, amount, date },
+      });
+    },
+    []
+  );
+
+  /**
+   * Confirm delete sale (actually delete)
+   */
+  const confirmDeleteSale = useCallback(async () => {
+    if (!deleteConfirmation.saleId) return;
+    
+    await deleteSale(deleteConfirmation.saleId);
+    setDeleteConfirmation({ open: false, saleId: null, saleDetails: null });
+  }, [deleteConfirmation.saleId, deleteSale]);
+
+  /**
+   * Cancel delete sale (close dialog)
+   */
+  const cancelDeleteSale = useCallback(() => {
+    setDeleteConfirmation({ open: false, saleId: null, saleDetails: null });
+  }, []);
+
   return {
     // Data
     sales,
@@ -209,6 +251,12 @@ export function useSales() {
     fetchTodaySales,
     fetchSalesByDate,
     fetchCustomerHistory,
+    
+    // Confirmation Methods
+    requestDeleteSale,
+    confirmDeleteSale,
+    cancelDeleteSale,
+    deleteConfirmation,
     
     // States
     loading,

@@ -10,6 +10,7 @@
 
 import { Container } from "@/components/layout/Container";
 import { KPICard } from "@/components/shared/KPICard";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { QuickAddForm } from "@/components/today/QuickAddForm";
 import { TodayEntriesList } from "@/components/today/TodayEntriesList";
@@ -36,7 +37,10 @@ export function Today() {
   const {
     addSale,
     getTodaySales,
-    deleteSale,
+    requestDeleteSale,
+    confirmDeleteSale,
+    cancelDeleteSale,
+    deleteConfirmation,
     loading: salesLoading,
     error: salesError,
   } = useSales();
@@ -118,7 +122,15 @@ export function Today() {
                 <TodayEntriesList
                   sales={todaySales}
                   customers={customers || []}
-                  onDelete={(sale) => deleteSale(sale.id)}
+                  onDelete={(sale) => {
+                    const customer = customers?.find(c => c.id === sale.customerId);
+                    requestDeleteSale(
+                      sale.id,
+                      customer?.name || 'Unknown',
+                      `₱${(sale.quantity * sale.unitPrice).toFixed(2)}`,
+                      new Date(sale.date).toLocaleDateString()
+                    );
+                  }}
                   loading={loading}
                 />
               </CardContent>
@@ -142,6 +154,22 @@ export function Today() {
             loading={loading}
           />
         </div>
+
+        {/* Delete Confirmation Dialog */}
+        <ConfirmDialog
+          open={deleteConfirmation.open}
+          onOpenChange={(open) => !open && cancelDeleteSale()}
+          title="Delete Sale"
+          description={
+            deleteConfirmation.saleDetails
+              ? `Are you sure you want to delete this sale?\n\nCustomer: ${deleteConfirmation.saleDetails.customer}\nAmount: ${deleteConfirmation.saleDetails.amount}\nDate: ${deleteConfirmation.saleDetails.date}`
+              : 'Are you sure you want to delete this sale?'
+          }
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={confirmDeleteSale}
+          variant="destructive"
+        />
       </Container>
     </div>
   );

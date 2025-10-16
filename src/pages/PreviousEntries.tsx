@@ -11,6 +11,7 @@
 
 import { useState, useMemo } from "react";
 import { Container } from "@/components/layout/Container";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -59,7 +60,10 @@ export function PreviousEntries() {
   const {
     addSale,
     getSalesByDate,
-    deleteSale,
+    requestDeleteSale,
+    confirmDeleteSale,
+    cancelDeleteSale,
+    deleteConfirmation,
     loading: salesLoading,
     error: salesError,
   } = useSales();
@@ -367,7 +371,15 @@ export function PreviousEntries() {
                                 )}
                               </div>
                               <button
-                                onClick={() => deleteSale(sale.id)}
+                                onClick={() => {
+                                  const customer = customers?.find(c => c.id === sale.customerId);
+                                  requestDeleteSale(
+                                    sale.id,
+                                    customer?.name || 'Unknown',
+                                    `₱${(sale.quantity * sale.unitPrice).toFixed(2)}`,
+                                    new Date(sale.date).toLocaleDateString()
+                                  );
+                                }}
                                 className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
                                 aria-label="Delete entry"
                               >
@@ -445,6 +457,22 @@ export function PreviousEntries() {
         open={addModalOpen}
         onClose={() => setAddModalOpen(false)}
         onSave={(saleData) => addSale(saleData)}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={deleteConfirmation.open}
+        onOpenChange={(open) => !open && cancelDeleteSale()}
+        title="Delete Sale"
+        description={
+          deleteConfirmation.saleDetails
+            ? `Are you sure you want to delete this sale?\n\nCustomer: ${deleteConfirmation.saleDetails.customer}\nAmount: ${deleteConfirmation.saleDetails.amount}\nDate: ${deleteConfirmation.saleDetails.date}`
+            : 'Are you sure you want to delete this sale?'
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDeleteSale}
+        variant="destructive"
       />
     </>
   );

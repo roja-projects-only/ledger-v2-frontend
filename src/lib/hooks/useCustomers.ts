@@ -5,7 +5,7 @@
  * Provides the same interface as before, but with optimized caching.
  */
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { customersApi, handleApiError } from "@/lib/api";
 import type { Customer, Location } from "@/lib/types";
 import { 
@@ -14,6 +14,7 @@ import {
   useUpdateCustomerMutation, 
   useDeleteCustomerMutation 
 } from "@/lib/queries/customersQueries";
+import { useSales } from "./useSales";
 
 // ============================================================================
 // Hook
@@ -28,8 +29,24 @@ export function useCustomers() {
   const updateCustomerMutation = useUpdateCustomerMutation();
   const deleteCustomerMutation = useDeleteCustomerMutation();
 
+  // Get sales data for checking if customer has sales
+  const { sales } = useSales();
+
   // Convert React Query error to string
   const error = queryError ? (queryError as Error).message : null;
+
+  // Delete confirmation state
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    open: boolean;
+    customerId: string | null;
+    customerName: string | null;
+    salesCount: number;
+  }>({
+    open: false,
+    customerId: null,
+    customerName: null,
+    salesCount: 0,
+  });
 
   /**
    * Get customer by ID
@@ -148,6 +165,46 @@ export function useCustomers() {
     }
   }, []);
 
+  /**
+   * Request delete customer (show confirmation dialog)
+   */
+  const requestDeleteCustomer = useCallback(
+    (customerId: string, customerName: string) => {
+      const salesCount = sales.filter((s) => s.customerId === customerId).length;
+      
+      setDeleteConfirmation({
+        open: true,
+        customerId,
+        customerName,
+        salesCount,
+      });
+    },
+    [sales]
+  );
+
+  /**
+   * Confirm delete customer (actually delete)
+   */
+  const confirmDeleteCustomer = useCallback(async () => {
+    if (!deleteConfirmation.customerId) return;
+    
+    // Block if customer has sales
+    if (deleteConfirmation.salesCount > 0) {
+      setDeleteConfirmation({ open: false, customerId: null, customerName: null, salesCount: 0 });
+      return;
+    }
+    
+    await deleteCustomer(deleteConfirmation.customerId);
+    setDeleteConfirmation({ open: false, customerId: null, customerName: null, salesCount: 0 });
+  }, [deleteConfirmation, deleteCustomer]);
+
+  /**
+   * Cancel delete customer (close dialog)
+   */
+  const cancelDeleteCustomer = useCallback(() => {
+    setDeleteConfirmation({ open: false, customerId: null, customerName: null, salesCount: 0 });
+  }, []);
+
   return {
     // Data
     customers,
@@ -160,6 +217,12 @@ export function useCustomers() {
     getCustomersByLocation,
     searchCustomers,
     getCustomerStats,
+    
+    // Confirmation Methods
+    requestDeleteCustomer,
+    confirmDeleteCustomer,
+    cancelDeleteCustomer,
+    deleteConfirmation,
     
     // States
     loading,
