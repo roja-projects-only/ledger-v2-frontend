@@ -13,6 +13,7 @@ import { Container } from "@/components/layout/Container";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Command,
   CommandEmpty,
@@ -26,7 +27,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Check, ChevronsUpDown, User } from "lucide-react";
+import { Check, ChevronsUpDown, User, CalendarIcon } from "lucide-react";
 import { KPICard } from "@/components/shared/KPICard";
 import { LocationBadge } from "@/components/shared/LocationBadge";
 import { PurchaseTimeline } from "@/components/customer-history/PurchaseTimeline";
@@ -53,16 +54,49 @@ export function CustomerHistory() {
 
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
+  const [dateRangeOpen, setDateRangeOpen] = useState(false);
+
+  // Date range state (default: last 30 days)
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>(() => {
+    const today = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    return { from: thirtyDaysAgo, to: today };
+  });
+  const [showAllTime, setShowAllTime] = useState(false);
 
   // Get selected customer
   const selectedCustomer = customers?.find((c) => c.id === selectedCustomerId);
 
-  // Get sales for selected customer
-  const customerSales = selectedCustomerId
+  // Get all sales for selected customer
+  const allCustomerSales = selectedCustomerId
     ? getSalesByCustomer(selectedCustomerId)
     : [];
 
-  // Calculate customer KPIs
+  // Filter sales by date range
+  const customerSales = useMemo(() => {
+    if (showAllTime) return allCustomerSales;
+
+    return allCustomerSales.filter((sale) => {
+      const saleDate = new Date(sale.date);
+      return saleDate >= dateRange.from && saleDate <= dateRange.to;
+    });
+  }, [allCustomerSales, dateRange, showAllTime]);
+
+  // Date range presets
+  const setDateRangePreset = (days: number) => {
+    const today = new Date();
+    const pastDate = new Date();
+    pastDate.setDate(today.getDate() - days);
+    setDateRange({ from: pastDate, to: today });
+    setShowAllTime(false);
+  };
+
+  const handleAllTime = () => {
+    setShowAllTime(true);
+  };
+
+  // Calculate customer KPIs based on filtered sales
   const { getCustomerKPIs } = useKPIs(customerSales, customers || []);
   const customerKPIs = useMemo(
     () => (selectedCustomerId ? getCustomerKPIs(selectedCustomerId) : []),
@@ -162,6 +196,117 @@ export function CustomerHistory() {
               </Popover>
             </CardContent>
           </Card>
+
+          {/* Date Range Filter */}
+          {selectedCustomer && (
+            <Card className="overflow-hidden">
+              <CardHeader>
+                <CardTitle className="text-lg">Date Range</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {/* Quick Presets */}
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant={!showAllTime && dateRange.from.getTime() === new Date(new Date().setDate(new Date().getDate() - 7)).setHours(0, 0, 0, 0) ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setDateRangePreset(7)}
+                      className="flex-1 min-w-[80px]"
+                    >
+                      Last 7 days
+                    </Button>
+                    <Button
+                      variant={!showAllTime && dateRange.from.getTime() === new Date(new Date().setDate(new Date().getDate() - 30)).setHours(0, 0, 0, 0) ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setDateRangePreset(30)}
+                      className="flex-1 min-w-[80px]"
+                    >
+                      Last 30 days
+                    </Button>
+                    <Button
+                      variant={!showAllTime && dateRange.from.getTime() === new Date(new Date().setDate(new Date().getDate() - 90)).setHours(0, 0, 0, 0) ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setDateRangePreset(90)}
+                      className="flex-1 min-w-[80px]"
+                    >
+                      Last 90 days
+                    </Button>
+                    <Button
+                      variant={showAllTime ? "default" : "outline"}
+                      size="sm"
+                      onClick={handleAllTime}
+                      className="flex-1 min-w-[80px]"
+                    >
+                      All Time
+                    </Button>
+                  </div>
+
+                  {/* Custom Date Range Picker */}
+                  {!showAllTime && (
+                    <Popover open={dateRangeOpen} onOpenChange={setDateRangeOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-left font-normal"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {dateRange.from.toLocaleDateString()} - {dateRange.to.toLocaleDateString()}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <div className="flex flex-col sm:flex-row gap-2 p-3">
+                          <div className="space-y-2">
+                            <p className="text-sm font-medium">From</p>
+                            <Calendar
+                              mode="single"
+                              selected={dateRange.from}
+                              onSelect={(date) => date && setDateRange({ ...dateRange, from: date })}
+                              disabled={(date) => date > dateRange.to || date > new Date()}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <p className="text-sm font-medium">To</p>
+                            <Calendar
+                              mode="single"
+                              selected={dateRange.to}
+                              onSelect={(date) => date && setDateRange({ ...dateRange, to: date })}
+                              disabled={(date) => date < dateRange.from || date > new Date()}
+                            />
+                          </div>
+                        </div>
+                        <div className="border-t p-3 flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setDateRangeOpen(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => setDateRangeOpen(false)}
+                          >
+                            Apply
+                          </Button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  )}
+
+                  {/* Stats */}
+                  <div className="text-sm text-muted-foreground">
+                    {showAllTime ? (
+                      <span>Showing all {allCustomerSales.length} purchases</span>
+                    ) : (
+                      <span>
+                        Showing {customerSales.length} of {allCustomerSales.length} purchases
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Customer Summary (only show if customer selected) */}
           {selectedCustomer && (
