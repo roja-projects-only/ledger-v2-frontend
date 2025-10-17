@@ -33,6 +33,7 @@ import { PurchaseTimeline } from "@/components/customer-history/PurchaseTimeline
 import { useSales } from "@/lib/hooks/useSales";
 import { useCustomers } from "@/lib/hooks/useCustomers";
 import { useKPIs } from "@/lib/hooks/useKPIs";
+import { usePricing } from "@/lib/hooks/usePricing";
 import type { KPI } from "@/lib/types";
 import { formatCurrency, cn } from "@/lib/utils";
 
@@ -50,6 +51,7 @@ export function CustomerHistory() {
     deleteConfirmation,
     loading: salesLoading 
   } = useSales();
+  const { getEffectivePrice } = usePricing();
 
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
@@ -331,10 +333,12 @@ export function CustomerHistory() {
                   sales={customerSales}
                   customer={selectedCustomer}
                   onDelete={(sale) => {
+                    const effectivePrice = selectedCustomer ? getEffectivePrice(selectedCustomer) : sale.unitPrice;
+                    const recalculatedTotal = sale.quantity * effectivePrice;
                     requestDeleteSale(
                       sale.id,
                       selectedCustomer?.name || 'Unknown',
-                      `₱${(sale.quantity * sale.unitPrice).toFixed(2)}`,
+                      `₱${recalculatedTotal.toFixed(2)}`,
                       new Date(sale.date).toLocaleDateString()
                     );
                   }}

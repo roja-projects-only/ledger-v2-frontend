@@ -83,8 +83,9 @@ export function useDashboardData() {
       return null;
     }
 
-    // Get custom pricing setting
+    // Get custom pricing setting and global unit price
     const customPricingEnabled = settings.enableCustomPricing ?? true;
+    const globalUnitPrice = settings.unitPrice || 0;
 
     // Calculate date ranges
     const now = new Date();
@@ -98,7 +99,8 @@ export function useDashboardData() {
       customers,
       startOfThisMonth,
       now,
-      customPricingEnabled
+      customPricingEnabled,
+      globalUnitPrice
     );
 
     const lastMonth = calculatePeriodMetrics(
@@ -106,7 +108,8 @@ export function useDashboardData() {
       customers,
       startOfLastMonth,
       endOfLastMonth,
-      customPricingEnabled
+      customPricingEnabled,
+      globalUnitPrice
     );
 
     // Calculate growth percentages
@@ -134,18 +137,18 @@ export function useDashboardData() {
     const activeCustomersTrend = getTrendDirection(activeCustomersGrowth);
 
     // Get time series data
-    const sparklineData = getLast7DaysData(sales, customers, customPricingEnabled);
-    const chartData7D = formatChartData(getLast7DaysData(sales, customers, customPricingEnabled), "7D");
-    const chartData30D = formatChartData(getLast30DaysData(sales, customers, customPricingEnabled), "30D");
-    const chartData90D = formatChartData(getLast90DaysData(sales, customers, customPricingEnabled), "90D");
-    const chartData1Y = formatChartData(getLastYearData(sales, customers, customPricingEnabled), "1Y");
+    const sparklineData = getLast7DaysData(sales, customers, customPricingEnabled, globalUnitPrice);
+    const chartData7D = formatChartData(getLast7DaysData(sales, customers, customPricingEnabled, globalUnitPrice), "7D");
+    const chartData30D = formatChartData(getLast30DaysData(sales, customers, customPricingEnabled, globalUnitPrice), "30D");
+    const chartData90D = formatChartData(getLast90DaysData(sales, customers, customPricingEnabled, globalUnitPrice), "90D");
+    const chartData1Y = formatChartData(getLastYearData(sales, customers, customPricingEnabled, globalUnitPrice), "1Y");
 
     // Get location analytics
-    const allLocations = aggregateSalesByLocation(sales, customers, customPricingEnabled);
+    const allLocations = aggregateSalesByLocation(sales, customers, customPricingEnabled, globalUnitPrice);
     const topLocations = allLocations.slice(0, 5);
 
     // Get customer analytics
-    const topCustomers = rankCustomersByRevenue(sales, customers, 10, customPricingEnabled);
+    const topCustomers = rankCustomersByRevenue(sales, customers, 10, customPricingEnabled, globalUnitPrice);
 
     return {
       thisMonth,
@@ -171,7 +174,7 @@ export function useDashboardData() {
       allLocations,
       topCustomers,
     };
-  }, [sales, customers, settings.enableCustomPricing, loading]);
+  }, [sales, customers, settings.enableCustomPricing, settings.unitPrice, loading]);
 
   return { data, loading, error };
 }

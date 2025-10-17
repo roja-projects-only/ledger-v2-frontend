@@ -20,6 +20,7 @@ import { useCustomers } from "@/lib/hooks/useCustomers";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useKPIs } from "@/lib/hooks/useKPIs";
 import { useKeyboardShortcut } from "@/lib/hooks/useKeyboardShortcut";
+import { usePricing } from "@/lib/hooks/usePricing";
 import { getSemanticColor } from "@/lib/colors";
 import { cn, formatCurrency, formatDate, getTodayISO } from "@/lib/utils";
 import type { KPI } from "@/lib/types";
@@ -45,6 +46,7 @@ export function Today() {
     loading: salesLoading,
     error: salesError,
   } = useSales();
+  const { getEffectivePrice } = usePricing();
 
   // Get today's sales
   const todaySales = getTodaySales();
@@ -150,10 +152,12 @@ export function Today() {
                   customers={customers || []}
                   onDelete={(sale) => {
                     const customer = customers?.find(c => c.id === sale.customerId);
+                    const effectivePrice = customer ? getEffectivePrice(customer) : sale.unitPrice;
+                    const recalculatedTotal = sale.quantity * effectivePrice;
                     requestDeleteSale(
                       sale.id,
                       customer?.name || 'Unknown',
-                      `₱${(sale.quantity * sale.unitPrice).toFixed(2)}`,
+                      `₱${recalculatedTotal.toFixed(2)}`,
                       new Date(sale.date).toLocaleDateString()
                     );
                   }}

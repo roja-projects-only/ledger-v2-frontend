@@ -39,7 +39,7 @@ interface SaleRowProps {
 // ============================================================================
 
 export function SaleRow({ sale, customer, onDelete }: SaleRowProps) {
-  const { isCustomPriceActive } = usePricing();
+  const { isCustomPriceActive, getEffectivePrice } = usePricing();
   const locationColor = getLocationColor(customer.location);
   const errorTone = getSemanticColor("error");
   const errorFocusText = errorTone.icon.replace("text-", "focus:text-");
@@ -55,6 +55,10 @@ export function SaleRow({ sale, customer, onDelete }: SaleRowProps) {
   };
 
   const hasCustomPricing = isCustomPriceActive(customer);
+  
+  // Recalculate total with effective pricing
+  const effectivePrice = getEffectivePrice(customer);
+  const recalculatedTotal = sale.quantity * effectivePrice;
 
   return (
     <div
@@ -77,7 +81,7 @@ export function SaleRow({ sale, customer, onDelete }: SaleRowProps) {
 
       {/* Amount */}
       <span className="font-semibold text-sm sm:text-base text-primary min-w-[70px] sm:min-w-[90px] flex-shrink-0">
-        {formatCurrency(sale.total)}
+        {formatCurrency(recalculatedTotal)}
       </span>
 
       {/* Quantity - hide on very small screens */}

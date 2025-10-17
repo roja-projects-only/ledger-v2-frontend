@@ -42,6 +42,7 @@ import { useSales } from "@/lib/hooks/useSales";
 import { useCustomers } from "@/lib/hooks/useCustomers";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useKeyboardShortcut } from "@/lib/hooks/useKeyboardShortcut";
+import { usePricing } from "@/lib/hooks/usePricing";
 import type { Location } from "@/lib/types";
 import { LOCATIONS } from "@/lib/constants";
 import { getLocationColor, getSemanticColor } from "@/lib/colors";
@@ -68,6 +69,7 @@ export function PreviousEntries() {
     loading: salesLoading,
     error: salesError,
   } = useSales();
+  const { getEffectivePrice } = usePricing();
 
   // Initialize with today's date in Asia/Manila timezone
   const todayInManila = getTodayISO();
@@ -406,10 +408,12 @@ export function PreviousEntries() {
                               <button
                                 onClick={() => {
                                   const customer = customers?.find(c => c.id === sale.customerId);
+                                  const effectivePrice = customer ? getEffectivePrice(customer) : sale.unitPrice;
+                                  const recalculatedTotal = sale.quantity * effectivePrice;
                                   requestDeleteSale(
                                     sale.id,
                                     customer?.name || 'Unknown',
-                                    `₱${(sale.quantity * sale.unitPrice).toFixed(2)}`,
+                                    `₱${recalculatedTotal.toFixed(2)}`,
                                     new Date(sale.date).toLocaleDateString()
                                   );
                                 }}
@@ -429,7 +433,7 @@ export function PreviousEntries() {
                               <div>
                                 <p className="text-muted-foreground">Total</p>
                                 <p className="font-semibold text-lg">
-                                  {formatCurrency(sale.total)}
+                                  {formatCurrency(customer ? sale.quantity * getEffectivePrice(customer) : sale.total)}
                                 </p>
                               </div>
                             </div>
