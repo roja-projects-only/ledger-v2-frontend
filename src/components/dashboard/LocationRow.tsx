@@ -1,6 +1,11 @@
 /**
  * LocationRow Component
  * 
+ * ⚠️ PRICING: Receives pre-calculated revenue from parent component
+ * - Revenue already respects enableCustomPricing toggle
+ * - Data calculated via analytics utilities with getEffectivePriceFromData()
+ * - See: src/lib/hooks/useDashboardData.ts and docs/PRICING_GUIDE.md
+ * 
  * Displays a single location's performance metrics with visual indicators.
  * 
  * Features:

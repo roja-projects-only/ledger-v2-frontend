@@ -1,6 +1,11 @@
 /**
  * Today Page - Primary data entry page for recording today's sales
  * 
+ * ⚠️ PRICING: Uses usePricing() hook for custom pricing support
+ * - Respects enableCustomPricing toggle from settings
+ * - Delete confirmations use getEffectivePrice() for accurate totals
+ * - See: src/lib/hooks/usePricing.ts and docs/PRICING_GUIDE.md
+ * 
  * Features:
  * - KPI row with 4 key metrics
  * - Two-column layout: entries list | quick add form

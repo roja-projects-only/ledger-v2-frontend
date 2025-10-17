@@ -1,6 +1,11 @@
 /**
  * Customer History Page - View detailed purchase history for a specific customer
  * 
+ * ⚠️ PRICING: Uses usePricing() hook for custom pricing support
+ * - Respects enableCustomPricing toggle from settings
+ * - Delete confirmations use getEffectivePrice() for accurate totals
+ * - See: src/lib/hooks/usePricing.ts and docs/PRICING_GUIDE.md
+ * 
  * Features:
  * - Customer selector (Combobox with search)
  * - Customer summary card with KPIs

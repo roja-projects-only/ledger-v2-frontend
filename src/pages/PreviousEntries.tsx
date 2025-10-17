@@ -1,6 +1,11 @@
 ﻿/**
  * Previous Entries Page - View and add entries for past dates
  * 
+ * ⚠️ PRICING: Uses usePricing() hook for custom pricing support
+ * - Respects enableCustomPricing toggle from settings
+ * - Card displays and delete confirmations use getEffectivePrice()
+ * - See: src/lib/hooks/usePricing.ts and docs/PRICING_GUIDE.md
+ * 
  * Features:
  * - Calendar date selector
  * - Summary card for selected date

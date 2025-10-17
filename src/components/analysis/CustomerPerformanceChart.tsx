@@ -1,6 +1,11 @@
 /**
  * CustomerPerformanceChart - Horizontal bar chart showing top customers by sales
  * 
+ * ⚠️ PRICING: Uses usePricing() hook for custom pricing support
+ * - Respects enableCustomPricing toggle from settings
+ * - Recalculates revenue using getEffectivePrice()
+ * - See: src/lib/hooks/usePricing.ts and docs/PRICING_GUIDE.md
+ * 
  * Features:
  * - Recharts horizontal BarChart
  * - Shows top 10 customers by total sales

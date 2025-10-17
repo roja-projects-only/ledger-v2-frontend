@@ -1,6 +1,12 @@
 /**
  * SaleRow - Single-line compact row for displaying one sale
  * 
+ * ⚠️ PRICING: Uses usePricing() hook for custom pricing support
+ * - Respects enableCustomPricing toggle from settings
+ * - Recalculates total display using getEffectivePrice()
+ * - Shows custom pricing badge when active
+ * - See: src/lib/hooks/usePricing.ts and docs/PRICING_GUIDE.md
+ * 
  * Features:
  * - One sale per date (business rule)
  * - Colored dot indicator from location

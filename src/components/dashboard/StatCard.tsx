@@ -1,6 +1,11 @@
 /**
  * StatCard - Enhanced KPI card with sparkline and trend indicator
  * 
+ * ⚠️ PRICING: Receives pre-calculated metrics from useDashboardData
+ * - Revenue/values already respect enableCustomPricing toggle
+ * - Data calculated via analytics utilities with getEffectivePriceFromData()
+ * - See: src/lib/hooks/useDashboardData.ts and docs/PRICING_GUIDE.md
+ * 
  * Features:
  * - Icon badge with colored background
  * - Large metric value

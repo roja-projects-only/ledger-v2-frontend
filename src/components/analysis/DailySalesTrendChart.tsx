@@ -1,6 +1,11 @@
 /**
  * DailySalesTrendChart - Line chart showing daily sales trend over time
  * 
+ * ⚠️ PRICING: Uses usePricing() hook for custom pricing support
+ * - Respects enableCustomPricing toggle from settings
+ * - Recalculates revenue using getEffectivePrice()
+ * - See: src/lib/hooks/usePricing.ts and docs/PRICING_GUIDE.md
+ * 
  * Features:
  * - Recharts LineChart with Area fill
  * - Aggregates sales by day within date range

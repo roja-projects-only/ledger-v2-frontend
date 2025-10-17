@@ -34,6 +34,13 @@ App runs at: `http://localhost:5173`
 - InputOTP 6-digit passcode entry
 - Session persistence
 
+### Custom Pricing System
+- **Global toggle** to enable/disable custom pricing per customer
+- When **ON**: Each customer can have individual unit price
+- When **OFF**: All sales use global unit price
+- Toggle respects all existing custom prices (reversible)
+- **See**: `docs/PRICING_GUIDE.md` for implementation details
+
 ### Pages
 - **Today** (`/`) - Quick entry form + today's sales + KPIs + location chart
 - **Previous** (`/previous`) - Date selector + past entries
@@ -71,6 +78,8 @@ App runs at: `http://localhost:5173`
 
 ```
 frontend-v2/
+├── docs/
+│   └── PRICING_GUIDE.md    # ⚠️ Required reading for pricing components
 ├── src/
 │   ├── pages/              # Route-level pages
 │   │   ├── Today.tsx
@@ -86,10 +95,11 @@ frontend-v2/
 │   │   ├── ui/             # shadcn/ui primitives
 │   │   └── [domain]/       # Domain-specific components
 │   ├── lib/
-│   │   ├── hooks/          # Custom hooks (useSales, useCustomers, etc.)
+│   │   ├── hooks/          # Custom hooks (useSales, useCustomers, usePricing)
 │   │   ├── queries/        # React Query hooks
 │   │   ├── api/            # API clients with adapters
 │   │   ├── contexts/       # React contexts (SettingsContext)
+│   │   ├── utils/          # Utilities (analytics, etc.)
 │   │   ├── colors.ts       # Location color system
 │   │   ├── constants.ts    # App constants
 │   │   ├── queryClient.ts  # React Query config
@@ -233,6 +243,7 @@ VITE_API_URL=https://your-backend.railway.app/api
 - **Date Handling**: Extract date part `.split('T')[0]`
 - **Loading States**: Use Skeleton components
 - **Error Handling**: Show toast notifications
+- **Pricing Calculations**: ALWAYS use `usePricing()` hook - see `docs/PRICING_GUIDE.md`
 
 ### React Query Benefits
 - Automatic caching (pages share data)

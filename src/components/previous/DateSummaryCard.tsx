@@ -1,6 +1,11 @@
 /**
  * DateSummaryCard - Display summary metrics for selected date
  * 
+ * ⚠️ PRICING: Uses usePricing() hook for custom pricing support
+ * - Respects enableCustomPricing toggle from settings
+ * - Recalculates revenue using getEffectivePrice()
+ * - See: src/lib/hooks/usePricing.ts and docs/PRICING_GUIDE.md
+ * 
  * Features:
  * - Shows entry count, total revenue, containers sold, average per entry
  * - Loading skeleton state

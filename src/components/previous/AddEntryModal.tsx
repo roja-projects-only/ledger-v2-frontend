@@ -1,6 +1,11 @@
 /**
  * AddEntryModal - Modal for adding entries to past dates
  * 
+ * ⚠️ PRICING: Uses usePricing() hook for custom pricing support
+ * - Respects enableCustomPricing toggle from settings
+ * - Calculates sale totals using getEffectivePrice()
+ * - See: src/lib/hooks/usePricing.ts and docs/PRICING_GUIDE.md
+ * 
  * Features:
  * - Similar to QuickAddForm but for historical dates
  * - Date is pre-filled and read-only

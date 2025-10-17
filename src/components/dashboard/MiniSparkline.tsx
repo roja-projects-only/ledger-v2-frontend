@@ -1,6 +1,11 @@
 /**
  * MiniSparkline - Small inline trend chart
  * 
+ * ⚠️ PRICING: Receives pre-calculated revenue from parent component
+ * - Revenue already respects enableCustomPricing toggle
+ * - Data calculated via analytics utilities with getEffectivePriceFromData()
+ * - See: src/lib/hooks/useDashboardData.ts and docs/PRICING_GUIDE.md
+ * 
  * Simple SVG line chart showing 7-day trend data.
  * No axes, labels, or grid - just a smooth trend line.
  * Memoized for performance optimization.

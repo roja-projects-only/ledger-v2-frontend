@@ -1,6 +1,11 @@
 /**
  * TopCustomersCard Component
  * 
+ * ⚠️ PRICING: Receives pre-calculated revenue from useDashboardData
+ * - Revenue already respects enableCustomPricing toggle
+ * - Data calculated via analytics utilities with getEffectivePriceFromData()
+ * - See: src/lib/hooks/useDashboardData.ts and docs/PRICING_GUIDE.md
+ * 
  * Displays top 10 customers by revenue with clickable rows.
  * 
  * Features:
