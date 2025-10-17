@@ -47,7 +47,7 @@ import { getLocationColor, getSemanticColor } from "@/lib/colors";
 import { cn, formatCurrency, formatLocation, getTodayISO } from "@/lib/utils";
 import { useSettings } from "@/lib/contexts/SettingsContext";
 import { usePricing } from "@/lib/hooks/usePricing";
-import { Plus, Check, ChevronsUpDown, DollarSign, AlertCircle } from "lucide-react";
+import { Plus, Check, ChevronsUpDown, DollarSign, AlertCircle, UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { NumberInput } from "@/components/shared/NumberInput";
 import { useKeyboardShortcut } from "@/lib/hooks/useKeyboardShortcut";
@@ -101,8 +101,14 @@ export function QuickAddForm({ customers, userId, onSave, loading = false }: Qui
     ? customers
     : customers.filter((c) => c.location === locationFilter);
 
+  // Find walk-in customer
+  const walkInCustomer = customers.find((c) => c.name === 'Walk-In Customer' && c.location === 'WALK_IN');
+
   // Selected customer
   const selectedCustomer = customers.find((c) => c.id === customerId);
+  
+  // Check if walk-in is currently selected
+  const isWalkInSelected = selectedCustomer?.id === walkInCustomer?.id;
 
   // Get effective price (custom or global based on toggle)
   const effectivePrice = selectedCustomer 
@@ -113,6 +119,18 @@ export function QuickAddForm({ customers, userId, onSave, loading = false }: Qui
   const amount = containers && !isNaN(Number(containers))
     ? Number(containers) * effectivePrice
     : 0;
+
+  /**
+   * Handle Walk-In quick select
+   */
+  const handleWalkInSelect = () => {
+    if (walkInCustomer) {
+      setCustomerId(walkInCustomer.id);
+      setLocationFilter("all"); // Reset filter to show all customers
+      setErrors((prev) => ({ ...prev, customer: undefined })); // Clear customer error
+      containersInputRef.current?.focus(); // Focus containers input
+    }
+  };
 
   /**
    * Handle form submission
@@ -218,6 +236,29 @@ export function QuickAddForm({ customers, userId, onSave, loading = false }: Qui
               </SelectContent>
             </Select>
           </div>
+
+          {/* Walk-In Quick Select */}
+          {walkInCustomer && (
+            <div className="space-y-2">
+              <Button
+                type="button"
+                variant={isWalkInSelected ? "default" : "outline"}
+                className={cn(
+                  "w-full justify-start gap-2",
+                  isWalkInSelected && "ring-2 ring-offset-2 ring-primary"
+                )}
+                onClick={handleWalkInSelect}
+                disabled={loading}
+              >
+                <UserPlus className="h-4 w-4" />
+                <span className="font-medium">Walk-In Customer</span>
+                {isWalkInSelected && <Check className="ml-auto h-4 w-4" />}
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Quick select for customers not in the system
+              </p>
+            </div>
+          )}
 
           {/* Customer Combobox */}
           <div className="space-y-2">

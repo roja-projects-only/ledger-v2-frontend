@@ -47,7 +47,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, UserPlus } from "lucide-react";
 import { LocationBadge } from "@/components/shared/LocationBadge";
 import { Badge } from "@/components/ui/badge";
 import { NumberInput } from "@/components/shared/NumberInput";
@@ -103,8 +103,14 @@ export function AddEntryModal({
       ? customers
       : customers.filter((c) => c.location === locationFilter);
 
+  // Find walk-in customer
+  const walkInCustomer = customers.find((c) => c.name === 'Walk-In Customer' && c.location === 'WALK_IN');
+
   // Get selected customer
   const selectedCustomer = customers.find((c) => c.id === selectedCustomerId);
+  
+  // Check if walk-in is currently selected
+  const isWalkInSelected = selectedCustomer?.id === walkInCustomer?.id;
 
   // Calculate amount with effective pricing
   const containersNum = parseFloat(containers) || 0;
@@ -112,6 +118,16 @@ export function AddEntryModal({
     ? getEffectivePrice(selectedCustomer)
     : settings.unitPrice;
   const amount = containersNum * effectivePrice;
+
+  // Handle Walk-In quick select
+  const handleWalkInSelect = () => {
+    if (walkInCustomer) {
+      setSelectedCustomerId(walkInCustomer.id);
+      setLocationFilter("all"); // Reset filter to show all customers
+      setErrors((prev) => ({ ...prev, customer: undefined })); // Clear customer error
+      containersInputRef.current?.focus(); // Focus containers input
+    }
+  };
 
   // Reset form when modal opens/closes
   useEffect(() => {
@@ -227,6 +243,28 @@ export function AddEntryModal({
               </SelectContent>
             </Select>
           </div>
+
+          {/* Walk-In Quick Select */}
+          {walkInCustomer && (
+            <div className="space-y-2">
+              <Button
+                type="button"
+                variant={isWalkInSelected ? "default" : "outline"}
+                className={cn(
+                  "w-full justify-start gap-2",
+                  isWalkInSelected && "ring-2 ring-offset-2 ring-primary"
+                )}
+                onClick={handleWalkInSelect}
+              >
+                <UserPlus className="h-4 w-4" />
+                <span className="font-medium">Walk-In Customer</span>
+                {isWalkInSelected && <Check className="ml-auto h-4 w-4" />}
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Quick select for customers not in the system
+              </p>
+            </div>
+          )}
 
           {/* Customer Select */}
           <div className="space-y-2">

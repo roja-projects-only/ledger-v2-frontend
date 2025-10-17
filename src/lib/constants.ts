@@ -21,6 +21,7 @@ export const LOCATIONS = [
   Location.SAN_ISIDRO,
   Location.UPPER_LOOB,
   Location.URBAN,
+  Location.WALK_IN,
   Location.ZUNIGA,
 ] as const;
 

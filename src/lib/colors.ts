@@ -78,6 +78,13 @@ export const LOCATION_COLORS: Record<
     hex: "#818cf8",          // indigo-400
     ring: "ring-indigo-400",
   },
+  WALK_IN: {
+    bg: "bg-slate-500/10",
+    text: "text-slate-300",
+    border: "border-slate-500/30",
+    hex: "#94a3b8",          // slate-400
+    ring: "ring-slate-400",
+  },
   ZUNIGA: {
     bg: "bg-pink-500/10",
     text: "text-pink-300",

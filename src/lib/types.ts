@@ -22,6 +22,7 @@ export const Location = {
   SAN_ISIDRO: "SAN_ISIDRO",
   UPPER_LOOB: "UPPER_LOOB",
   URBAN: "URBAN",
+  WALK_IN: "WALK_IN",
   ZUNIGA: "ZUNIGA",
 } as const;
 
