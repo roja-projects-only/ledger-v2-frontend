@@ -3,6 +3,7 @@
  * 
  * Main date filtering UI combining preset toggle and date range display.
  * Provides centralized date control for all dashboard components.
+ * Optimized for mobile responsiveness and accessibility.
  */
 
 import { useDateFilter } from "@/lib/hooks/useDateFilter";
@@ -26,11 +27,13 @@ export function DateFilterControls({ className }: DateFilterControlsProps) {
   const { preset, setPreset, computed, comparisonEnabled } = useDateFilter();
 
   return (
-    <div className={cn("space-y-3", className)}>
+    <div className={cn("space-y-3 pb-4 border-b border-slate-800", className)}>
       {/* Preset Toggle Buttons */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-muted-foreground">Period:</span>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+            Period:
+          </span>
           <DateFilterToggle 
             value={preset} 
             onChange={setPreset}
@@ -42,7 +45,7 @@ export function DateFilterControls({ className }: DateFilterControlsProps) {
           label={computed.label}
           comparisonLabel={computed.comparisonLabel}
           showComparison={comparisonEnabled}
-          className="text-xs"
+          className="text-xs sm:text-sm"
         />
       </div>
     </div>

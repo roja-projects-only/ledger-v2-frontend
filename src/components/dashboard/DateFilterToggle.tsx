@@ -3,6 +3,7 @@
  * 
  * Toggle buttons for preset date filter periods (7D, 30D, 90D, 1Y).
  * Used in dashboard to quickly switch between common time periods.
+ * Optimized for mobile touch interactions and accessibility.
  */
 
 import { cn } from "@/lib/utils";
@@ -32,7 +33,11 @@ export function DateFilterToggle({ value, onChange, className }: DateFilterToggl
 
   return (
     <div
-      className={cn("inline-flex rounded-lg bg-slate-800 p-1", className)}
+      className={cn(
+        "inline-flex rounded-lg bg-slate-800 p-1",
+        "shadow-inner ring-1 ring-slate-700/50",
+        className
+      )}
       role="group"
       aria-label="Date filter period"
     >
@@ -45,8 +50,9 @@ export function DateFilterToggle({ value, onChange, className }: DateFilterToggl
             type="button"
             onClick={() => onChange(preset.value)}
             className={cn(
-              "px-3 py-1.5 text-sm font-medium rounded-md transition-all",
+              "px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200",
               "focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-slate-900",
+              "active:scale-95", // Touch feedback
               isActive
                 ? "bg-sky-600 text-white shadow-sm"
                 : "text-slate-400 hover:text-slate-200 hover:bg-slate-700"

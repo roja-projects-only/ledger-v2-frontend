@@ -3,6 +3,7 @@
  * 
  * Displays the currently selected date range in human-readable format.
  * Shows both the main period and comparison period (if enabled).
+ * Optimized for accessibility and responsive text sizing.
  */
 
 import { Calendar } from "lucide-react";
@@ -30,12 +31,17 @@ export function SelectedDateLabel({
   className 
 }: SelectedDateLabelProps) {
   return (
-    <div className={cn("flex items-center gap-2 text-sm text-muted-foreground", className)}>
-      <Calendar className="w-4 h-4" />
-      <span>
+    <div 
+      className={cn("flex items-center gap-2 text-sm text-muted-foreground", className)}
+      role="status"
+      aria-live="polite"
+      aria-label={`Selected date range: ${label}${showComparison && comparisonLabel ? `, compared to ${comparisonLabel}` : ''}`}
+    >
+      <Calendar className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+      <span className="truncate">
         <span className="font-medium text-foreground">{label}</span>
         {showComparison && comparisonLabel && (
-          <span className="ml-2">
+          <span className="ml-2 hidden sm:inline">
             {comparisonLabel}
           </span>
         )}

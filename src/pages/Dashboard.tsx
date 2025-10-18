@@ -150,7 +150,10 @@ function DashboardContent() {
 
           {/* Dashboard Content */}
           {!loading && data && (
-            <main id="main-content" className="space-y-6">
+            <main 
+              id="main-content" 
+              className="space-y-6 animate-in fade-in duration-300"
+            >
               {/* Summary Stats */}
               <section aria-labelledby="kpi-heading" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <h2 id="kpi-heading" className="sr-only">Key Performance Indicators</h2>
