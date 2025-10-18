@@ -22,12 +22,13 @@ import { getSemanticColor } from "@/lib/colors";
 import { cn, formatCurrency } from "@/lib/utils";
 import { DollarSign, Droplet, TrendingUp, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { DateFilterProvider } from "@/lib/contexts/DateFilterContext";
 
 // ============================================================================
 // Dashboard Page Component
 // ============================================================================
 
-export function Dashboard() {
+function DashboardContent() {
   const { data, loading, error } = useDashboardData();
   const navigate = useNavigate();
 
@@ -242,5 +243,17 @@ export function Dashboard() {
         </div>
       </Container>
     </div>
+  );
+}
+
+// ============================================================================
+// Wrapped Component with Context Provider
+// ============================================================================
+
+export function Dashboard() {
+  return (
+    <DateFilterProvider>
+      <DashboardContent />
+    </DateFilterProvider>
   );
 }
