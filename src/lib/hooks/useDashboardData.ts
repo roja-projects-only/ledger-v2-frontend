@@ -2,12 +2,14 @@
  * useDashboardData - Custom hook for dashboard metrics
  * 
  * Aggregates sales and customer data for dashboard display.
+ * Now supports date filtering via DateFilterContext.
  */
 
 import { useMemo } from "react";
 import { useSales } from "./useSales";
 import { useCustomers } from "./useCustomers";
 import { useSettings } from "@/lib/contexts/SettingsContext";
+import { useDateFilter } from "./useDateFilter";
 import {
   calculatePeriodMetrics,
   calculateGrowthPercentage,
@@ -18,9 +20,7 @@ import {
   getLastYearData,
   aggregateSalesByLocation,
   rankCustomersByRevenue,
-  getStartOfMonth,
-  getStartOfLastMonth,
-  getEndOfLastMonth,
+  filterSalesByDateRange,
   type PeriodMetrics,
   type DailyMetric,
   type LocationStats,
@@ -74,6 +74,7 @@ export function useDashboardData() {
   const { sales, loading: salesLoading, error: salesError } = useSales();
   const { customers, loading: customersLoading, error: customersError } = useCustomers();
   const { settings } = useSettings();
+  const { computed: dateFilter, comparisonEnabled } = useDateFilter();
 
   const loading = salesLoading || customersLoading;
   const error = salesError || customersError;
@@ -87,47 +88,48 @@ export function useDashboardData() {
     const customPricingEnabled = settings.enableCustomPricing ?? true;
     const globalUnitPrice = settings.unitPrice || 0;
 
-    // Calculate date ranges
-    const now = new Date();
-    const startOfThisMonth = getStartOfMonth(now);
-    const startOfLastMonth = getStartOfLastMonth(now);
-    const endOfLastMonth = getEndOfLastMonth(now);
+    // Use date filter ranges
+    const { startDate, endDate, comparisonStartDate, comparisonEndDate } = dateFilter;
 
-    // Calculate period metrics
-    const thisMonth = calculatePeriodMetrics(
+    // Filter sales by selected date range
+    const filteredSales = filterSalesByDateRange(sales, startDate, endDate);
+
+    // Calculate period metrics for selected range
+    const thisPeriod = calculatePeriodMetrics(
       sales,
       customers,
-      startOfThisMonth,
-      now,
+      startDate,
+      endDate,
       customPricingEnabled,
       globalUnitPrice
     );
 
-    const lastMonth = calculatePeriodMetrics(
+    // Calculate comparison period metrics
+    const comparisonPeriod = calculatePeriodMetrics(
       sales,
       customers,
-      startOfLastMonth,
-      endOfLastMonth,
+      comparisonStartDate,
+      comparisonEndDate,
       customPricingEnabled,
       globalUnitPrice
     );
 
     // Calculate growth percentages
     const revenueGrowth = calculateGrowthPercentage(
-      thisMonth.revenue,
-      lastMonth.revenue
+      thisPeriod.revenue,
+      comparisonPeriod.revenue
     );
     const quantityGrowth = calculateGrowthPercentage(
-      thisMonth.quantity,
-      lastMonth.quantity
+      thisPeriod.quantity,
+      comparisonPeriod.quantity
     );
     const averageSaleGrowth = calculateGrowthPercentage(
-      thisMonth.averageSale,
-      lastMonth.averageSale
+      thisPeriod.averageSale,
+      comparisonPeriod.averageSale
     );
     const activeCustomersGrowth = calculateGrowthPercentage(
-      thisMonth.activeCustomers,
-      lastMonth.activeCustomers
+      thisPeriod.activeCustomers,
+      comparisonPeriod.activeCustomers
     );
 
     // Get trend directions
@@ -136,23 +138,47 @@ export function useDashboardData() {
     const averageSaleTrend = getTrendDirection(averageSaleGrowth);
     const activeCustomersTrend = getTrendDirection(activeCustomersGrowth);
 
-    // Get time series data
-    const sparklineData = getLast7DaysData(sales, customers, customPricingEnabled, globalUnitPrice);
-    const chartData7D = formatChartData(getLast7DaysData(sales, customers, customPricingEnabled, globalUnitPrice), "7D");
-    const chartData30D = formatChartData(getLast30DaysData(sales, customers, customPricingEnabled, globalUnitPrice), "30D");
-    const chartData90D = formatChartData(getLast90DaysData(sales, customers, customPricingEnabled, globalUnitPrice), "90D");
-    const chartData1Y = formatChartData(getLastYearData(sales, customers, customPricingEnabled, globalUnitPrice), "1Y");
+    // Get time series data for selected range
+    // For sparkline, use last 7 days of the selected range
+    const sparklineStartDate = new Date(endDate);
+    sparklineStartDate.setDate(sparklineStartDate.getDate() - 6);
+    const sparklineData = getLast7DaysData(
+      filteredSales, 
+      customers, 
+      customPricingEnabled, 
+      globalUnitPrice,
+      sparklineStartDate,
+      endDate
+    );
 
-    // Get location analytics
-    const allLocations = aggregateSalesByLocation(sales, customers, customPricingEnabled, globalUnitPrice);
+    // Chart data uses the full selected range
+    const chartData7D = formatChartData(
+      getLast7DaysData(filteredSales, customers, customPricingEnabled, globalUnitPrice, startDate, endDate), 
+      "7D"
+    );
+    const chartData30D = formatChartData(
+      getLast30DaysData(filteredSales, customers, customPricingEnabled, globalUnitPrice, startDate, endDate), 
+      "30D"
+    );
+    const chartData90D = formatChartData(
+      getLast90DaysData(filteredSales, customers, customPricingEnabled, globalUnitPrice, startDate, endDate), 
+      "90D"
+    );
+    const chartData1Y = formatChartData(
+      getLastYearData(filteredSales, customers, customPricingEnabled, globalUnitPrice, startDate, endDate), 
+      "1Y"
+    );
+
+    // Get location analytics for filtered sales
+    const allLocations = aggregateSalesByLocation(filteredSales, customers, customPricingEnabled, globalUnitPrice);
     const topLocations = allLocations.slice(0, 5);
 
-    // Get customer analytics
-    const topCustomers = rankCustomersByRevenue(sales, customers, 10, customPricingEnabled, globalUnitPrice);
+    // Get customer analytics for filtered sales
+    const topCustomers = rankCustomersByRevenue(filteredSales, customers, 10, customPricingEnabled, globalUnitPrice);
 
     return {
-      thisMonth,
-      lastMonth,
+      thisMonth: thisPeriod,
+      lastMonth: comparisonPeriod,
       growth: {
         revenue: revenueGrowth,
         quantity: quantityGrowth,
@@ -174,7 +200,7 @@ export function useDashboardData() {
       allLocations,
       topCustomers,
     };
-  }, [sales, customers, settings.enableCustomPricing, settings.unitPrice, loading]);
+  }, [sales, customers, settings.enableCustomPricing, settings.unitPrice, dateFilter, comparisonEnabled, loading]);
 
   return { data, loading, error };
 }

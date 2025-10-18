@@ -82,6 +82,23 @@ export function formatDateToISO(date: Date): string {
   return date.toISOString().split('T')[0];
 }
 
+/**
+ * Filter sales by date range
+ */
+export function filterSalesByDateRange(
+  sales: Sale[],
+  startDate: Date,
+  endDate: Date
+): Sale[] {
+  const startISO = formatDateToISO(startDate);
+  const endISO = formatDateToISO(endDate);
+  
+  return sales.filter((sale) => {
+    const saleDate = sale.date.split('T')[0];
+    return saleDate >= startISO && saleDate <= endISO;
+  });
+}
+
 // ============================================================================
 // Period Calculations
 // ============================================================================
@@ -165,23 +182,32 @@ export function getTrendDirection(
 // ============================================================================
 
 /**
- * Get daily metrics for the last N days
+ * Get daily metrics for the last N days or a custom date range
  */
 export function getLastNDaysData(
   sales: Sale[],
   customers: Customer[],
   days: number,
   customPricingEnabled: boolean = true,
-  globalUnitPrice: number = 0
+  globalUnitPrice: number = 0,
+  customStartDate?: Date,
+  customEndDate?: Date
 ): DailyMetric[] {
-  const today = new Date();
-  const startDate = new Date(today);
-  startDate.setDate(startDate.getDate() - days + 1);
+  // Use custom date range if provided, otherwise calculate from days
+  const endDate = customEndDate || new Date();
+  const startDate = customStartDate || (() => {
+    const date = new Date(endDate);
+    date.setDate(date.getDate() - days + 1);
+    return date;
+  })();
 
   const dailyData: Map<string, DailyMetric> = new Map();
 
+  // Calculate number of days in range
+  const dayCount = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
   // Initialize all dates with zero values
-  for (let i = 0; i < days; i++) {
+  for (let i = 0; i < dayCount; i++) {
     const date = new Date(startDate);
     date.setDate(date.getDate() + i);
     const dateISO = formatDateToISO(date);
@@ -219,29 +245,57 @@ export function getLastNDaysData(
 /**
  * Get last 7 days data for sparklines
  */
-export function getLast7DaysData(sales: Sale[], customers: Customer[], customPricingEnabled: boolean = true, globalUnitPrice: number = 0): DailyMetric[] {
-  return getLastNDaysData(sales, customers, 7, customPricingEnabled, globalUnitPrice);
+export function getLast7DaysData(
+  sales: Sale[], 
+  customers: Customer[], 
+  customPricingEnabled: boolean = true, 
+  globalUnitPrice: number = 0,
+  customStartDate?: Date,
+  customEndDate?: Date
+): DailyMetric[] {
+  return getLastNDaysData(sales, customers, 7, customPricingEnabled, globalUnitPrice, customStartDate, customEndDate);
 }
 
 /**
  * Get last 30 days data for main chart
  */
-export function getLast30DaysData(sales: Sale[], customers: Customer[], customPricingEnabled: boolean = true, globalUnitPrice: number = 0): DailyMetric[] {
-  return getLastNDaysData(sales, customers, 30, customPricingEnabled, globalUnitPrice);
+export function getLast30DaysData(
+  sales: Sale[], 
+  customers: Customer[], 
+  customPricingEnabled: boolean = true, 
+  globalUnitPrice: number = 0,
+  customStartDate?: Date,
+  customEndDate?: Date
+): DailyMetric[] {
+  return getLastNDaysData(sales, customers, 30, customPricingEnabled, globalUnitPrice, customStartDate, customEndDate);
 }
 
 /**
  * Get last 90 days data (may need weekly aggregation)
  */
-export function getLast90DaysData(sales: Sale[], customers: Customer[], customPricingEnabled: boolean = true, globalUnitPrice: number = 0): DailyMetric[] {
-  return getLastNDaysData(sales, customers, 90, customPricingEnabled, globalUnitPrice);
+export function getLast90DaysData(
+  sales: Sale[], 
+  customers: Customer[], 
+  customPricingEnabled: boolean = true, 
+  globalUnitPrice: number = 0,
+  customStartDate?: Date,
+  customEndDate?: Date
+): DailyMetric[] {
+  return getLastNDaysData(sales, customers, 90, customPricingEnabled, globalUnitPrice, customStartDate, customEndDate);
 }
 
 /**
  * Get last year data (may need monthly aggregation)
  */
-export function getLastYearData(sales: Sale[], customers: Customer[], customPricingEnabled: boolean = true, globalUnitPrice: number = 0): DailyMetric[] {
-  return getLastNDaysData(sales, customers, 365, customPricingEnabled, globalUnitPrice);
+export function getLastYearData(
+  sales: Sale[], 
+  customers: Customer[], 
+  customPricingEnabled: boolean = true, 
+  globalUnitPrice: number = 0,
+  customStartDate?: Date,
+  customEndDate?: Date
+): DailyMetric[] {
+  return getLastNDaysData(sales, customers, 365, customPricingEnabled, globalUnitPrice, customStartDate, customEndDate);
 }
 
 // ============================================================================
