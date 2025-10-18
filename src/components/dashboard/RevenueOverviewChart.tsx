@@ -6,18 +6,18 @@
  * - Data calculated via analytics utilities with getEffectivePriceFromData()
  * - See: src/lib/hooks/useDashboardData.ts and docs/PRICING_GUIDE.md
  * 
- * Area chart displaying revenue trends over selected time period.
+ * Area chart displaying revenue trends for the selected date range.
  * Uses Recharts with gradient fill and responsive design.
+ * Now uses global date filter instead of internal toggle.
  * 
  * Features:
  * - Smooth area chart with gradient fill
- * - Time period toggle (7D/30D/90D/1Y)
  * - Responsive tooltip with formatted values
  * - Dark theme optimized
  * - Automatic Y-axis scaling
+ * - Respects global date filter context
  */
 
-import { useState } from "react";
 import {
   AreaChart,
   Area,
@@ -27,24 +27,18 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { TimePeriodToggle } from "./TimePeriodToggle";
-import type { TimePeriod } from "./TimePeriodToggle";
 import { formatCurrencyAxis, formatDateAxis } from "@/lib/utils/chartHelpers";
 import { formatCurrency } from "@/lib/utils";
 import type { ChartDataPoint } from "@/lib/utils/chartHelpers";
+import { useDateFilter } from "@/lib/hooks/useDateFilter";
 
 // ============================================================================
 // Types
 // ============================================================================
 
 export interface RevenueOverviewChartProps {
-  /** Chart data for each time period */
-  data: {
-    "7D": ChartDataPoint[];
-    "30D": ChartDataPoint[];
-    "90D": ChartDataPoint[];
-    "1Y": ChartDataPoint[];
-  };
+  /** Chart data for the selected period */
+  data: ChartDataPoint[];
   /** Optional loading state */
   loading?: boolean;
 }
@@ -81,16 +75,13 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 // ============================================================================
 
 export function RevenueOverviewChart({ data, loading = false }: RevenueOverviewChartProps) {
-  const [period, setPeriod] = useState<TimePeriod>("30D");
-
-  const chartData = data[period];
+  const { preset } = useDateFilter();
 
   if (loading) {
     return (
       <div className="bg-card border rounded-lg p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="h-6 w-40 bg-slate-700 animate-pulse rounded" />
-          <div className="h-9 w-64 bg-slate-700 animate-pulse rounded-lg" />
         </div>
         <div className="h-[300px] bg-slate-800/50 animate-pulse rounded" />
       </div>
@@ -100,21 +91,17 @@ export function RevenueOverviewChart({ data, loading = false }: RevenueOverviewC
   return (
     <div className="bg-card border rounded-lg p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-lg font-semibold">Revenue Overview</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Daily revenue trend for selected period
-          </p>
-        </div>
-        
-        <TimePeriodToggle value={period} onChange={setPeriod} />
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold">Revenue Overview</h2>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          Daily revenue trend for selected period
+        </p>
       </div>
 
       {/* Chart */}
       <ResponsiveContainer width="100%" height={300}>
         <AreaChart
-          data={chartData}
+          data={data}
           margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
         >
           {/* Gradient Definition */}
@@ -135,7 +122,7 @@ export function RevenueOverviewChart({ data, loading = false }: RevenueOverviewC
           {/* X Axis */}
           <XAxis
             dataKey="date"
-            tickFormatter={(value) => formatDateAxis(value, period)}
+            tickFormatter={(value) => formatDateAxis(value, preset)}
             stroke="rgb(148 163 184)"
             style={{ fontSize: "12px" }}
             tickLine={false}

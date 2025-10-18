@@ -18,6 +18,7 @@ import { SalesDistributionChart } from "@/components/dashboard/SalesDistribution
 import { TopCustomersCard } from "@/components/dashboard/TopCustomersCard";
 import { DateFilterControls } from "@/components/dashboard/DateFilterControls";
 import { useDashboardData } from "@/lib/hooks/useDashboardData";
+import { useDateFilter } from "@/lib/hooks/useDateFilter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getSemanticColor } from "@/lib/colors";
 import { cn, formatCurrency } from "@/lib/utils";
@@ -31,6 +32,7 @@ import { DateFilterProvider } from "@/lib/contexts/DateFilterContext";
 
 function DashboardContent() {
   const { data, loading, error } = useDashboardData();
+  const { computed, preset } = useDateFilter();
   const navigate = useNavigate();
 
   // Memoize navigation callbacks for performance
@@ -42,16 +44,20 @@ function DashboardContent() {
     navigate(`/customers?id=${customerId}`);
   }, [navigate]);
 
-  // Memoize chart data to prevent unnecessary re-renders
+  // Get chart data based on selected preset
   const chartData = useMemo(() => {
-    if (!data) return null;
-    return {
+    if (!data) return [];
+    
+    // Map preset to corresponding chart data
+    const dataMap = {
       "7D": data.chartData7D,
       "30D": data.chartData30D,
       "90D": data.chartData90D,
       "1Y": data.chartData1Y,
     };
-  }, [data]);
+    
+    return dataMap[preset] || data.chartData30D;
+  }, [data, preset]);
 
   const errorTone = getSemanticColor("error");
 
@@ -157,7 +163,7 @@ function DashboardContent() {
                   trend={{
                     direction: data.trends.revenue,
                     percentage: data.growth.revenue,
-                    label: "vs last month",
+                    label: computed.comparisonLabel,
                   }}
                   sparklineData={data.sparklineData}
                 />
@@ -171,7 +177,7 @@ function DashboardContent() {
                   trend={{
                     direction: data.trends.quantity,
                     percentage: data.growth.quantity,
-                    label: "vs last month",
+                    label: computed.comparisonLabel,
                   }}
                   sparklineData={data.sparklineData}
                 />
@@ -185,7 +191,7 @@ function DashboardContent() {
                   trend={{
                     direction: data.trends.averageSale,
                     percentage: data.growth.averageSale,
-                    label: "vs last month",
+                    label: computed.comparisonLabel,
                   }}
                   sparklineData={data.sparklineData}
                 />
@@ -199,7 +205,7 @@ function DashboardContent() {
                   trend={{
                     direction: data.trends.activeCustomers,
                     percentage: data.growth.activeCustomers,
-                    label: "vs last month",
+                    label: computed.comparisonLabel,
                   }}
                   sparklineData={data.sparklineData}
                 />
@@ -209,7 +215,7 @@ function DashboardContent() {
               <section aria-labelledby="revenue-chart-heading">
                 <h2 id="revenue-chart-heading" className="sr-only">Revenue Trend Analysis</h2>
                 <RevenueOverviewChart 
-                  data={chartData!}
+                  data={chartData}
                   loading={loading} 
                 />
               </section>

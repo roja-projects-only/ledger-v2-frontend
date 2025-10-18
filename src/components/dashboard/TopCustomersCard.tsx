@@ -69,7 +69,7 @@ export function TopCustomersCard({
           Top Customers
         </h2>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Highest revenue contributors this month
+          Highest revenue contributors this period
         </p>
       </div>
 

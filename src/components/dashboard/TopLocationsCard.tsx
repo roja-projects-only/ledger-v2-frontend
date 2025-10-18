@@ -75,7 +75,7 @@ export function TopLocationsCard({
             Top Locations
           </h2>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Highest performing areas this month
+            Highest performing areas this period
           </p>
         </div>
 
