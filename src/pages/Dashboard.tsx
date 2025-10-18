@@ -16,6 +16,7 @@ import { RevenueOverviewChart } from "@/components/dashboard/RevenueOverviewChar
 import { TopLocationsCard } from "@/components/dashboard/TopLocationsCard";
 import { SalesDistributionChart } from "@/components/dashboard/SalesDistributionChart";
 import { TopCustomersCard } from "@/components/dashboard/TopCustomersCard";
+import { DateFilterControls } from "@/components/dashboard/DateFilterControls";
 import { useDashboardData } from "@/lib/hooks/useDashboardData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getSemanticColor } from "@/lib/colors";
@@ -73,6 +74,9 @@ function DashboardContent() {
               Business overview and analytics
             </p>
           </header>
+
+          {/* Date Filter Controls */}
+          <DateFilterControls />
 
           {/* Error State */}
           {error && (
