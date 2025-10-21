@@ -34,6 +34,108 @@ export type Location = (typeof Location)[keyof typeof Location];
 export type KPIVariant = "revenue" | "quantity" | "average" | "customers";
 
 // ============================================================================
+// Payment & Credit Types
+// ============================================================================
+
+/**
+ * Payment status for credit transactions
+ */
+export const PaymentStatus = {
+  UNPAID: "UNPAID",
+  PARTIAL: "PARTIAL", 
+  PAID: "PAID",
+  OVERDUE: "OVERDUE",
+  COLLECTION: "COLLECTION",
+} as const;
+
+export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus];
+
+/**
+ * Payment method types
+ */
+export const PaymentMethod = {
+  CASH: "CASH",
+} as const;
+
+export type PaymentMethod = (typeof PaymentMethod)[keyof typeof PaymentMethod];
+
+/**
+ * Payment type for sales
+ */
+export const PaymentType = {
+  CASH: "CASH",
+  CREDIT: "CREDIT",
+} as const;
+
+export type PaymentType = (typeof PaymentType)[keyof typeof PaymentType];
+
+/**
+ * Collection status for customers
+ */
+export const CollectionStatus = {
+  ACTIVE: "ACTIVE",
+  OVERDUE: "OVERDUE", 
+  SUSPENDED: "SUSPENDED",
+} as const;
+
+export type CollectionStatus = (typeof CollectionStatus)[keyof typeof CollectionStatus];
+
+/**
+ * Payment entity - represents a payment record for credit sales
+ */
+export interface Payment {
+  id: string;
+  amount: number;
+  status: PaymentStatus;
+  paymentMethod?: PaymentMethod;
+  paidAmount: number;
+  paidAt?: string; // ISO 8601 date string
+  dueDate?: string; // ISO 8601 date string
+  notes?: string;
+  saleId: string;
+  customerId: string;
+  recordedById: string;
+  createdAt: string; // ISO 8601 date string
+  updatedAt: string; // ISO 8601 date string
+  
+  // Relations
+  sale?: Sale;
+  customer?: Customer;
+  recordedBy?: User;
+}
+
+/**
+ * Reminder note entity - tracks customer payment reminders
+ */
+export interface ReminderNote {
+  id: string;
+  note: string;
+  reminderDate: string; // ISO 8601 date string
+  customerId: string;
+  createdById: string;
+  createdAt: string; // ISO 8601 date string
+  
+  // Relations
+  customer?: Customer;
+  createdBy?: User;
+}
+
+/**
+ * Outstanding balance summary for customers with debt
+ */
+export interface OutstandingBalance {
+  customerId: string;
+  customerName: string;
+  location: Location;
+  totalOwed: number;
+  oldestDebtDate: string; // ISO 8601 date string
+  daysPastDue: number;
+  creditLimit: number;
+  collectionStatus: CollectionStatus;
+  lastPaymentDate?: string; // ISO 8601 date string
+}
+
+// ============================================================================
 // Core Entities
 // ============================================================================
 
@@ -47,8 +149,16 @@ export interface Customer {
   phone?: string; // Optional phone number for contact
   customUnitPrice?: number; // Optional custom price per gallon (overrides global)
   notes?: string; // Optional additional notes about customer
+  creditLimit?: number; // Maximum amount customer can owe before credit is suspended
+  outstandingBalance: number; // Current amount owed by customer
+  lastPaymentDate?: string; // ISO 8601 date string of last payment
+  collectionStatus: CollectionStatus; // Current collection status
   createdAt: string; // ISO 8601 date string
   updatedAt?: string; // ISO 8601 date string
+  
+  // Relations
+  payments?: Payment[];
+  reminderNotes?: ReminderNote[];
 }
 
 /**
@@ -62,10 +172,14 @@ export interface Sale {
   quantity: number; // Number of containers (gallons)
   unitPrice: number; // Price per container at time of sale
   total: number; // Total amount (quantity × unitPrice)
+  paymentType: PaymentType; // Whether sale was cash or credit
   notes?: string; // Optional notes about the sale
   createdAt: string; // ISO 8601 date string (when entry was created)
   updatedAt?: string; // ISO 8601 date string (when entry was last updated)
   wasUpdated?: boolean; // Indicates if this was an update operation (upsert)
+  
+  // Relations
+  payment?: Payment; // One-to-one relationship for credit sales
 }
 
 /**
@@ -203,6 +317,7 @@ export interface CustomerFormData {
   location: Location;
   phone?: string; // Optional phone number
   customUnitPrice?: number; // Optional custom price per gallon
+  creditLimit?: number; // Optional credit limit
   notes?: string; // Optional notes
 }
 
@@ -213,7 +328,26 @@ export interface SaleFormData {
   customerId: string;
   date: string; // ISO 8601 date string
   quantity: number;
+  paymentType: PaymentType; // Cash or credit payment
   notes?: string;
+}
+
+/**
+ * Form data for recording a payment
+ */
+export interface PaymentFormData {
+  paymentId: string;
+  amount: number;
+  paymentMethod: PaymentMethod;
+  notes?: string;
+}
+
+/**
+ * Form data for adding a reminder note
+ */
+export interface ReminderNoteFormData {
+  customerId: string;
+  note: string;
 }
 
 /**
