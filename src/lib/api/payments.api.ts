@@ -139,16 +139,30 @@ export const paymentsApi = {
    * Get customer payment history
    */
   getCustomerPayments: async (customerId: string): Promise<Payment[]> => {
-    const response = await apiClient.get(`/customers/${customerId}/payments`);
-    return adaptSimpleListResponse<Payment>(response).data;
+    const response = await apiClient.get(`/payments/customers/${customerId}/payments`);
+    // Backend returns { payments: [...], pagination: {...} }
+    return response.data.payments || [];
   },
 
   /**
    * Get customer outstanding balance
    */
   getCustomerOutstanding: async (customerId: string): Promise<OutstandingBalance> => {
-    const response = await apiClient.get(`/customers/${customerId}/outstanding`);
-    return adaptItemResponse<OutstandingBalance>(response).data;
+    const response = await apiClient.get(`/payments/customers/${customerId}/outstanding`);
+    // Backend returns { customerId, outstandingBalance, calculatedAt }
+    // We need to transform this to match our OutstandingBalance interface
+    const data = response.data;
+    return {
+      customerId: data.customerId,
+      customerName: "", // Will need to be fetched separately or included in backend response
+      location: "URBAN", // Default, should be included in backend response
+      totalOwed: data.outstandingBalance,
+      oldestDebtDate: new Date().toISOString(), // Should be included in backend response
+      daysPastDue: 0, // Should be calculated in backend
+      creditLimit: 0, // Should be included in backend response
+      collectionStatus: "ACTIVE", // Should be included in backend response
+      lastPaymentDate: undefined, // Should be included in backend response
+    };
   },
 
   /**
@@ -156,7 +170,9 @@ export const paymentsApi = {
    */
   getOutstandingBalances: async (): Promise<OutstandingBalance[]> => {
     const response = await apiClient.get("/payments/outstanding");
-    return adaptSimpleListResponse<OutstandingBalance>(response).data;
+    // Backend returns { customers: [...], totalCustomers, totalOutstanding, retrievedAt }
+    // We need to extract the customers array
+    return response.data.customers || [];
   },
 
   /**
