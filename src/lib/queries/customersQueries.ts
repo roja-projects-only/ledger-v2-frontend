@@ -102,6 +102,11 @@ export function useAddCustomerMutation() {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           createdBy: undefined,
+          // Payment tracking fields
+          creditLimit: 1000, // Default credit limit
+          outstandingBalance: 0, // New customers start with no debt
+          lastPaymentDate: undefined,
+          collectionStatus: 'ACTIVE' as const,
         } as Customer,
         ...old,
       ]);

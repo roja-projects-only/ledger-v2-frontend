@@ -139,6 +139,22 @@ export function CustomerDebtHistoryModal({
     queryKey: queryKeys.payments.customerPayments(customerId || ""),
     queryFn: () => paymentsApi.getCustomerPayments(customerId!),
     enabled: !!customerId && open,
+    retry: 1, // Only retry once to avoid excessive requests if endpoint doesn't exist
+    select: (data: any) => {
+      // Ensure we always return an array
+      if (!data) return [];
+      if (Array.isArray(data)) return data;
+      // If data is an object with a payments property, use that
+      if (typeof data === 'object' && 'payments' in data && Array.isArray(data.payments)) {
+        return data.payments;
+      }
+      // If data is an object with a data property, use that
+      if (typeof data === 'object' && 'data' in data && Array.isArray(data.data)) {
+        return data.data;
+      }
+      // Fallback to empty array
+      return [];
+    },
   });
 
   // Fetch customer reminders
@@ -150,6 +166,22 @@ export function CustomerDebtHistoryModal({
     queryKey: queryKeys.reminders.customerReminders(customerId || ""),
     queryFn: () => reminderNotesApi.getCustomerReminders(customerId!),
     enabled: !!customerId && open,
+    retry: 1, // Only retry once to avoid excessive requests if endpoint doesn't exist
+    select: (data: any) => {
+      // Ensure we always return an array
+      if (!data) return [];
+      if (Array.isArray(data)) return data;
+      // If data is an object with a reminders property, use that
+      if (typeof data === 'object' && 'reminders' in data && Array.isArray(data.reminders)) {
+        return data.reminders;
+      }
+      // If data is an object with a data property, use that
+      if (typeof data === 'object' && 'data' in data && Array.isArray(data.data)) {
+        return data.data;
+      }
+      // Fallback to empty array
+      return [];
+    },
   });
 
   // Fetch current outstanding balance if not provided
@@ -164,7 +196,7 @@ export function CustomerDebtHistoryModal({
   const balance = outstandingBalance || currentBalance;
 
   // Calculate payment statistics
-  const paymentStats = payments ? {
+  const paymentStats = payments && Array.isArray(payments) ? {
     totalPaid: payments.reduce((sum, payment) => sum + payment.paidAmount, 0),
     totalOwed: payments.reduce((sum, payment) => sum + payment.amount, 0),
     paymentCount: payments.filter(p => p.paidAmount > 0).length,
@@ -273,7 +305,7 @@ export function CustomerDebtHistoryModal({
                         <AlertCircle className="h-8 w-8 mx-auto mb-2" />
                         <p>Failed to load payment history</p>
                       </div>
-                    ) : !payments || payments.length === 0 ? (
+                    ) : !payments || !Array.isArray(payments) || payments.length === 0 ? (
                       <div className="p-4 text-center text-muted-foreground">
                         <DollarSign className="h-8 w-8 mx-auto mb-2" />
                         <p>No payment history found</p>
@@ -362,7 +394,7 @@ export function CustomerDebtHistoryModal({
                         <AlertCircle className="h-8 w-8 mx-auto mb-2" />
                         <p>Failed to load reminder notes</p>
                       </div>
-                    ) : !reminders || reminders.length === 0 ? (
+                    ) : !reminders || !Array.isArray(reminders) || reminders.length === 0 ? (
                       <div className="p-4 text-center text-muted-foreground">
                         <MessageSquare className="h-8 w-8 mx-auto mb-2" />
                         <p>No reminder notes found</p>
