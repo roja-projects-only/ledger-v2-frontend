@@ -25,6 +25,7 @@ import {
 import { KPICard } from "@/components/shared/KPICard";
 import { OutstandingBalanceCard } from "@/components/shared/OutstandingBalanceCard";
 import { CustomerDebtHistoryModal } from "@/components/shared/CustomerDebtHistoryModal";
+import { PaymentRecordingModal } from "@/components/shared/PaymentRecordingModal";
 import { useQuery } from "@tanstack/react-query";
 import { paymentsApi } from "@/lib/api/payments.api";
 import { queryKeys } from "@/lib/queryKeys";
@@ -91,6 +92,7 @@ export function OutstandingBalances() {
   const [selectedBalance, setSelectedBalance] =
     useState<OutstandingBalance | null>(null);
   const [debtHistoryModalOpen, setDebtHistoryModalOpen] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
 
   // ============================================================================
   // Computed Values
@@ -222,8 +224,15 @@ export function OutstandingBalances() {
   // ============================================================================
 
   const handleRecordPayment = (customerId: string) => {
-    // TODO: Implement payment recording modal
-    console.log("Record payment for customer:", customerId);
+    const balance = outstandingBalances?.find(
+      (b) => b.customerId === customerId
+    );
+    if (balance) {
+      setSelectedCustomerId(customerId);
+      setSelectedCustomerName(balance.customerName);
+      setSelectedBalance(balance);
+      setPaymentModalOpen(true);
+    }
   };
 
   const handleAddReminder = (customerId: string) => {
@@ -539,6 +548,19 @@ export function OutstandingBalances() {
         customerName={selectedCustomerName}
         outstandingBalance={selectedBalance || undefined}
         onRecordPayment={handleRecordPayment}
+      />
+
+      {/* Payment Recording Modal */}
+      <PaymentRecordingModal
+        open={paymentModalOpen}
+        onOpenChange={setPaymentModalOpen}
+        customerId={selectedCustomerId}
+        customerName={selectedCustomerName}
+        outstandingBalance={selectedBalance || undefined}
+        onPaymentRecorded={() => {
+          // Refresh the outstanding balances data
+          // The query will automatically refetch due to invalidation in the modal
+        }}
       />
     </div>
   );

@@ -25,6 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LocationBadge } from "./LocationBadge";
 import { AgingIndicator, CollectionStatusBadge } from "./OutstandingBalanceCard";
+import { PaymentRecordingModal } from "./PaymentRecordingModal";
 import { useQuery } from "@tanstack/react-query";
 import { paymentsApi, reminderNotesApi } from "@/lib/api/payments.api";
 import { queryKeys } from "@/lib/queryKeys";
@@ -129,6 +130,7 @@ export function CustomerDebtHistoryModal({
   onRecordPayment,
 }: CustomerDebtHistoryModalProps) {
   const [activeTab, setActiveTab] = useState("payments");
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
 
   // Fetch customer payments
   const {
@@ -205,21 +207,24 @@ export function CustomerDebtHistoryModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5" />
-            {customerName ? `${customerName} - Debt History` : "Customer Debt History"}
-          </DialogTitle>
-          <DialogDescription>
-            View complete payment history and outstanding balance details
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-4xl sm:max-w-4xl h-[90vh] flex flex-col p-0 gap-0">
+        <div className="flex-shrink-0 p-6 pb-4 border-b">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5" />
+              {customerName ? `${customerName} - Debt History` : "Customer Debt History"}
+            </DialogTitle>
+            <DialogDescription>
+              View complete payment history and outstanding balance details
+            </DialogDescription>
+          </DialogHeader>
+        </div>
 
-        <div className="flex-1 overflow-hidden">
-          {/* Customer Summary */}
-          {balance && (
-            <Card className="mb-4">
+        <div className="flex-1 overflow-y-auto px-6">
+          <div className="py-6 space-y-4">
+            {/* Customer Summary */}
+            {balance && (
+              <Card>
               <CardContent className="p-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {/* Customer Info */}
@@ -257,17 +262,16 @@ export function CustomerDebtHistoryModal({
                 </div>
 
                 {/* Action Button */}
-                {onRecordPayment && (
-                  <div className="mt-4 pt-4 border-t">
-                    <Button
-                      onClick={() => onRecordPayment(customerId!)}
-                      className="w-full"
-                    >
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      Record Payment
-                    </Button>
-                  </div>
-                )}
+                <div className="mt-4 pt-4 border-t">
+                  <Button
+                    onClick={() => setPaymentModalOpen(true)}
+                    className="w-full"
+                    disabled={!balance || balance.totalOwed <= 0}
+                  >
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    Record Payment
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -424,7 +428,23 @@ export function CustomerDebtHistoryModal({
               </Card>
             </TabsContent>
           </Tabs>
+          </div>
         </div>
+
+        {/* Payment Recording Modal */}
+        <PaymentRecordingModal
+          open={paymentModalOpen}
+          onOpenChange={setPaymentModalOpen}
+          customerId={customerId}
+          customerName={customerName}
+          outstandingBalance={balance}
+          onPaymentRecorded={(customerId) => {
+            // Call the original callback if provided
+            if (onRecordPayment) {
+              onRecordPayment(customerId);
+            }
+          }}
+        />
       </DialogContent>
     </Dialog>
   );
