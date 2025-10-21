@@ -40,17 +40,20 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import type { Customer, Location, Sale } from "@/lib/types";
+import type { Customer, Location, Sale, PaymentType } from "@/lib/types";
 import { LOCATIONS } from "@/lib/constants";
 import { LocationBadge } from "@/components/shared/LocationBadge";
 import { getLocationColor, getSemanticColor } from "@/lib/colors";
 import { cn, formatCurrency, formatLocation, getTodayISO } from "@/lib/utils";
 import { useSettings } from "@/lib/contexts/SettingsContext";
 import { usePricing } from "@/lib/hooks/usePricing";
-import { Plus, Check, ChevronsUpDown, DollarSign, AlertCircle, UserPlus } from "lucide-react";
+import { Plus, Check, ChevronsUpDown, DollarSign, AlertCircle, UserPlus, CreditCard, Banknote, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { NumberInput } from "@/components/shared/NumberInput";
 import { useKeyboardShortcut } from "@/lib/hooks/useKeyboardShortcut";
+import { paymentsApi } from "@/lib/api/payments.api";
+import { useQuery } from "@tanstack/react-query";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // ============================================================================
 // Types
@@ -83,9 +86,10 @@ export function QuickAddForm({ customers, userId, onSave, loading = false }: Qui
   const [locationFilter, setLocationFilter] = useState<Location | "all">("all");
   const [customerId, setCustomerId] = useState("");
   const [containers, setContainers] = useState("");
+  const [paymentType, setPaymentType] = useState<PaymentType>("CASH");
   const [notes, setNotes] = useState("");
   const [comboboxOpen, setComboboxOpen] = useState(false);
-  const [errors, setErrors] = useState<{ customer?: string; containers?: string }>({});
+  const [errors, setErrors] = useState<{ customer?: string; containers?: string; credit?: string }>({});
 
   // Auto-focus containers input on mount (desktop only, not mobile)
   useEffect(() => {
@@ -110,6 +114,14 @@ export function QuickAddForm({ customers, userId, onSave, loading = false }: Qui
   // Check if walk-in is currently selected
   const isWalkInSelected = selectedCustomer?.id === walkInCustomer?.id;
 
+  // Fetch customer outstanding balance for credit warnings
+  const { data: outstandingBalance } = useQuery({
+    queryKey: ['customer-outstanding', customerId],
+    queryFn: () => paymentsApi.getCustomerOutstanding(customerId),
+    enabled: !!customerId && paymentType === "CREDIT",
+    staleTime: 30000, // 30 seconds
+  });
+
   // Get effective price (custom or global based on toggle)
   const effectivePrice = selectedCustomer 
     ? getEffectivePrice(selectedCustomer) 
@@ -119,6 +131,15 @@ export function QuickAddForm({ customers, userId, onSave, loading = false }: Qui
   const amount = containers && !isNaN(Number(containers))
     ? Number(containers) * effectivePrice
     : 0;
+
+  // Credit limit validation
+  const creditLimit = selectedCustomer?.creditLimit || 0;
+  const currentBalance = outstandingBalance?.totalOwed || 0;
+  const newBalance = currentBalance + amount;
+  const creditUtilization = creditLimit > 0 ? (newBalance / creditLimit) * 100 : 0;
+  
+  const isCreditLimitExceeded = paymentType === "CREDIT" && newBalance > creditLimit;
+  const isCreditLimitWarning = paymentType === "CREDIT" && creditUtilization >= 80 && !isCreditLimitExceeded;
 
   /**
    * Handle Walk-In quick select
@@ -140,7 +161,7 @@ export function QuickAddForm({ customers, userId, onSave, loading = false }: Qui
 
     setErrors({});
 
-    const validationErrors: { customer?: string; containers?: string } = {};
+    const validationErrors: { customer?: string; containers?: string; credit?: string } = {};
 
     if (!customerId) {
       validationErrors.customer = "Please select a customer";
@@ -149,6 +170,11 @@ export function QuickAddForm({ customers, userId, onSave, loading = false }: Qui
     const containersNum = Number(containers);
     if (!containers || isNaN(containersNum) || containersNum <= 0) {
       validationErrors.containers = "Enter a valid number of containers";
+    }
+
+    // Credit limit validation
+    if (paymentType === "CREDIT" && isCreditLimitExceeded) {
+      validationErrors.credit = "Credit limit exceeded. Please reduce quantity or use cash payment.";
     }
 
     if (Object.keys(validationErrors).length > 0) {
@@ -164,6 +190,7 @@ export function QuickAddForm({ customers, userId, onSave, loading = false }: Qui
       quantity: containersNum,
       unitPrice: effectivePrice, // Use effective price (custom or global)
       total: amount,
+      paymentType, // Include payment type
       notes: notes.trim() || undefined,
     };
 
@@ -173,6 +200,7 @@ export function QuickAddForm({ customers, userId, onSave, loading = false }: Qui
     // Reset form
     setCustomerId("");
     setContainers("");
+    setPaymentType("CASH");
     setNotes("");
     setComboboxOpen(false);
     setErrors({});
@@ -260,6 +288,35 @@ export function QuickAddForm({ customers, userId, onSave, loading = false }: Qui
             </div>
           )}
 
+          {/* Payment Type Toggle */}
+          <div className="space-y-2">
+            <Label>Payment Type</Label>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant={paymentType === "CASH" ? "default" : "outline"}
+                size="sm"
+                className="flex-1 gap-2"
+                onClick={() => setPaymentType("CASH")}
+                disabled={loading}
+              >
+                <Banknote className="h-4 w-4" />
+                Cash
+              </Button>
+              <Button
+                type="button"
+                variant={paymentType === "CREDIT" ? "default" : "outline"}
+                size="sm"
+                className="flex-1 gap-2"
+                onClick={() => setPaymentType("CREDIT")}
+                disabled={loading}
+              >
+                <CreditCard className="h-4 w-4" />
+                Credit
+              </Button>
+            </div>
+          </div>
+
           {/* Customer Combobox */}
           <div className="space-y-2">
             <Label htmlFor="customer">
@@ -331,6 +388,22 @@ export function QuickAddForm({ customers, userId, onSave, loading = false }: Qui
                 {errors.customer}
               </p>
             )}
+
+            {/* Outstanding Balance Warning */}
+            {selectedCustomer && paymentType === "CREDIT" && outstandingBalance && outstandingBalance.totalOwed > 0 && (
+              <Alert className="mt-2">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>{selectedCustomer.name}</strong> has an outstanding balance of{" "}
+                  <strong>{formatCurrency(outstandingBalance.totalOwed)}</strong>
+                  {outstandingBalance.daysPastDue > 0 && (
+                    <span className="text-orange-600">
+                      {" "}({outstandingBalance.daysPastDue} days overdue)
+                    </span>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
 
           {/* Containers Input */}
@@ -361,6 +434,38 @@ export function QuickAddForm({ customers, userId, onSave, loading = false }: Qui
               >
                 {errors.containers}
               </p>
+            )}
+
+            {/* Credit Limit Warnings */}
+            {paymentType === "CREDIT" && selectedCustomer && amount > 0 && (
+              <div className="space-y-2">
+                {isCreditLimitWarning && (
+                  <Alert className="border-orange-200 bg-orange-50">
+                    <AlertTriangle className="h-4 w-4 text-orange-600" />
+                    <AlertDescription className="text-orange-800">
+                      <strong>Credit Limit Warning:</strong> This sale will bring the customer to{" "}
+                      <strong>{creditUtilization.toFixed(0)}%</strong> of their credit limit 
+                      ({formatCurrency(newBalance)} / {formatCurrency(creditLimit)})
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
+                {isCreditLimitExceeded && (
+                  <Alert className="border-red-200 bg-red-50">
+                    <AlertTriangle className="h-4 w-4 text-red-600" />
+                    <AlertDescription className="text-red-800">
+                      <strong>Credit Limit Exceeded:</strong> This sale would exceed the customer's credit limit.
+                      New balance would be {formatCurrency(newBalance)} (limit: {formatCurrency(creditLimit)})
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {errors.credit && (
+                  <p className={cn("text-xs", errorTone.text)} role="alert">
+                    {errors.credit}
+                  </p>
+                )}
+              </div>
             )}
           </div>
 
@@ -430,9 +535,13 @@ export function QuickAddForm({ customers, userId, onSave, loading = false }: Qui
           </div>
 
           {/* Submit Button */}
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={loading || (paymentType === "CREDIT" && isCreditLimitExceeded)}
+          >
             <Plus className="mr-2 h-4 w-4" />
-            Add Entry
+            Add {paymentType === "CREDIT" ? "Credit" : "Cash"} Entry
           </Button>
 
           {/* Quick Stats Info */}

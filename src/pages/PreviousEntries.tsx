@@ -40,7 +40,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Plus, CalendarIcon } from "lucide-react";
+import { Plus, CalendarIcon, CreditCard, Banknote } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { DateSummaryCard } from "@/components/previous/DateSummaryCard";
 import { AddEntryModal } from "@/components/previous/AddEntryModal";
 import { useSales } from "@/lib/hooks/useSales";
@@ -430,7 +431,7 @@ export function PreviousEntries() {
                             </div>
 
                             {/* Sale details */}
-                            <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div className="grid grid-cols-3 gap-3 text-sm">
                               <div>
                                 <p className="text-muted-foreground">Quantity</p>
                                 <p className="font-medium">{sale.quantity} gallons</p>
@@ -440,6 +441,20 @@ export function PreviousEntries() {
                                 <p className="font-semibold text-lg">
                                   {formatCurrency(customer ? sale.quantity * getEffectivePrice(customer) : sale.total)}
                                 </p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Payment</p>
+                                {sale.paymentType === "CREDIT" ? (
+                                  <Badge variant="outline" className="text-orange-600 border-orange-300 bg-orange-50">
+                                    <CreditCard className="h-3 w-3 mr-1" />
+                                    Credit
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="outline" className="text-green-600 border-green-300 bg-green-50">
+                                    <Banknote className="h-3 w-3 mr-1" />
+                                    Cash
+                                  </Badge>
+                                )}
                               </div>
                             </div>
 
