@@ -271,15 +271,13 @@ export function OutstandingBalances() {
       <Container>
         <div className="space-y-6">
           {/* Page Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">
-                Outstanding Balances
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                Track customers with unpaid credit sales
-              </p>
-            </div>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Outstanding Balances
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Track customers with unpaid credit sales
+            </p>
           </div>
 
           {/* Summary KPIs */}
