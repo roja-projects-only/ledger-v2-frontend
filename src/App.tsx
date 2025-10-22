@@ -21,6 +21,7 @@ import { Settings } from "@/pages/Settings";
 import { Customers } from "@/pages/Customers";
 import { OutstandingBalances } from "@/pages/OutstandingBalances";
 import { Reminders } from "@/pages/Reminders";
+import { Reports } from "@/pages/Reports";
 import { NotFound } from "@/pages/NotFound";
 import { Toaster } from "@/components/ui/sonner";
 import { useAuth } from "@/lib/hooks/useAuth";
@@ -119,6 +120,9 @@ function AppLayout() {
             
             {/* Reminders Page */}
             <Route path="/reminders" element={<Reminders />} />
+            
+            {/* Reports Page */}
+            <Route path="/reports" element={<Reports />} />
             
             {/* 404 Page - Catch-all for unknown routes */}
             <Route path="*" element={<NotFound />} />

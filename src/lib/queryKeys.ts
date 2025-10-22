@@ -47,6 +47,7 @@ export const queryKeys = {
     customerOutstanding: (customerId: string) => [...queryKeys.payments.all, 'customer', customerId, 'outstanding'] as const,
     agingReport: () => [...queryKeys.payments.all, 'aging'] as const,
     dailyReport: (date: string) => [...queryKeys.payments.all, 'daily', date] as const,
+    summary: () => [...queryKeys.payments.all, 'summary'] as const,
   },
   
   // Reminder notes query keys

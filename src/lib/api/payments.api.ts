@@ -178,19 +178,27 @@ export const paymentsApi = {
   /**
    * Get aging report
    */
-  getAgingReport: async (): Promise<AgingReport> => {
-    const response = await apiClient.get("/reports/aging");
-    return adaptItemResponse<AgingReport>(response).data;
+  getAgingReport: async (): Promise<any> => {
+    const response = await apiClient.get("/payments/reports/aging");
+    return response.data;
   },
 
   /**
    * Get daily payments report
    */
-  getDailyPaymentsReport: async (date: string): Promise<DailyPaymentsReport> => {
-    const response = await apiClient.get("/reports/payments/daily", { 
+  getDailyPaymentsReport: async (date: string): Promise<any> => {
+    const response = await apiClient.get("/payments/reports/payments/daily", { 
       params: { date } 
     });
-    return adaptItemResponse<DailyPaymentsReport>(response).data;
+    return response.data;
+  },
+
+  /**
+   * Get payment summary/KPIs
+   */
+  getPaymentSummary: async (): Promise<any> => {
+    const response = await apiClient.get("/payments/summary");
+    return response.data;
   },
 };
 
