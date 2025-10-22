@@ -122,7 +122,7 @@ export function ReminderNoteModal({
 
         <div className="space-y-6">
           {/* Add Reminder Form */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <Label htmlFor="reminder-note">Reminder Note</Label>
             <Textarea
               id="reminder-note"

@@ -425,7 +425,7 @@ export function PaymentRecordingModal({
                 <CardContent className="space-y-6">
                   <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Payment Selection */}
-                    <div className="space-y-4">
+                    <div className="space-y-2">
                       <Label className="text-lg font-semibold">
                         Select Payment to Apply To *
                       </Label>
@@ -487,7 +487,7 @@ export function PaymentRecordingModal({
                     </div>
 
                     {/* Payment Amount */}
-                    <div className="space-y-4">
+                    <div className="space-y-2">
                       <Label
                         htmlFor="payment-amount"
                         className="text-lg font-semibold"
@@ -591,7 +591,7 @@ export function PaymentRecordingModal({
                     </div>
 
                     {/* Notes */}
-                    <div className="space-y-4">
+                    <div className="space-y-2">
                       <Label
                         htmlFor="payment-notes"
                         className="text-lg font-semibold"
