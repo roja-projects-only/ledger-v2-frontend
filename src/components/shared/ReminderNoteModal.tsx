@@ -142,7 +142,7 @@ export function ReminderNoteModal({
           <div className="space-y-3">
             <h3 className="text-sm font-semibold">Reminder History</h3>
             {historyLoading ? (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {[...Array(3)].map((_, index) => (
                   <Skeleton key={index} className="h-16 w-full" />
                 ))}

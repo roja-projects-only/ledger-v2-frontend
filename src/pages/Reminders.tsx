@@ -366,7 +366,7 @@ export function Reminders() {
             <Card>
               <CardContent className="space-y-3 py-6">
                 {[...Array(5)].map((_, index) => (
-                  <Skeleton key={index} className="h-24 w-full" />
+                  <Skeleton key={index} className="h-20 w-full" />
                 ))}
               </CardContent>
             </Card>

@@ -648,9 +648,9 @@ export function PaymentRecordingModal({
                 <CardContent className="p-0">
                   <div className="max-h-[600px] overflow-y-auto">
                     {paymentsLoading ? (
-                      <div className="space-y-4 p-6">
+                      <div className="space-y-3 p-6">
                         {[...Array(5)].map((_, index) => (
-                          <Skeleton key={index} className="h-24 w-full" />
+                          <Skeleton key={index} className="h-20 w-full" />
                         ))}
                       </div>
                     ) : paymentsError ? (
