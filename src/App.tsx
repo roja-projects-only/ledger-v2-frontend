@@ -20,6 +20,7 @@ import { CustomerHistory } from "@/pages/CustomerHistory";
 import { Settings } from "@/pages/Settings";
 import { Customers } from "@/pages/Customers";
 import { OutstandingBalances } from "@/pages/OutstandingBalances";
+import { Reminders } from "@/pages/Reminders";
 import { NotFound } from "@/pages/NotFound";
 import { Toaster } from "@/components/ui/sonner";
 import { useAuth } from "@/lib/hooks/useAuth";
@@ -115,6 +116,9 @@ function AppLayout() {
             
             {/* Outstanding Balances Page */}
             <Route path="/outstanding" element={<OutstandingBalances />} />
+            
+            {/* Reminders Page */}
+            <Route path="/reminders" element={<Reminders />} />
             
             {/* 404 Page - Catch-all for unknown routes */}
             <Route path="*" element={<NotFound />} />

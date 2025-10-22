@@ -165,7 +165,7 @@ export function CustomerDebtHistoryModal({
     isLoading: remindersLoading,
     error: remindersError,
   } = useQuery({
-    queryKey: queryKeys.reminders.customerReminders(customerId || ""),
+    queryKey: queryKeys.reminders.customerHistory(customerId || ""),
     queryFn: () => reminderNotesApi.getCustomerReminders(customerId!),
     enabled: !!customerId && open,
     retry: 1, // Only retry once to avoid excessive requests if endpoint doesn't exist

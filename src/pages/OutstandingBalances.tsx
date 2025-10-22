@@ -26,6 +26,7 @@ import { KPICard } from "@/components/shared/KPICard";
 import { OutstandingBalanceCard } from "@/components/shared/OutstandingBalanceCard";
 import { CustomerDebtHistoryModal } from "@/components/shared/CustomerDebtHistoryModal";
 import { PaymentRecordingModal } from "@/components/shared/PaymentRecordingModal";
+import { ReminderNoteModal } from "@/components/shared/ReminderNoteModal";
 import { useQuery } from "@tanstack/react-query";
 import { paymentsApi } from "@/lib/api/payments.api";
 import { queryKeys } from "@/lib/queryKeys";
@@ -93,6 +94,7 @@ export function OutstandingBalances() {
     useState<OutstandingBalance | null>(null);
   const [debtHistoryModalOpen, setDebtHistoryModalOpen] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [reminderModalOpen, setReminderModalOpen] = useState(false);
 
   // ============================================================================
   // Computed Values
@@ -236,8 +238,14 @@ export function OutstandingBalances() {
   };
 
   const handleAddReminder = (customerId: string) => {
-    // TODO: Implement reminder note modal
-    console.log("Add reminder for customer:", customerId);
+    const balance = outstandingBalances?.find(
+      (b) => b.customerId === customerId
+    );
+    if (balance) {
+      setSelectedCustomerId(customerId);
+      setSelectedCustomerName(balance.customerName);
+      setReminderModalOpen(true);
+    }
   };
 
   const handleViewHistory = (customerId: string) => {
@@ -561,6 +569,14 @@ export function OutstandingBalances() {
           // Refresh the outstanding balances data
           // The query will automatically refetch due to invalidation in the modal
         }}
+      />
+
+      {/* Reminder Note Modal */}
+      <ReminderNoteModal
+        open={reminderModalOpen}
+        onOpenChange={setReminderModalOpen}
+        customerId={selectedCustomerId}
+        customerName={selectedCustomerName}
       />
     </div>
   );

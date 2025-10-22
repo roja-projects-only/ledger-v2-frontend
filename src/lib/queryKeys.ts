@@ -53,7 +53,10 @@ export const queryKeys = {
   reminders: {
     all: ['reminders'] as const,
     lists: () => [...queryKeys.reminders.all, 'list'] as const,
-    customerReminders: (customerId: string) => [...queryKeys.reminders.all, 'customer', customerId] as const,
-    overdue: (daysSinceLastReminder?: number) => [...queryKeys.reminders.all, 'overdue', daysSinceLastReminder] as const,
+    list: (filters?: Record<string, unknown>) => [...queryKeys.reminders.lists(), filters] as const,
+    customerHistory: (customerId: string) => [...queryKeys.reminders.all, 'customer', customerId, 'history'] as const,
+    needingReminders: (days?: number) => [...queryKeys.reminders.all, 'needing', days] as const,
+    overdueCustomers: (days?: number) => [...queryKeys.reminders.all, 'overdue-customers', days] as const,
+    stats: () => [...queryKeys.reminders.all, 'stats'] as const,
   },
 } as const;
