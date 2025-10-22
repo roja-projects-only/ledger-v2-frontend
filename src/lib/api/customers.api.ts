@@ -23,6 +23,7 @@ export interface CreateCustomerRequest {
   location: Location;
   phone?: string;
   customUnitPrice?: number;
+  creditLimit?: number;
   notes?: string;
 }
 
@@ -31,6 +32,7 @@ export interface UpdateCustomerRequest {
   location?: Location;
   phone?: string;
   customUnitPrice?: number;
+  creditLimit?: number;
   notes?: string;
 }
 

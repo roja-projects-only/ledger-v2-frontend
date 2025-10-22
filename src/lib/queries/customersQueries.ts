@@ -75,6 +75,7 @@ export function useAddCustomerMutation() {
       location: Location;
       phone?: string;
       customUnitPrice?: number;
+      creditLimit?: number;
       notes?: string;
     }) => {
       return await customersApi.create(customerData);
@@ -103,7 +104,7 @@ export function useAddCustomerMutation() {
           updatedAt: new Date().toISOString(),
           createdBy: undefined,
           // Payment tracking fields
-          creditLimit: 1000, // Default credit limit
+          creditLimit: newCustomer.creditLimit ?? 1000, // Use provided or default credit limit
           outstandingBalance: 0, // New customers start with no debt
           lastPaymentDate: undefined,
           collectionStatus: 'ACTIVE' as const,
@@ -152,6 +153,7 @@ export function useUpdateCustomerMutation() {
         location?: Location;
         phone?: string;
         customUnitPrice?: number;
+        creditLimit?: number;
         notes?: string;
       };
     }) => {

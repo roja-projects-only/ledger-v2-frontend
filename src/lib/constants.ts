@@ -33,6 +33,9 @@ export const DEFAULT_SETTINGS: Settings = {
   currency: "PHP",
   businessName: undefined,
   enableCustomPricing: true, // Custom pricing enabled by default
+  enableCreditFeature: true, // Credit feature enabled by default
+  defaultCreditLimit: 1000.0, // PHP 1000 default credit limit
+  daysBeforeOverdue: 30, // 30 days before debt is considered overdue
 };
 
 // ============================================================================

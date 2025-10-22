@@ -38,6 +38,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     unitPrice: DEFAULT_SETTINGS.unitPrice,
     currency: DEFAULT_SETTINGS.currency,
     businessName: DEFAULT_SETTINGS.businessName,
+    enableCreditFeature: DEFAULT_SETTINGS.enableCreditFeature,
+    defaultCreditLimit: DEFAULT_SETTINGS.defaultCreditLimit,
+    daysBeforeOverdue: DEFAULT_SETTINGS.daysBeforeOverdue,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,6 +63,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         unitPrice: DEFAULT_SETTINGS.unitPrice,
         currency: DEFAULT_SETTINGS.currency,
         businessName: DEFAULT_SETTINGS.businessName,
+        enableCreditFeature: DEFAULT_SETTINGS.enableCreditFeature,
+        defaultCreditLimit: DEFAULT_SETTINGS.defaultCreditLimit,
+        daysBeforeOverdue: DEFAULT_SETTINGS.daysBeforeOverdue,
       });
     } finally {
       setLoading(false);
@@ -152,6 +158,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       unitPrice: DEFAULT_SETTINGS.unitPrice,
       currency: DEFAULT_SETTINGS.currency,
       businessName: DEFAULT_SETTINGS.businessName,
+      enableCreditFeature: DEFAULT_SETTINGS.enableCreditFeature,
+      defaultCreditLimit: DEFAULT_SETTINGS.defaultCreditLimit,
+      daysBeforeOverdue: DEFAULT_SETTINGS.daysBeforeOverdue,
     });
   }, [updateSettings]);
 

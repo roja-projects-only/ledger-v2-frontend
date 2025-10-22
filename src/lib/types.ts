@@ -203,6 +203,9 @@ export interface Settings {
   currency: string; // Currency code (default: "PHP")
   businessName?: string; // Optional business name
   enableCustomPricing: boolean; // Global toggle for custom pricing feature
+  enableCreditFeature: boolean; // Global toggle for credit/debt tracking feature
+  defaultCreditLimit: number; // Default credit limit for new customers (in PHP)
+  daysBeforeOverdue: number; // Number of days before debt is considered overdue
 }
 
 // ============================================================================
