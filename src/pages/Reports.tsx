@@ -260,7 +260,7 @@ export function Reports() {
         {/* Date Selector */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Select Date</CardTitle>
+            <CardTitle>Select Date</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-4">
@@ -301,55 +301,47 @@ export function Reports() {
         {/* Summary */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
-            <CardContent className="pt-6">
+            <CardHeader>
+              <CardTitle className="text-base font-medium">Total Payments</CardTitle>
+            </CardHeader>
+            <CardContent>
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Total Payments
-                  </p>
-                  <p className="text-2xl font-bold">
-                    {dailyReport.summary.totalPayments}
-                  </p>
-                </div>
+                <p className="text-2xl font-bold">
+                  {dailyReport.summary.totalPayments}
+                </p>
                 <Receipt className="h-8 w-8 text-muted-foreground" />
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6">
+            <CardHeader>
+              <CardTitle className="text-base font-medium">Total Amount</CardTitle>
+            </CardHeader>
+            <CardContent>
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Total Amount
-                  </p>
-                  <p className="text-2xl font-bold">
-                    {formatCurrency(dailyReport.summary.totalAmount)}
-                  </p>
-                </div>
+                <p className="text-2xl font-bold">
+                  {formatCurrency(dailyReport.summary.totalAmount)}
+                </p>
                 <DollarSign className="h-8 w-8 text-muted-foreground" />
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Payment Methods
-                  </p>
-                  <div className="text-sm mt-1">
-                    {Object.entries(dailyReport.summary.paymentMethods).map(
-                      ([method, amount]) => (
-                        <div key={method} className="flex justify-between">
-                          <span>{method}:</span>
-                          <span className="font-medium">
-                            {formatCurrency(amount)}
-                          </span>
-                        </div>
-                      )
-                    )}
-                  </div>
-                </div>
+            <CardHeader>
+              <CardTitle className="text-base font-medium">Payment Methods</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-1">
+                {Object.entries(dailyReport.summary.paymentMethods).map(
+                  ([method, amount]) => (
+                    <div key={method} className="flex justify-between text-sm">
+                      <span>{method}:</span>
+                      <span className="font-medium">
+                        {formatCurrency(amount)}
+                      </span>
+                    </div>
+                  )
+                )}
               </div>
             </CardContent>
           </Card>
@@ -445,42 +437,42 @@ export function Reports() {
         {/* Summary */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
-            <CardContent className="pt-6 text-center">
+            <CardHeader>
+              <CardTitle className="text-base font-medium text-center">0-30 days</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
               <div className="text-2xl font-bold text-green-600">
                 {formatCurrency(agingReport.summary.current)}
               </div>
-              <div className="text-sm text-muted-foreground mt-1">
-                0-30 days
-              </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6 text-center">
+            <CardHeader>
+              <CardTitle className="text-base font-medium text-center">31-60 days</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
               <div className="text-2xl font-bold text-yellow-600">
                 {formatCurrency(agingReport.summary.days31to60)}
               </div>
-              <div className="text-sm text-muted-foreground mt-1">
-                31-60 days
-              </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6 text-center">
+            <CardHeader>
+              <CardTitle className="text-base font-medium text-center">61-90 days</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
               <div className="text-2xl font-bold text-orange-600">
                 {formatCurrency(agingReport.summary.days61to90)}
               </div>
-              <div className="text-sm text-muted-foreground mt-1">
-                61-90 days
-              </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6 text-center">
+            <CardHeader>
+              <CardTitle className="text-base font-medium text-center">90+ days</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
               <div className="text-2xl font-bold text-red-600">
                 {formatCurrency(agingReport.summary.over90Days)}
-              </div>
-              <div className="text-sm text-muted-foreground mt-1">
-                90+ days
               </div>
             </CardContent>
           </Card>
