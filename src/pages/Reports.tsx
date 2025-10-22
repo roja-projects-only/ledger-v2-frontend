@@ -77,7 +77,7 @@ interface DailyPaymentsReportData {
 
 export function Reports() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const selectedDateISO = formatDate(selectedDate.toISOString().split("T")[0]);
+  const selectedDateISO = selectedDate.toISOString().split("T")[0];
 
   // Fetch daily payments report
   const {
