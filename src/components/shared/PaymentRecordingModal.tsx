@@ -352,7 +352,7 @@ export function PaymentRecordingModal({
             {balance && (
               <Card>
                 <CardContent className="p-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {/* Customer Info */}
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
