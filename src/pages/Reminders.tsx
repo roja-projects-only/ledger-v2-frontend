@@ -34,6 +34,7 @@ import { queryKeys } from "@/lib/queryKeys";
 import { notify } from "@/lib/notifications";
 import { handleApiError } from "@/lib/api/client";
 import { formatCurrency, cn } from "@/lib/utils";
+import { getSemanticColor } from "@/lib/colors";
 import {
   Bell,
   Users,
@@ -176,6 +177,8 @@ export function Reminders() {
   // ============================================================================
   // Render
   // ============================================================================
+
+  const errorTone = getSemanticColor("error");
 
   return (
     <div className="py-6">
@@ -349,12 +352,17 @@ export function Reminders() {
             <div
               role="alert"
               aria-live="polite"
-              className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+              className={cn(
+                "rounded-lg border px-4 py-3 text-sm",
+                errorTone.bg,
+                errorTone.border,
+                errorTone.text
+              )}
             >
               <p className="font-medium">
                 Unable to load customers needing reminders.
               </p>
-              <p className="text-xs text-red-700">
+              <p className={cn("text-xs", errorTone.subtext)}>
                 {error instanceof Error ? error.message : "Unknown error"}.
                 Please check your connection and try again.
               </p>
