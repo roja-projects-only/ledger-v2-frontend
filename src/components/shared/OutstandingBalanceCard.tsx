@@ -23,7 +23,6 @@ import {
   Clock, 
   AlertTriangle, 
   MessageSquare,
-  Calendar,
   CreditCard
 } from "lucide-react";
 
@@ -166,82 +165,74 @@ export function OutstandingBalanceCard({
 
   return (
     <Card className={`overflow-hidden transition-all duration-200 ${className}`}>
-      <CardContent className="p-3 sm:p-4">
-        <div className="space-y-3 sm:space-y-4">
-          {/* Header Row - Customer Info */}
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+      <CardContent className="p-4">
+        <div className="space-y-3">
+          {/* Header: Customer + Location + Status | Amount */}
+          <div className="flex items-center justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold truncate text-base sm:text-lg">
+              <h3 className="font-semibold text-sm truncate">
                 {balance.customerName}
               </h3>
-              <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <div className="flex items-center gap-1 mt-1 flex-wrap">
                 <LocationBadge location={balance.location} size="sm" />
                 <CollectionStatusBadge status={balance.collectionStatus} />
               </div>
             </div>
             
-            {/* Outstanding Amount - Prominent Display */}
-            <div className="text-right sm:text-right">
-              <div className="text-xl sm:text-2xl font-bold text-red-600">
+            {/* Outstanding Amount */}
+            <div className="text-right flex-shrink-0">
+              <div className="text-lg font-bold text-red-600">
                 {formatCurrency(balance.totalOwed)}
               </div>
-              <div className="text-xs sm:text-sm text-muted-foreground">
-                Outstanding
-              </div>
+              <div className="text-xs text-muted-foreground">Outstanding</div>
             </div>
           </div>
 
-          {/* Aging and Days Overdue */}
-          <div className="flex items-center justify-between gap-2 sm:gap-4">
-            <AgingIndicator daysPastDue={balance.daysPastDue} />
+          {/* Status Row: Aging | Days | Utilization */}
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <AgingIndicator daysPastDue={balance.daysPastDue} />
+            </div>
             
-            <div className="text-right">
-              <div className="text-base sm:text-lg font-semibold">
-                {balance.daysPastDue}
-              </div>
-              <div className="text-xs sm:text-sm text-muted-foreground">
-                days overdue
-              </div>
+            <div className="flex items-center gap-1 text-xs">
+              <span className="font-semibold text-foreground">{balance.daysPastDue}</span>
+              <span className="text-muted-foreground">days overdue</span>
+            </div>
+
+            <div className="flex items-center gap-1 text-xs ml-auto">
+              <span className={`font-semibold ${isOverLimit ? 'text-red-600' : isNearLimit ? 'text-yellow-600' : 'text-blue-600'}`}>
+                {utilizationPercentage.toFixed(0)}%
+              </span>
+              <span className="text-muted-foreground">utilized</span>
             </div>
           </div>
 
-          {/* Credit Limit Progress */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Credit Utilization</span>
-              <span className={`font-medium ${isOverLimit ? 'text-red-600' : isNearLimit ? 'text-yellow-600' : 'text-muted-foreground'}`}>
-                {utilizationPercentage.toFixed(1)}%
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+          {/* Credit Limit Bar */}
+          <div className="space-y-1">
+            <div className="w-full bg-slate-700 rounded-sm h-1.5">
               <div 
-                className={`h-2 rounded-full transition-all duration-300 ${
+                className={`h-1.5 rounded-sm transition-all duration-300 ${
                   isOverLimit ? 'bg-red-500' : isNearLimit ? 'bg-yellow-500' : 'bg-blue-500'
                 }`}
                 style={{ width: `${Math.min(utilizationPercentage, 100)}%` }}
               />
             </div>
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{formatCurrency(balance.totalOwed)} owed</span>
-              <span>{formatCurrency(balance.creditLimit)} limit</span>
+              <span>{formatCurrency(balance.totalOwed)}</span>
+              <span>{formatCurrency(balance.creditLimit)}</span>
             </div>
           </div>
 
-          {/* Additional Details (Expandable) */}
+          {/* Expanded Details */}
           {isExpanded && (
-            <div className="space-y-3 pt-3 border-t">
-              {/* Last Payment Date */}
+            <div className="space-y-1 pt-1 border-t text-xs">
               {balance.lastPaymentDate && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                <div className="flex justify-between">
                   <span className="text-muted-foreground">Last payment:</span>
                   <span>{new Date(balance.lastPaymentDate).toLocaleDateString()}</span>
                 </div>
               )}
-
-              {/* Oldest Debt Date */}
-              <div className="flex items-center gap-2 text-sm">
-                <Clock className="h-4 w-4 text-muted-foreground" />
+              <div className="flex justify-between">
                 <span className="text-muted-foreground">Oldest debt:</span>
                 <span>{new Date(balance.oldestDebtDate).toLocaleDateString()}</span>
               </div>
@@ -249,16 +240,16 @@ export function OutstandingBalanceCard({
           )}
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 pt-2 border-t">
+          <div className="flex gap-2 pt-2 border-t">
             {onRecordPayment && (
               <Button
                 variant="default"
                 size="sm"
                 onClick={() => onRecordPayment(balance.customerId)}
-                className="min-w-0"
+                className="flex-1 text-xs h-8"
               >
-                <CreditCard className="h-3.5 w-3.5 mr-1.5" />
-                <span className="truncate">Record Payment</span>
+                <CreditCard className="h-3 w-3 mr-1" />
+                Record
               </Button>
             )}
             
@@ -267,10 +258,10 @@ export function OutstandingBalanceCard({
                 variant="outline"
                 size="sm"
                 onClick={() => onAddReminder(balance.customerId)}
-                className="min-w-0"
+                className="flex-1 text-xs h-8"
               >
-                <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
-                <span className="truncate">Add Reminder</span>
+                <MessageSquare className="h-3 w-3 mr-1" />
+                Remind
               </Button>
             )}
             
@@ -279,18 +270,18 @@ export function OutstandingBalanceCard({
                 variant="ghost"
                 size="sm"
                 onClick={() => onViewHistory(balance.customerId)}
-                className="min-w-0"
+                className="flex-1 text-xs h-8"
               >
-                <span className="truncate">View History</span>
+                History
               </Button>
             )}
 
-            {/* Expand/Collapse Toggle */}
+            {/* Expand Toggle */}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsExpanded(!isExpanded)}
-              className="col-span-1"
+              className="text-xs h-8 px-2 shrink-0"
             >
               {isExpanded ? "Less" : "More"}
             </Button>
