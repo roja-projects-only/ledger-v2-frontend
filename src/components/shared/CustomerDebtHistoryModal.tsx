@@ -22,7 +22,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { LocationBadge } from "./LocationBadge";
 import { AgingIndicator, CollectionStatusBadge } from "./OutstandingBalanceCard";
 import { PaymentRecordingModal } from "./PaymentRecordingModal";
@@ -297,7 +296,7 @@ export function CustomerDebtHistoryModal({
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <ScrollArea className="h-[400px]">
+                  <div className="h-[400px] overflow-y-auto scroll-smooth will-change-transform" style={{ WebkitOverflowScrolling: 'touch' }}>
                     {paymentsLoading ? (
                       <div className="space-y-3 p-4">
                         {[...Array(5)].map((_, index) => (
@@ -317,7 +316,7 @@ export function CustomerDebtHistoryModal({
                     ) : (
                       <div className="divide-y">
                         {payments.map((payment) => (
-                          <div key={payment.id} className="p-4 hover:bg-muted/50">
+                          <div key={payment.id} className="p-4 hover:bg-muted/50 will-change-colors">
                             <div className="flex items-center justify-between gap-4">
                               {/* Payment Info */}
                               <div className="flex-1 min-w-0">
@@ -367,7 +366,7 @@ export function CustomerDebtHistoryModal({
                         ))}
                       </div>
                     )}
-                  </ScrollArea>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -386,7 +385,7 @@ export function CustomerDebtHistoryModal({
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <ScrollArea className="h-[400px]">
+                  <div className="h-[400px] overflow-y-auto scroll-smooth will-change-transform" style={{ WebkitOverflowScrolling: 'touch' }}>
                     {remindersLoading ? (
                       <div className="space-y-3 p-4">
                         {[...Array(3)].map((_, index) => (
@@ -406,7 +405,7 @@ export function CustomerDebtHistoryModal({
                     ) : (
                       <div className="divide-y">
                         {reminders.map((reminder) => (
-                          <div key={reminder.id} className="p-4 hover:bg-muted/50">
+                          <div key={reminder.id} className="p-4 hover:bg-muted/50 will-change-colors">
                             <div className="flex items-start gap-3">
                               <MessageSquare className="h-4 w-4 mt-1 text-muted-foreground shrink-0" />
                               <div className="flex-1 min-w-0">
@@ -423,7 +422,7 @@ export function CustomerDebtHistoryModal({
                         ))}
                       </div>
                     )}
-                  </ScrollArea>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>

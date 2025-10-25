@@ -153,31 +153,33 @@ export function ReminderNoteModal({
                 <p>No reminder notes yet</p>
               </div>
             ) : (
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {reminderHistory.reminders.map((reminder) => (
-                  <div
-                    key={reminder.id}
-                    className="border rounded-lg p-3 space-y-2"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm flex-1">{reminder.note}</p>
-                    </div>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {formatDistanceToNow(new Date(reminder.reminderDate), {
-                          addSuffix: true,
-                        })}
-                      </span>
-                      {reminder.createdBy && (
+              <div className="max-h-64 overflow-y-auto scroll-smooth will-change-transform" style={{ WebkitOverflowScrolling: 'touch' }}>
+                <div className="space-y-2 p-0">
+                  {reminderHistory.reminders.map((reminder) => (
+                    <div
+                      key={reminder.id}
+                      className="border rounded-lg p-3 space-y-2 hover:bg-muted/30 will-change-colors m-2"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm flex-1">{reminder.note}</p>
+                      </div>
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
-                          <UserIcon className="h-3 w-3" />
-                          {reminder.createdBy.username}
+                          <Calendar className="h-3 w-3" />
+                          {formatDistanceToNow(new Date(reminder.reminderDate), {
+                            addSuffix: true,
+                          })}
                         </span>
-                      )}
+                        {reminder.createdBy && (
+                          <span className="flex items-center gap-1">
+                            <UserIcon className="h-3 w-3" />
+                            {reminder.createdBy.username}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
           </div>

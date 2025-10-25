@@ -405,17 +405,17 @@ export function PaymentRecordingModal({
                   </AlertDescription>
                 </Alert>
               ) : (
-                <div className="border rounded-lg overflow-hidden">
-                  <div className="max-h-48 overflow-y-auto">
+                <div className="border rounded-lg overflow-hidden will-change-transform">
+                  <div className="max-h-48 overflow-y-auto scroll-smooth" style={{ WebkitOverflowScrolling: 'touch' }}>
                     <div className="space-y-1 p-2">
                       {unpaidPayments.map((payment: Payment) => (
                         <div
                           key={payment.id}
                           className={cn(
-                            "p-3 border rounded-lg cursor-pointer transition-all text-sm",
+                            "p-2 rounded cursor-pointer text-sm will-change-colors",
                             selectedPaymentId === payment.id
-                              ? "border-primary bg-primary/10 ring-2 ring-primary/20"
-                              : "border-border hover:bg-muted/50"
+                              ? "border-2 border-primary bg-primary/10"
+                              : "border border-border hover:bg-muted/50 active:bg-muted/80"
                           )}
                           onClick={() => setSelectedPaymentId(payment.id)}
                         >
@@ -601,7 +601,7 @@ export function PaymentRecordingModal({
                     payments.slice(0, 5).map((payment: Payment) => (
                       <div
                         key={payment.id}
-                        className="p-3 hover:bg-muted/50 transition-colors text-xs"
+                        className="p-3 hover:bg-muted/50 will-change-colors text-xs"
                       >
                         <div className="flex items-center justify-between gap-2 mb-1">
                           <PaymentStatusBadge status={payment.status} />
