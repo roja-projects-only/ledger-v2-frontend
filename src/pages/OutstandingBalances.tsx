@@ -27,6 +27,8 @@ import { OutstandingBalanceCard } from "@/components/shared/OutstandingBalanceCa
 import { CustomerDebtHistoryModal } from "@/components/shared/CustomerDebtHistoryModal";
 import { PaymentRecordingModal } from "@/components/shared/PaymentRecordingModal";
 import { ReminderNoteModal } from "@/components/shared/ReminderNoteModal";
+import { PaginationControls } from "@/components/shared/PaginationControls";
+import { usePagination } from "@/lib/hooks/usePagination";
 import { useQuery } from "@tanstack/react-query";
 import { paymentsApi } from "@/lib/api/payments.api";
 import { queryKeys } from "@/lib/queryKeys";
@@ -220,6 +222,13 @@ export function OutstandingBalances() {
     overdueFilter,
     sortConfig,
   ]);
+
+  // Pagination
+  const pagination = usePagination(filteredBalances, {
+    mobile: 5,
+    tablet: 8,
+    desktop: 15,
+  });
 
   // ============================================================================
   // Handlers
@@ -531,16 +540,36 @@ export function OutstandingBalances() {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-3">
-              {filteredBalances.map((balance) => (
-                <OutstandingBalanceCard
-                  key={balance.customerId}
-                  balance={balance}
-                  onRecordPayment={handleRecordPayment}
-                  onAddReminder={handleAddReminder}
-                  onViewHistory={handleViewHistory}
-                />
-              ))}
+            <div className="space-y-4">
+              {/* Paginated List */}
+              <div className="space-y-3">
+                {pagination.pageItems.map((balance) => (
+                  <OutstandingBalanceCard
+                    key={balance.customerId}
+                    balance={balance}
+                    onRecordPayment={handleRecordPayment}
+                    onAddReminder={handleAddReminder}
+                    onViewHistory={handleViewHistory}
+                  />
+                ))}
+              </div>
+
+              {/* Pagination Controls */}
+              {pagination.totalPages > 1 && (
+                <Card>
+                  <CardContent className="py-4">
+                    <PaginationControls
+                      currentPage={pagination.currentPage}
+                      totalPages={pagination.totalPages}
+                      onPrevious={pagination.prevPage}
+                      onNext={pagination.nextPage}
+                      onGoToPage={pagination.goToPage}
+                      totalItems={pagination.totalItems}
+                      itemsPerPage={pagination.itemsPerPage}
+                    />
+                  </CardContent>
+                </Card>
+              )}
             </div>
           )}
         </div>
