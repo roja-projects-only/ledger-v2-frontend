@@ -25,7 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { KPICard } from "@/components/shared/KPICard";
 import { LocationBadge } from "@/components/shared/LocationBadge";
 import { ReminderNoteModal } from "@/components/shared/ReminderNoteModal";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -135,6 +134,11 @@ export function Reminders() {
     );
   }, [customersNeedingReminders, searchQuery]);
 
+  // Get semantic colors for KPI cards
+  const infoColor = getSemanticColor("info");
+  const warningColor = getSemanticColor("warning");
+  const errorColor = getSemanticColor("error");
+
   // ============================================================================
   // Handlers
   // ============================================================================
@@ -197,30 +201,73 @@ export function Reminders() {
           {/* Summary KPIs */}
           {stats && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <KPICard
-                label="Reminders Today"
-                value={stats.remindersToday}
-                icon={Bell}
-                variant="quantity"
-              />
-              <KPICard
-                label="Reminders This Week"
-                value={stats.remindersThisWeek}
-                icon={Clock}
-                variant="quantity"
-              />
-              <KPICard
-                label="Customers with Debt"
-                value={stats.customersWithDebt}
-                icon={Users}
-                variant="customers"
-              />
-              <KPICard
-                label="Need Reminders"
-                value={needRemindersCount}
-                icon={AlertTriangle}
-                variant="quantity"
-              />
+              {/* Reminders Today - Info tone (sky blue) */}
+              <Card className={cn("border-2", infoColor.bg, infoColor.border)}>
+                <CardHeader className="pb-0">
+                  <div className="flex items-center gap-2">
+                    <div className={cn("p-1.5 rounded-md", infoColor.bg)}>
+                      <Bell className={cn("h-3.5 w-3.5", infoColor.icon)} />
+                    </div>
+                    <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Reminders Today
+                    </CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-1">
+                  <div className="text-2xl font-bold">{stats.remindersToday}</div>
+                </CardContent>
+              </Card>
+
+              {/* Reminders This Week - Warning tone (amber) */}
+              <Card className={cn("border-2", warningColor.bg, warningColor.border)}>
+                <CardHeader className="pb-0">
+                  <div className="flex items-center gap-2">
+                    <div className={cn("p-1.5 rounded-md", warningColor.bg)}>
+                      <Clock className={cn("h-3.5 w-3.5", warningColor.icon)} />
+                    </div>
+                    <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Reminders This Week
+                    </CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-1">
+                  <div className="text-2xl font-bold">{stats.remindersThisWeek}</div>
+                </CardContent>
+              </Card>
+
+              {/* Customers with Debt - Error tone (red) */}
+              <Card className={cn("border-2", errorColor.bg, errorColor.border)}>
+                <CardHeader className="pb-0">
+                  <div className="flex items-center gap-2">
+                    <div className={cn("p-1.5 rounded-md", errorColor.bg)}>
+                      <Users className={cn("h-3.5 w-3.5", errorColor.icon)} />
+                    </div>
+                    <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Customers with Debt
+                    </CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-1">
+                  <div className="text-2xl font-bold">{stats.customersWithDebt}</div>
+                </CardContent>
+              </Card>
+
+              {/* Need Reminders - Warning tone (amber) */}
+              <Card className={cn("border-2", warningColor.bg, warningColor.border)}>
+                <CardHeader className="pb-0">
+                  <div className="flex items-center gap-2">
+                    <div className={cn("p-1.5 rounded-md", warningColor.bg)}>
+                      <AlertTriangle className={cn("h-3.5 w-3.5", warningColor.icon)} />
+                    </div>
+                    <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Need Reminders
+                    </CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-1">
+                  <div className="text-2xl font-bold">{needRemindersCount}</div>
+                </CardContent>
+              </Card>
             </div>
           )}
 

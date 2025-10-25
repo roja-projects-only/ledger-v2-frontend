@@ -9,7 +9,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getKPIVariant, type KPIVariant } from "@/lib/colors";
+import { getKPIVariant, getSemanticColor, type KPIVariant, type SemanticTone } from "@/lib/colors";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 
@@ -26,6 +26,7 @@ interface KPICardProps {
     value: string;
   };
   variant?: KPIVariant;
+  semanticTone?: SemanticTone;
   loading?: boolean;
   className?: string;
 }
@@ -40,13 +41,21 @@ export function KPICard({
   icon: Icon,
   trend,
   variant,
+  semanticTone,
   loading = false,
   className,
 }: KPICardProps) {
-  const theme = variant ? getKPIVariant(variant) : null;
+  // Use semantic color if provided, otherwise fall back to KPI variant
+  let theme: ReturnType<typeof getSemanticColor> | ReturnType<typeof getKPIVariant> | null = null;
+  
+  if (semanticTone) {
+    theme = getSemanticColor(semanticTone);
+  } else if (variant) {
+    theme = getKPIVariant(variant);
+  }
+  
   const cardClasses = cn(
-    "h-full gap-2",
-    theme && "border-2",
+    "h-full gap-2 border-2",
     theme?.bg,
     theme?.border,
     className,
@@ -77,7 +86,9 @@ export function KPICard({
             <div
               className={cn(
                 "p-1.5 rounded-md",
-                theme?.iconBg ?? "bg-primary/10",
+                ("iconBg" in (theme ?? {}))
+                  ? (theme as any)?.iconBg
+                  : "bg-primary/10",
               )}
             >
               <Icon
