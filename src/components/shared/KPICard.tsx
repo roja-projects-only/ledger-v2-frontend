@@ -55,7 +55,7 @@ export function KPICard({
   }
   
   const cardClasses = cn(
-    "h-full gap-2 border-2",
+    "h-full gap-0 sm:gap-0 border-2",
     theme?.bg,
     theme?.border,
     className,
