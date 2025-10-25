@@ -330,42 +330,42 @@ export function PaymentRecordingModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl w-full max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
-        <div className="flex-shrink-0 p-6 pb-4 border-b">
+      <DialogContent className="w-full max-w-2xl max-h-[90vh] sm:max-h-[95vh] flex flex-col p-0 gap-0 overflow-hidden mx-0 sm:mx-auto rounded-b-none sm:rounded-lg">
+        <div className="flex-shrink-0 p-4 sm:p-6 pb-3 sm:pb-4 border-b">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <CreditCard className="h-5 w-5" />
-              Record Payment - {customerName || "Customer"}
+              <span className="truncate">Record Payment {customerName ? `- ${customerName}` : ""}</span>
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-xs sm:text-sm">
               Record a cash payment received from the customer
             </DialogDescription>
           </DialogHeader>
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          <div className="px-6 py-6 space-y-4">
+          <div className="px-4 sm:px-6 py-4 sm:py-6 space-y-3 sm:space-y-4">
             {/* Customer Summary - Compact */}
             {balance && (
-              <Card className="border-2 gap-0 sm:gap-0">
-                <CardContent className="p-4">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <Card className="border gap-0">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
                     {/* Current Outstanding */}
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-red-600">
+                      <div className="text-lg sm:text-2xl font-bold text-red-600">
                         {formatCurrency(balance.totalOwed)}
                       </div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-xs sm:text-sm text-muted-foreground">
                         Current Outstanding
                       </div>
                     </div>
 
                     {/* After Payment */}
                     <div className="text-center">
-                      <div className="text-2xl font-semibold text-green-600">
+                      <div className="text-lg sm:text-2xl font-semibold text-green-600">
                         {formatCurrency(newBalanceAfterPayment)}
                       </div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-xs sm:text-sm text-muted-foreground">
                         After Payment
                       </div>
                       {paymentAmountNum > 0 && (
@@ -406,13 +406,13 @@ export function PaymentRecordingModal({
                 </Alert>
               ) : (
                 <div className="border rounded-lg overflow-hidden will-change-transform">
-                  <div className="max-h-48 overflow-y-auto scroll-smooth" style={{ WebkitOverflowScrolling: 'touch' }}>
+                  <div className="max-h-40 sm:max-h-48 overflow-y-auto scroll-smooth" style={{ WebkitOverflowScrolling: 'touch' }}>
                     <div className="space-y-1 p-2">
                       {unpaidPayments.map((payment: Payment) => (
                         <div
                           key={payment.id}
                           className={cn(
-                            "p-2 rounded cursor-pointer text-sm will-change-colors",
+                            "p-2 sm:p-3 rounded cursor-pointer text-sm will-change-colors transition-colors",
                             selectedPaymentId === payment.id
                               ? "border-2 border-primary bg-primary/10"
                               : "border border-border hover:bg-muted/50 active:bg-muted/80"
@@ -432,7 +432,7 @@ export function PaymentRecordingModal({
                               )}
                             </div>
                             <div className="text-right flex-shrink-0">
-                              <div className="font-bold">
+                              <div className="font-bold text-xs sm:text-sm">
                                 {formatCurrency(
                                   payment.amount - payment.paidAmount
                                 )}
@@ -476,7 +476,7 @@ export function PaymentRecordingModal({
                 inputRef={paymentAmountRef}
                 aria-label="Payment amount"
                 className={cn(
-                  "text-lg h-12 text-center font-semibold",
+                  "text-base sm:text-lg h-12 sm:h-14 text-center font-semibold",
                   errors.amount && cn(errorTone.border, errorTone.ring)
                 )}
               />
@@ -493,7 +493,7 @@ export function PaymentRecordingModal({
             {/* Quick Amount Buttons - Simplified */}
             {selectedPayment && (
               <div className="space-y-2">
-                <div className="text-xs text-muted-foreground font-medium">
+                <div className="text-xs sm:text-sm text-muted-foreground font-medium">
                   Quick amounts:
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -502,7 +502,7 @@ export function PaymentRecordingModal({
                     variant="outline"
                     size="sm"
                     onClick={handleFullPayment}
-                    className="h-12 flex flex-col items-center justify-center gap-1"
+                    className="h-11 sm:h-12 flex flex-col items-center justify-center gap-1"
                   >
                     <span className="font-semibold text-xs">Full</span>
                     <span className="text-xs">
@@ -518,7 +518,7 @@ export function PaymentRecordingModal({
                         Math.floor(remainingOnPayment / 2)
                       )
                     }
-                    className="h-12 flex flex-col items-center justify-center gap-1"
+                    className="h-11 sm:h-12 flex flex-col items-center justify-center gap-1"
                   >
                     <span className="font-semibold text-xs">Half</span>
                     <span className="text-xs">
@@ -536,7 +536,7 @@ export function PaymentRecordingModal({
                       variant="outline"
                       size="sm"
                       onClick={() => handleQuickAmount(amount)}
-                      className="h-10 text-xs font-semibold"
+                      className="h-10 sm:h-11 text-xs sm:text-sm font-semibold"
                     >
                       ₱{(amount / 1000).toFixed(1).replace('.0', 'K')}
                     </Button>
@@ -550,7 +550,7 @@ export function PaymentRecordingModal({
                       variant="outline"
                       size="sm"
                       onClick={() => handleQuickAmount(amount)}
-                      className="h-10 text-xs font-semibold"
+                      className="h-10 sm:h-11 text-xs sm:text-sm font-semibold"
                     >
                       ₱{(amount / 1000).toFixed(0)}K
                     </Button>
@@ -578,7 +578,7 @@ export function PaymentRecordingModal({
             </div>
 
             {/* Recent Payment History - Collapsible */}
-            <Card className="border-2 gap-0 sm:gap-0">
+            <Card className="border gap-0">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <History className="h-4 w-4" />
@@ -629,12 +629,12 @@ export function PaymentRecordingModal({
         </div>
 
         {/* Action Buttons - Sticky Footer */}
-        <div className="flex-shrink-0 border-t p-4 gap-3 flex bg-background">
+        <div className="flex-shrink-0 border-t p-3 sm:p-4 gap-2 sm:gap-3 flex bg-background">
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="flex-1"
+            className="flex-1 h-11 sm:h-12"
           >
             Cancel
           </Button>
@@ -647,7 +647,7 @@ export function PaymentRecordingModal({
               recordPaymentMutation.isPending ||
               unpaidPayments.length === 0
             }
-            className="flex-1 font-semibold"
+            className="flex-1 font-semibold h-11 sm:h-12"
           >
             {recordPaymentMutation.isPending ? (
               <>Recording...</>
