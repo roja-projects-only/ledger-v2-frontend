@@ -40,15 +40,12 @@ import { cn, formatCurrency } from "@/lib/utils";
 import { getSemanticColor } from "@/lib/colors";
 import type { Payment, OutstandingBalance, PaymentMethod } from "@/lib/types";
 import {
-  DollarSign,
   Clock,
   CreditCard,
   AlertCircle,
   CheckCircle,
   XCircle,
-  Calculator,
   History,
-  Banknote,
 } from "lucide-react";
 
 // ============================================================================
@@ -333,7 +330,7 @@ export function PaymentRecordingModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl w-full max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
+      <DialogContent className="max-w-2xl w-full max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
         <div className="flex-shrink-0 p-6 pb-4 border-b">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -346,43 +343,21 @@ export function PaymentRecordingModal({
           </DialogHeader>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6">
-          <div className="space-y-6 py-6">
-            {/* Customer Summary */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="px-6 py-6 space-y-4">
+            {/* Customer Summary - Compact */}
             {balance && (
-              <Card>
-                <CardContent className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {/* Customer Info */}
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <LocationBadge location={balance.location} size="sm" />
-                        <CollectionStatusBadge
-                          status={balance.collectionStatus}
-                        />
-                      </div>
-                      {balance.lastPaymentDate && (
-                        <div className="text-sm text-muted-foreground">
-                          Last payment:{" "}
-                          {new Date(
-                            balance.lastPaymentDate
-                          ).toLocaleDateString()}
-                        </div>
-                      )}
-                    </div>
-
+              <Card className="border-2 gap-0 sm:gap-0">
+                <CardContent className="p-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {/* Current Outstanding */}
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-red-600">
+                      <div className="text-2xl font-bold text-red-600">
                         {formatCurrency(balance.totalOwed)}
                       </div>
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-xs text-muted-foreground">
                         Current Outstanding
                       </div>
-                      <AgingIndicator
-                        daysPastDue={balance.daysPastDue}
-                        className="mt-2"
-                      />
                     </div>
 
                     {/* After Payment */}
@@ -390,352 +365,296 @@ export function PaymentRecordingModal({
                       <div className="text-2xl font-semibold text-green-600">
                         {formatCurrency(newBalanceAfterPayment)}
                       </div>
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-xs text-muted-foreground">
                         After Payment
                       </div>
                       {paymentAmountNum > 0 && (
-                        <div className="text-sm text-muted-foreground mt-1">
+                        <div className="text-xs text-muted-foreground">
                           -{formatCurrency(paymentAmountNum)}
                         </div>
                       )}
                     </div>
 
-                    {/* Payment Method Info */}
+                    {/* Location & Status */}
+                    <div className="flex flex-col items-center justify-center gap-1">
+                      <LocationBadge location={balance.location} size="sm" />
+                      <CollectionStatusBadge
+                        status={balance.collectionStatus}
+                      />
+                    </div>
+
+                    {/* Aging Info */}
                     <div className="flex items-center justify-center">
-                      <div className="flex items-center gap-3 p-4 border rounded-lg bg-muted/50">
-                        <Banknote className="h-5 w-5" />
-                        <span className="font-medium">Cash Payment</span>
-                      </div>
+                      <AgingIndicator daysPastDue={balance.daysPastDue} />
                     </div>
                   </div>
                 </CardContent>
               </Card>
             )}
 
-            {/* Main Content - Two Column Layout */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-              {/* Left Column - Payment Form */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calculator className="h-4 w-4" />
-                    Record Payment
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Payment Selection */}
-                    <div className="space-y-2">
-                      <Label className="text-lg font-semibold">
-                        Select Payment to Apply To *
-                      </Label>
-                      {unpaidPayments.length === 0 ? (
-                        <Alert>
-                          <AlertCircle className="h-4 w-4" />
-                          <AlertDescription>
-                            No unpaid payments found for this customer.
-                          </AlertDescription>
-                        </Alert>
-                      ) : (
-                        <div className="space-y-3 max-h-60 overflow-y-auto border rounded-lg p-4">
-                          {unpaidPayments.map((payment: Payment) => (
-                            <div
-                              key={payment.id}
-                              className={cn(
-                                "p-5 border rounded-lg cursor-pointer transition-all",
-                                selectedPaymentId === payment.id
-                                  ? "border-primary bg-primary/10 ring-2 ring-primary/20 shadow-md"
-                                  : "border-border hover:bg-muted/50 hover:shadow-sm"
-                              )}
-                              onClick={() => setSelectedPaymentId(payment.id)}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                  <PaymentStatusBadge status={payment.status} />
-                                  {payment.dueDate && (
-                                    <span className="text-sm text-muted-foreground">
-                                      Due:{" "}
-                                      {new Date(
-                                        payment.dueDate
-                                      ).toLocaleDateString()}
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="text-right">
-                                  <div className="text-xl font-bold">
-                                    {formatCurrency(
-                                      payment.amount - payment.paidAmount
-                                    )}
-                                  </div>
-                                  <div className="text-sm text-muted-foreground">
-                                    remaining
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      {errors.payment && (
-                        <p
-                          className={cn("text-sm", errorTone.text)}
-                          role="alert"
+            {/* Payment Selection */}
+            <div className="space-y-2">
+              <Label className="font-semibold text-sm">
+                Select Payment to Apply To *
+              </Label>
+              {unpaidPayments.length === 0 ? (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    No unpaid payments found for this customer.
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <div className="border rounded-lg overflow-hidden">
+                  <div className="max-h-48 overflow-y-auto">
+                    <div className="space-y-1 p-2">
+                      {unpaidPayments.map((payment: Payment) => (
+                        <div
+                          key={payment.id}
+                          className={cn(
+                            "p-3 border rounded-lg cursor-pointer transition-all text-sm",
+                            selectedPaymentId === payment.id
+                              ? "border-primary bg-primary/10 ring-2 ring-primary/20"
+                              : "border-border hover:bg-muted/50"
+                          )}
+                          onClick={() => setSelectedPaymentId(payment.id)}
                         >
-                          {errors.payment}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Payment Amount */}
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="payment-amount"
-                        className="text-lg font-semibold"
-                      >
-                        Payment Amount (₱) *
-                      </Label>
-                      <NumberInput
-                        value={paymentAmount}
-                        onChange={setPaymentAmount}
-                        min={0.01}
-                        step={0.01}
-                        placeholder="0.00"
-                        inputRef={paymentAmountRef}
-                        aria-label="Payment amount"
-                        className={cn(
-                          "text-xl h-14 text-center font-semibold",
-                          errors.amount && cn(errorTone.border, errorTone.ring)
-                        )}
-                      />
-                      {errors.amount && (
-                        <p
-                          className={cn("text-sm", errorTone.text)}
-                          role="alert"
-                        >
-                          {errors.amount}
-                        </p>
-                      )}
-
-                      {/* Quick Amount Buttons */}
-                      {selectedPayment && (
-                        <div className="space-y-4">
-                          <div className="text-sm text-muted-foreground font-medium">
-                            Quick amounts:
-                          </div>
-                          <div className="grid grid-cols-2 gap-3">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="lg"
-                              onClick={handleFullPayment}
-                              className="h-14 flex flex-col"
-                            >
-                              <span className="font-semibold">
-                                Full Payment
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {formatCurrency(remainingOnPayment)}
-                              </span>
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="lg"
-                              onClick={() =>
-                                handleQuickAmount(
-                                  Math.floor(remainingOnPayment / 2)
-                                )
-                              }
-                              className="h-14 flex flex-col"
-                            >
-                              <span className="font-semibold">
-                                Half Payment
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {formatCurrency(
-                                  Math.floor(remainingOnPayment / 2)
-                                )}
-                              </span>
-                            </Button>
-                          </div>
-                          <div className="grid grid-cols-4 gap-3">
-                            {[100, 200, 500, 1000].map((amount) => (
-                              <Button
-                                key={amount}
-                                type="button"
-                                variant="outline"
-                                size="lg"
-                                onClick={() => handleQuickAmount(amount)}
-                                className="h-12 font-semibold"
-                              >
-                                ₱{amount}
-                              </Button>
-                            ))}
-                          </div>
-                          <div className="grid grid-cols-3 gap-3">
-                            {[2000, 5000, 10000].map((amount) => (
-                              <Button
-                                key={amount}
-                                type="button"
-                                variant="outline"
-                                size="lg"
-                                onClick={() => handleQuickAmount(amount)}
-                                className="h-12 font-semibold"
-                              >
-                                ₱{amount}
-                              </Button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Notes */}
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="payment-notes"
-                        className="text-lg font-semibold"
-                      >
-                        Notes (Optional)
-                      </Label>
-                      <Textarea
-                        id="payment-notes"
-                        placeholder="Additional notes about this payment..."
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        rows={4}
-                        className="resize-none text-base"
-                      />
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-4 pt-6">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => onOpenChange(false)}
-                        className="flex-1 h-14 text-base"
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        type="submit"
-                        disabled={
-                          recordPaymentMutation.isPending ||
-                          unpaidPayments.length === 0
-                        }
-                        className="flex-1 h-14 text-base font-semibold"
-                      >
-                        {recordPaymentMutation.isPending ? (
-                          <>Recording Payment...</>
-                        ) : (
-                          <>Record Payment</>
-                        )}
-                      </Button>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
-
-              {/* Right Column - Payment History */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <History className="h-4 w-4" />
-                    Recent Payment History
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="max-h-[600px] overflow-y-auto">
-                    {paymentsLoading ? (
-                      <div className="space-y-3 p-6">
-                        {[...Array(5)].map((_, index) => (
-                          <Skeleton key={index} className="h-20 w-full" />
-                        ))}
-                      </div>
-                    ) : paymentsError ? (
-                      <div className="p-8 text-center text-muted-foreground">
-                        <AlertCircle className="h-12 w-12 mx-auto mb-4" />
-                        <p className="text-lg">
-                          Failed to load payment history
-                        </p>
-                      </div>
-                    ) : !payments || payments.length === 0 ? (
-                      <div className="p-8 text-center text-muted-foreground">
-                        <DollarSign className="h-12 w-12 mx-auto mb-4" />
-                        <p className="text-lg">No payment history found</p>
-                      </div>
-                    ) : (
-                      <div className="divide-y">
-                        {payments.slice(0, 15).map((payment: Payment) => (
-                          <div
-                            key={payment.id}
-                            className="p-6 hover:bg-muted/50 transition-colors"
-                          >
-                            <div className="flex items-center justify-between gap-6">
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-3 mb-3">
-                                  <PaymentStatusBadge status={payment.status} />
-                                  {payment.dueDate && (
-                                    <span className="text-sm text-muted-foreground">
-                                      Due:{" "}
-                                      {new Date(
-                                        payment.dueDate
-                                      ).toLocaleDateString()}
-                                    </span>
-                                  )}
-                                </div>
-
-                                <div className="text-sm text-muted-foreground mb-2">
-                                  Created:{" "}
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <PaymentStatusBadge status={payment.status} />
+                              {payment.dueDate && (
+                                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                  Due:{" "}
                                   {new Date(
-                                    payment.createdAt
+                                    payment.dueDate
                                   ).toLocaleDateString()}
-                                  {payment.paidAt && (
-                                    <span className="ml-2">
-                                      • Paid:{" "}
-                                      {new Date(
-                                        payment.paidAt
-                                      ).toLocaleDateString()}
-                                    </span>
-                                  )}
-                                </div>
-
-                                {payment.notes && (
-                                  <div className="text-sm text-muted-foreground mt-2 p-2 bg-muted/50 rounded">
-                                    Note: {payment.notes}
-                                  </div>
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-right flex-shrink-0">
+                              <div className="font-bold">
+                                {formatCurrency(
+                                  payment.amount - payment.paidAmount
                                 )}
                               </div>
-
-                              <div className="text-right">
-                                <div className="text-xl font-bold">
-                                  {formatCurrency(payment.amount)}
-                                </div>
-                                {payment.paidAmount > 0 && (
-                                  <div className="text-sm text-green-600 font-medium">
-                                    Paid: {formatCurrency(payment.paidAmount)}
-                                  </div>
-                                )}
-                                {payment.amount > payment.paidAmount && (
-                                  <div className="text-sm text-red-600 font-medium">
-                                    Remaining:{" "}
-                                    {formatCurrency(
-                                      payment.amount - payment.paidAmount
-                                    )}
-                                  </div>
-                                )}
+                              <div className="text-xs text-muted-foreground">
+                                remaining
                               </div>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              )}
+              {errors.payment && (
+                <p
+                  className={cn("text-sm", errorTone.text)}
+                  role="alert"
+                >
+                  {errors.payment}
+                </p>
+              )}
             </div>
+
+            {/* Payment Amount */}
+            <div className="space-y-2">
+              <Label
+                htmlFor="payment-amount"
+                className="font-semibold text-sm"
+              >
+                Payment Amount (₱) *
+              </Label>
+              <NumberInput
+                value={paymentAmount}
+                onChange={setPaymentAmount}
+                min={1}
+                step={1}
+                quickValues={[]}
+                placeholder="0"
+                inputRef={paymentAmountRef}
+                aria-label="Payment amount"
+                className={cn(
+                  "text-lg h-12 text-center font-semibold",
+                  errors.amount && cn(errorTone.border, errorTone.ring)
+                )}
+              />
+              {errors.amount && (
+                <p
+                  className={cn("text-sm", errorTone.text)}
+                  role="alert"
+                >
+                  {errors.amount}
+                </p>
+              )}
+            </div>
+
+            {/* Quick Amount Buttons - Simplified */}
+            {selectedPayment && (
+              <div className="space-y-2">
+                <div className="text-xs text-muted-foreground font-medium">
+                  Quick amounts:
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleFullPayment}
+                    className="h-12 flex flex-col items-center justify-center gap-1"
+                  >
+                    <span className="font-semibold text-xs">Full</span>
+                    <span className="text-xs">
+                      {formatCurrency(remainingOnPayment)}
+                    </span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      handleQuickAmount(
+                        Math.floor(remainingOnPayment / 2)
+                      )
+                    }
+                    className="h-12 flex flex-col items-center justify-center gap-1"
+                  >
+                    <span className="font-semibold text-xs">Half</span>
+                    <span className="text-xs">
+                      {formatCurrency(
+                        Math.floor(remainingOnPayment / 2)
+                      )}
+                    </span>
+                  </Button>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {[500, 1000, 2000].map((amount) => (
+                    <Button
+                      key={amount}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleQuickAmount(amount)}
+                      className="h-10 text-xs font-semibold"
+                    >
+                      ₱{(amount / 1000).toFixed(1).replace('.0', 'K')}
+                    </Button>
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {[5000, 10000].map((amount) => (
+                    <Button
+                      key={amount}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleQuickAmount(amount)}
+                      className="h-10 text-xs font-semibold"
+                    >
+                      ₱{(amount / 1000).toFixed(0)}K
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Notes */}
+            <div className="space-y-2">
+              <Label
+                htmlFor="payment-notes"
+                className="font-semibold text-sm"
+              >
+                Notes (Optional)
+              </Label>
+              <Textarea
+                id="payment-notes"
+                placeholder="Additional notes about this payment..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={3}
+                className="resize-none text-sm"
+              />
+            </div>
+
+            {/* Recent Payment History - Collapsible */}
+            <Card className="border-2 gap-0 sm:gap-0">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <History className="h-4 w-4" />
+                  Recent Payments
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="max-h-32 overflow-y-auto divide-y border-t">
+                  {paymentsLoading ? (
+                    <div className="space-y-2 p-3">
+                      {[...Array(3)].map((_, index) => (
+                        <Skeleton key={index} className="h-12 w-full" />
+                      ))}
+                    </div>
+                  ) : paymentsError || !payments || payments.length === 0 ? (
+                    <div className="p-3 text-center text-muted-foreground text-xs">
+                      No payment history
+                    </div>
+                  ) : (
+                    payments.slice(0, 5).map((payment: Payment) => (
+                      <div
+                        key={payment.id}
+                        className="p-3 hover:bg-muted/50 transition-colors text-xs"
+                      >
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <PaymentStatusBadge status={payment.status} />
+                          <div className="font-bold">
+                            {formatCurrency(payment.amount)}
+                          </div>
+                        </div>
+                        <div className="text-muted-foreground text-xs">
+                          {new Date(
+                            payment.createdAt
+                          ).toLocaleDateString()}
+                          {payment.paidAmount > 0 && (
+                            <span className="ml-2 text-green-600">
+                              Paid: {formatCurrency(payment.paidAmount)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
+        </div>
+
+        {/* Action Buttons - Sticky Footer */}
+        <div className="flex-shrink-0 border-t p-4 gap-3 flex bg-background">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="flex-1"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={(e) => {
+              e.preventDefault();
+              handleSubmit(e as any);
+            }}
+            disabled={
+              recordPaymentMutation.isPending ||
+              unpaidPayments.length === 0
+            }
+            className="flex-1 font-semibold"
+          >
+            {recordPaymentMutation.isPending ? (
+              <>Recording...</>
+            ) : (
+              <>Record Payment</>
+            )}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
