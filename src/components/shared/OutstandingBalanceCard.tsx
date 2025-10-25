@@ -166,40 +166,40 @@ export function OutstandingBalanceCard({
 
   return (
     <Card className={`overflow-hidden transition-all duration-200 ${className}`}>
-      <CardContent className="p-4">
-        <div className="space-y-4">
+      <CardContent className="p-3 sm:p-4">
+        <div className="space-y-3 sm:space-y-4">
           {/* Header Row - Customer Info */}
-          <div className="flex items-start justify-between gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold truncate text-lg">
+              <h3 className="font-semibold truncate text-base sm:text-lg">
                 {balance.customerName}
               </h3>
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
                 <LocationBadge location={balance.location} size="sm" />
                 <CollectionStatusBadge status={balance.collectionStatus} />
               </div>
             </div>
             
             {/* Outstanding Amount - Prominent Display */}
-            <div className="text-right">
-              <div className="text-2xl font-bold text-red-600">
+            <div className="text-right sm:text-right">
+              <div className="text-xl sm:text-2xl font-bold text-red-600">
                 {formatCurrency(balance.totalOwed)}
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-xs sm:text-sm text-muted-foreground">
                 Outstanding
               </div>
             </div>
           </div>
 
           {/* Aging and Days Overdue */}
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
             <AgingIndicator daysPastDue={balance.daysPastDue} />
             
             <div className="text-right">
-              <div className="text-lg font-semibold">
+              <div className="text-base sm:text-lg font-semibold">
                 {balance.daysPastDue}
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-xs sm:text-sm text-muted-foreground">
                 days overdue
               </div>
             </div>
@@ -249,16 +249,16 @@ export function OutstandingBalanceCard({
           )}
 
           {/* Action Buttons */}
-          <div className="flex flex-wrap gap-2 pt-2 border-t">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 pt-2 border-t">
             {onRecordPayment && (
               <Button
                 variant="default"
                 size="sm"
                 onClick={() => onRecordPayment(balance.customerId)}
-                className="flex-1 min-w-0"
+                className="min-w-0"
               >
-                <CreditCard className="h-3.5 w-3.5 mr-2" />
-                Record Payment
+                <CreditCard className="h-3.5 w-3.5 mr-1.5" />
+                <span className="truncate">Record Payment</span>
               </Button>
             )}
             
@@ -267,10 +267,10 @@ export function OutstandingBalanceCard({
                 variant="outline"
                 size="sm"
                 onClick={() => onAddReminder(balance.customerId)}
-                className="flex-1 min-w-0"
+                className="min-w-0"
               >
-                <MessageSquare className="h-3.5 w-3.5 mr-2" />
-                Add Reminder
+                <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
+                <span className="truncate">Add Reminder</span>
               </Button>
             )}
             
@@ -279,9 +279,9 @@ export function OutstandingBalanceCard({
                 variant="ghost"
                 size="sm"
                 onClick={() => onViewHistory(balance.customerId)}
-                className="flex-1 min-w-0"
+                className="min-w-0"
               >
-                View History
+                <span className="truncate">View History</span>
               </Button>
             )}
 
@@ -290,7 +290,7 @@ export function OutstandingBalanceCard({
               variant="ghost"
               size="sm"
               onClick={() => setIsExpanded(!isExpanded)}
-              className="shrink-0"
+              className="col-span-1"
             >
               {isExpanded ? "Less" : "More"}
             </Button>

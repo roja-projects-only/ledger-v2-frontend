@@ -364,9 +364,9 @@ export function OutstandingBalances() {
           {/* Filters */}
           <Card>
             <CardContent className="pt-6">
-              <div className="flex flex-col sm:grid sm:grid-cols-2 lg:flex lg:flex-row gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {/* Search */}
-                <div className="space-y-2 flex-1 sm:col-span-2 lg:col-span-auto lg:flex-none lg:w-48">
+                <div className="space-y-2">
                   <Label htmlFor="search">Search Customers</Label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -391,7 +391,7 @@ export function OutstandingBalances() {
                     }
                     disabled={isLoading}
                   >
-                    <SelectTrigger id="amount-filter" className="w-full">
+                    <SelectTrigger id="amount-filter" className="w-full sm:w-auto">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -414,7 +414,7 @@ export function OutstandingBalances() {
                     }
                     disabled={isLoading}
                   >
-                    <SelectTrigger id="overdue-filter" className="w-full">
+                    <SelectTrigger id="overdue-filter" className="w-full sm:w-auto">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -444,7 +444,7 @@ export function OutstandingBalances() {
                     }}
                     disabled={isLoading}
                   >
-                    <SelectTrigger id="sort" className="w-full">
+                    <SelectTrigger id="sort" className="w-full sm:w-auto">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
