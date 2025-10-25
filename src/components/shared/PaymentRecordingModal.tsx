@@ -333,7 +333,7 @@ export function PaymentRecordingModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] sm:max-w-[95vw] w-full h-[95vh] flex flex-col p-0 gap-0">
+      <DialogContent className="max-w-4xl w-full max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
         <div className="flex-shrink-0 p-6 pb-4 border-b">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
