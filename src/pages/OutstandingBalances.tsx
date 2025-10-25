@@ -282,7 +282,7 @@ export function OutstandingBalances() {
 
           {/* Summary KPIs */}
           {summaryStats && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               <KPICard
                 label="Total Outstanding"
                 value={formatCurrency(summaryStats.totalOutstanding)}
@@ -320,7 +320,7 @@ export function OutstandingBalances() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-green-600">
                       {formatCurrency(summaryStats.aging.current.amount)}
@@ -364,9 +364,9 @@ export function OutstandingBalances() {
           {/* Filters */}
           <Card>
             <CardContent className="pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="flex flex-col sm:grid sm:grid-cols-2 lg:flex lg:flex-row gap-3 sm:gap-4">
                 {/* Search */}
-                <div className="space-y-2">
+                <div className="space-y-2 flex-1 sm:col-span-2 lg:col-span-auto lg:flex-none lg:w-48">
                   <Label htmlFor="search">Search Customers</Label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -375,7 +375,7 @@ export function OutstandingBalances() {
                       placeholder="Search by name..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-9"
+                      className="pl-9 w-full"
                       disabled={isLoading}
                     />
                   </div>
@@ -391,7 +391,7 @@ export function OutstandingBalances() {
                     }
                     disabled={isLoading}
                   >
-                    <SelectTrigger id="amount-filter">
+                    <SelectTrigger id="amount-filter" className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -414,7 +414,7 @@ export function OutstandingBalances() {
                     }
                     disabled={isLoading}
                   >
-                    <SelectTrigger id="overdue-filter">
+                    <SelectTrigger id="overdue-filter" className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -444,7 +444,7 @@ export function OutstandingBalances() {
                     }}
                     disabled={isLoading}
                   >
-                    <SelectTrigger id="sort">
+                    <SelectTrigger id="sort" className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
