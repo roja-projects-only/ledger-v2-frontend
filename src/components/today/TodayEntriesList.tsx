@@ -74,9 +74,9 @@ export function TodayEntriesList({
   }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Scrollable container with fixed height */}
-      <div className="overflow-y-auto pr-2 space-y-3" style={{ maxHeight: "calc(100vh - 500px)", minHeight: "400px" }}>
+    <div className="flex flex-col h-full gap-3">
+      {/* Scrollable container - flex-1 to fill available space */}
+      <div className="overflow-y-auto pr-2 space-y-3 flex-1 min-h-0">
         {displayedItems.map((sale) => {
           const customer = customers.find((c) => c.id === sale.customerId);
           return (
@@ -94,8 +94,8 @@ export function TodayEntriesList({
         {hasMore && <div ref={observerRef} className="h-4" />}
       </div>
 
-      {/* Status footer outside scroll area */}
-      <div className="pt-3 border-t border-border/50 mt-2">
+      {/* Status footer - always at bottom */}
+      <div className="border-t border-border/50 pt-3">
         {hasMore ? (
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-3 w-3 animate-spin" />
