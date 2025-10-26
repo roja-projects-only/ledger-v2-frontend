@@ -136,60 +136,6 @@ export interface OutstandingBalance {
 }
 
 // ============================================================================
-// Reporting Types
-// ============================================================================
-
-export interface AgingReportSummary {
-  totalCustomers: number;
-  totalOutstanding: number;
-  current: number;
-  days31to60: number;
-  days61to90: number;
-  over90Days: number;
-}
-
-export interface AgingReportCustomer {
-  customerId: string;
-  customerName: string;
-  location: Location;
-  current: number;
-  days31to60: number;
-  days61to90: number;
-  over90Days: number;
-  totalOwed: number;
-  collectionStatus: CollectionStatus;
-}
-
-export interface AgingReportData {
-  summary: AgingReportSummary;
-  customers: AgingReportCustomer[];
-  generatedAt: string; // ISO 8601 date string
-}
-
-export interface DailyPaymentsReportSummary {
-  date: string; // ISO 8601 date string
-  totalPayments: number;
-  totalAmount: number;
-  paymentMethods: Record<string, number>;
-}
-
-export interface DailyPaymentsReport {
-  summary: DailyPaymentsReportSummary;
-  payments: Payment[];
-  generatedAt: string; // ISO 8601 date string
-}
-
-export interface PaymentSummary {
-  totalOutstanding: number;
-  totalOverdue: number;
-  customersWithDebt: number;
-  overdueCustomers: number;
-  averageDebtAge: number;
-  totalPaymentsToday: number;
-  paymentsReceivedToday: number;
-}
-
-// ============================================================================
 // Core Entities
 // ============================================================================
 

@@ -7,9 +7,10 @@
  * - Empty state message
  * - Edit/delete actions
  * - Infinite scroll pagination
+ * - Responsive height matching
  */
 
-import { useState, useEffect, useRef } from "react";
+import { useMemo } from "react";
 import { EntryCard } from "@/components/shared/EntryCard";
 import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 import type { Sale, Customer } from "@/lib/types";
@@ -40,45 +41,17 @@ export function TodayEntriesList({
   loading = false,
   itemsPerPage = 10,
 }: TodayEntriesListProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [maxHeight, setMaxHeight] = useState<string>("calc(100vh - 500px)");
-
-  // Recalculate height on resize
-  useEffect(() => {
-    const calculateHeight = () => {
-      if (containerRef.current) {
-        const container = containerRef.current.closest('.grid');
-        if (container) {
-          // Get the top position of the scrollable area
-          const scrollableDiv = containerRef.current.querySelector('.overflow-y-auto');
-          if (scrollableDiv) {
-            const rect = scrollableDiv.getBoundingClientRect();
-            // Calculate remaining space from current position to bottom, match QuickAddForm
-            const availableHeight = window.innerHeight - rect.top - 40; // Reduced buffer to 40px
-            setMaxHeight(`${Math.max(availableHeight, 350)}px`);
-          }
-        }
-      }
-    };
-
-    // Calculate on mount after a small delay to ensure DOM is fully rendered
-    const timeoutId = setTimeout(calculateHeight, 100);
-
-    // Recalculate on resize/zoom
-    window.addEventListener('resize', calculateHeight);
-    
-    // Also recalculate on layout changes
-    const observer = new ResizeObserver(calculateHeight);
-    if (containerRef.current?.closest('.grid')) {
-      observer.observe(containerRef.current.closest('.grid') as Element);
+  const orderedSales = useMemo(() => {
+    if (!sales.length) {
+      return [] as Sale[];
     }
 
-    return () => {
-      clearTimeout(timeoutId);
-      window.removeEventListener('resize', calculateHeight);
-      observer.disconnect();
-    };
-  }, []);
+    return [...sales].sort((a, b) => {
+      const aTime = new Date(a.date).getTime();
+      const bTime = new Date(b.date).getTime();
+      return bTime - aTime;
+    });
+  }, [sales]);
 
   // Infinite scroll pagination
   const {
@@ -87,22 +60,19 @@ export function TodayEntriesList({
     observerRef,
     totalItems,
     displayedCount,
-  } = useInfiniteScroll(sales, { itemsPerPage, autoLoad: true });
+  } = useInfiniteScroll(orderedSales, { itemsPerPage, autoLoad: true });
 
   if (loading) {
     return (
-      <div className="space-y-3">
-        {[...Array(3)].map((_, i) => (
-          <div
-            key={i}
-            className="h-24 rounded-lg bg-muted animate-pulse"
-          />
+      <div className="flex h-full flex-col gap-3" aria-live="polite">
+        {[...Array(4)].map((_, index) => (
+          <div key={index} className="h-24 rounded-lg bg-muted animate-pulse" />
         ))}
       </div>
     );
   }
 
-  if (sales.length === 0) {
+  if (orderedSales.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <Package className="h-12 w-12 text-muted-foreground mb-3" />
@@ -115,28 +85,36 @@ export function TodayEntriesList({
   }
 
   return (
-    <div className="flex flex-col h-full" ref={containerRef}>
-      {/* Scrollable container with responsive height */}
-      <div className="overflow-y-auto pr-2 space-y-3" style={{ maxHeight, minHeight: "350px" }}>
-        {displayedItems.map((sale) => {
-          const customer = customers.find((c) => c.id === sale.customerId);
-          return (
-            <EntryCard
-              key={sale.id}
-              sale={sale}
-              customer={customer}
-              onEdit={onEdit ? () => onEdit(sale) : undefined}
-              onDelete={onDelete ? () => onDelete(sale) : undefined}
-            />
-          );
-        })}
-        
-        {/* Intersection observer trigger at the bottom */}
-        {hasMore && <div ref={observerRef} className="h-4" />}
+    <section className="flex h-full flex-col" aria-label="Today's entries">
+      <div className="flex-1 min-h-0">
+        <div className="relative h-full">
+          <div className="h-full overflow-y-auto pr-0" role="presentation">
+            <ul className="flex flex-col gap-3" role="list">
+              {displayedItems.map((sale) => {
+                const customer = customers.find((c) => c.id === sale.customerId);
+                return (
+                  <li key={sale.id}>
+                    <EntryCard
+                      sale={sale}
+                      customer={customer}
+                      onEdit={onEdit ? () => onEdit(sale) : undefined}
+                      onDelete={onDelete ? () => onDelete(sale) : undefined}
+                    />
+                  </li>
+                );
+              })}
+
+              {hasMore && (
+                <li>
+                  <div ref={observerRef} className="h-4" aria-hidden="true" />
+                </li>
+              )}
+            </ul>
+          </div>
+        </div>
       </div>
 
-      {/* Status footer outside scroll area */}
-      <div className="pt-3 border-t border-border/50 mt-2">
+      <footer className="border-t border-border/50 pt-3 mt-3 flex-shrink-0 px-0" aria-live="polite">
         {hasMore ? (
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-3 w-3 animate-spin" />
@@ -147,7 +125,7 @@ export function TodayEntriesList({
             {totalItems} {totalItems === 1 ? "entry" : "entries"} total
           </p>
         )}
-      </div>
-    </div>
+      </footer>
+    </section>
   );
 }

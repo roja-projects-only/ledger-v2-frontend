@@ -45,7 +45,7 @@ export const queryKeys = {
     outstanding: () => [...queryKeys.payments.all, 'outstanding'] as const,
     customerPayments: (customerId: string) => [...queryKeys.payments.all, 'customer', customerId] as const,
     customerOutstanding: (customerId: string) => [...queryKeys.payments.all, 'customer', customerId, 'outstanding'] as const,
-    agingReport: () => [...queryKeys.payments.all, 'aging'] as const,
+    agingReport: (date?: string) => [...queryKeys.payments.all, 'aging', date ?? 'current'] as const,
     dailyReport: (date: string) => [...queryKeys.payments.all, 'daily', date] as const,
     summary: () => [...queryKeys.payments.all, 'summary'] as const,
   },

@@ -232,7 +232,7 @@ export function QuickAddForm({ customers, userId, onSave, loading = false }: Qui
       <CardHeader>
         <CardTitle>Quick Add Entry</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 overflow-y-auto">
         <form onSubmit={handleSubmit} className="space-y-3">
           {/* Location Filter */}
           <div className="space-y-2">

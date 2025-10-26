@@ -13,7 +13,7 @@
  * - Responsive design (stacks on mobile)
  */
 
-import { useMemo } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { Container } from "@/components/layout/Container";
 import { KPICard } from "@/components/shared/KPICard";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -57,8 +57,35 @@ export function Today() {
   } = useSales();
   const { getEffectivePrice } = usePricing();
 
+  // Refs for syncing heights
+  const formRef = useRef<HTMLDivElement>(null);
+  const entriesCardRef = useRef<HTMLDivElement>(null);
+  const [entriesHeight, setEntriesHeight] = useState<number | null>(null);
+
   // Get today's sales
   const todaySales = getTodaySales();
+
+  // Sync Today's Entries card height with QuickAddForm
+  useEffect(() => {
+    if (!formRef.current || !entriesCardRef.current) return;
+
+    const observer = new ResizeObserver(() => {
+      const formHeight = formRef.current?.offsetHeight;
+      if (formHeight) {
+        setEntriesHeight(formHeight);
+      }
+    });
+
+    observer.observe(formRef.current);
+    
+    // Initial measurement
+    const initialHeight = formRef.current.offsetHeight;
+    if (initialHeight) {
+      setEntriesHeight(initialHeight);
+    }
+
+    return () => observer.disconnect();
+  }, []);
 
   // Calculate KPIs
   const { todayKPIs } = useKPIs(todaySales, customers);
@@ -241,12 +268,16 @@ export function Today() {
 
           {/* Main Content - Two Column Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left Column - Today's Entries */}
-            <Card>
-              <CardHeader>
+            {/* Left Column - Today's Entries with dynamic height */}
+            <Card 
+              ref={entriesCardRef}
+              className="flex flex-col"
+              style={{ height: entriesHeight ? `${entriesHeight}px` : 'auto' }}
+            >
+              <CardHeader className="flex-shrink-0">
                 <CardTitle>Today's Entries</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex-1 min-h-0 px-4 pb-4 lg:px-6 lg:pb-0">
                 <TodayEntriesList
                   sales={todaySales}
                   customers={customers || []}
@@ -266,15 +297,17 @@ export function Today() {
               </CardContent>
             </Card>
 
-            {/* Right Column - Quick Add Entry */}
-            <QuickAddForm
-              customers={customers || []}
-              userId={user?.id || ""}
-              onSave={(saleData) => {
-                addSale(saleData);
-              }}
-              loading={loading}
-            />
+            {/* Right Column - Quick Add Entry (reference element) */}
+            <div ref={formRef}>
+              <QuickAddForm
+                customers={customers || []}
+                userId={user?.id || ""}
+                onSave={(saleData) => {
+                  addSale(saleData);
+                }}
+                loading={loading}
+              />
+            </div>
           </div>
 
           {/* Sales by Location Chart */}
