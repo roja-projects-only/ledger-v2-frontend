@@ -1,6 +1,6 @@
 /**
  * CustomerDebtHistoryModal - Display detailed payment history for a customer
- * 
+ *
  * Features:
  * - Complete payment history with dates and amounts
  * - Outstanding balance summary
@@ -28,15 +28,18 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { LocationBadge } from "./LocationBadge";
-import { AgingIndicator, CollectionStatusBadge } from "./OutstandingBalanceCard";
+import {
+  AgingIndicator,
+  CollectionStatusBadge,
+} from "./OutstandingBalanceCard";
 import { PaymentRecordingModal } from "./PaymentRecordingModal";
 import { useQuery } from "@tanstack/react-query";
 import { paymentsApi, reminderNotesApi } from "@/lib/api/payments.api";
 import { queryKeys } from "@/lib/queryKeys";
 import type { Payment, OutstandingBalance } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
-import { 
-  DollarSign, 
+import {
+  DollarSign,
   Clock,
   MessageSquare,
   CreditCard,
@@ -45,7 +48,7 @@ import {
   XCircle,
   ChevronDown,
   ChevronRight,
-  Receipt
+  Receipt,
 } from "lucide-react";
 
 // ============================================================================
@@ -69,7 +72,8 @@ function PaymentTransactions({ payment }: { payment: Payment }) {
   const [isOpen, setIsOpen] = useState(false);
 
   // Check if payment has transactions
-  const hasTransactions = payment.transactions && payment.transactions.length > 0;
+  const hasTransactions =
+    payment.transactions && payment.transactions.length > 0;
 
   if (!hasTransactions) {
     return null;
@@ -91,7 +95,8 @@ function PaymentTransactions({ payment }: { payment: Payment }) {
             <ChevronRight className="h-3 w-3 mr-1" />
           )}
           <Receipt className="h-3 w-3 mr-1" />
-          {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
+          {transactions.length} transaction
+          {transactions.length !== 1 ? "s" : ""}
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent className="mt-2">
@@ -99,7 +104,10 @@ function PaymentTransactions({ payment }: { payment: Payment }) {
           {transactions.map((transaction, index) => {
             // Calculate running balance
             const previousTransactions = transactions.slice(0, index + 1);
-            const totalPaidSoFar = previousTransactions.reduce((sum, t) => sum + t.amount, 0);
+            const totalPaidSoFar = previousTransactions.reduce(
+              (sum, t) => sum + t.amount,
+              0
+            );
             const runningBalance = payment.amount - totalPaidSoFar;
 
             return (
@@ -120,13 +128,13 @@ function PaymentTransactions({ payment }: { payment: Payment }) {
                     {formatCurrency(transaction.amount)}
                   </span>
                 </div>
-                
+
                 {transaction.notes && (
                   <div className="text-xs text-muted-foreground">
                     Note: {transaction.notes}
                   </div>
                 )}
-                
+
                 <div className="text-xs text-muted-foreground">
                   Balance after: {formatCurrency(Math.max(0, runningBalance))}
                 </div>
@@ -232,11 +240,19 @@ export function CustomerDebtHistoryModal({
       if (!data) return [];
       if (Array.isArray(data)) return data;
       // If data is an object with a payments property, use that
-      if (typeof data === 'object' && 'payments' in data && Array.isArray(data.payments)) {
+      if (
+        typeof data === "object" &&
+        "payments" in data &&
+        Array.isArray(data.payments)
+      ) {
         return data.payments;
       }
       // If data is an object with a data property, use that
-      if (typeof data === 'object' && 'data' in data && Array.isArray(data.data)) {
+      if (
+        typeof data === "object" &&
+        "data" in data &&
+        Array.isArray(data.data)
+      ) {
         return data.data;
       }
       // Fallback to empty array
@@ -259,11 +275,19 @@ export function CustomerDebtHistoryModal({
       if (!data) return [];
       if (Array.isArray(data)) return data;
       // If data is an object with a reminders property, use that
-      if (typeof data === 'object' && 'reminders' in data && Array.isArray(data.reminders)) {
+      if (
+        typeof data === "object" &&
+        "reminders" in data &&
+        Array.isArray(data.reminders)
+      ) {
         return data.reminders;
       }
       // If data is an object with a data property, use that
-      if (typeof data === 'object' && 'data' in data && Array.isArray(data.data)) {
+      if (
+        typeof data === "object" &&
+        "data" in data &&
+        Array.isArray(data.data)
+      ) {
         return data.data;
       }
       // Fallback to empty array
@@ -272,9 +296,7 @@ export function CustomerDebtHistoryModal({
   });
 
   // Fetch current outstanding balance if not provided
-  const {
-    data: currentBalance,
-  } = useQuery({
+  const { data: currentBalance } = useQuery({
     queryKey: queryKeys.payments.customerOutstanding(customerId || ""),
     queryFn: () => paymentsApi.getCustomerOutstanding(customerId!),
     enabled: !!customerId && open && !outstandingBalance,
@@ -283,12 +305,20 @@ export function CustomerDebtHistoryModal({
   const balance = outstandingBalance || currentBalance;
 
   // Calculate payment statistics
-  const paymentStats = payments && Array.isArray(payments) ? {
-    totalPaid: payments.reduce((sum, payment) => sum + payment.paidAmount, 0),
-    totalOwed: payments.reduce((sum, payment) => sum + payment.amount, 0),
-    paymentCount: payments.filter(p => p.paidAmount > 0).length,
-    unpaidCount: payments.filter(p => p.status === "UNPAID" || p.status === "OVERDUE").length,
-  } : null;
+  const paymentStats =
+    payments && Array.isArray(payments)
+      ? {
+          totalPaid: payments.reduce(
+            (sum, payment) => sum + payment.paidAmount,
+            0
+          ),
+          totalOwed: payments.reduce((sum, payment) => sum + payment.amount, 0),
+          paymentCount: payments.filter((p) => p.paidAmount > 0).length,
+          unpaidCount: payments.filter(
+            (p) => p.status === "UNPAID" || p.status === "OVERDUE"
+          ).length,
+        }
+      : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -297,7 +327,11 @@ export function CustomerDebtHistoryModal({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <DollarSign className="h-5 w-5" />
-              <span className="truncate">{customerName ? `${customerName} - Debt History` : "Customer Debt History"}</span>
+              <span className="truncate">
+                {customerName
+                  ? `${customerName} - Debt History`
+                  : "Customer Debt History"}
+              </span>
             </DialogTitle>
             <DialogDescription className="text-xs sm:text-sm">
               View complete payment history and outstanding balance details
@@ -316,11 +350,16 @@ export function CustomerDebtHistoryModal({
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 flex-wrap">
                         <LocationBadge location={balance.location} size="sm" />
-                        <CollectionStatusBadge status={balance.collectionStatus} />
+                        <CollectionStatusBadge
+                          status={balance.collectionStatus}
+                        />
                       </div>
                       {balance.lastPaymentDate && (
                         <div className="text-xs sm:text-sm text-muted-foreground">
-                          Last payment: {new Date(balance.lastPaymentDate).toLocaleDateString()}
+                          Last payment:{" "}
+                          {new Date(
+                            balance.lastPaymentDate
+                          ).toLocaleDateString()}
                         </div>
                       )}
                     </div>
@@ -330,8 +369,13 @@ export function CustomerDebtHistoryModal({
                       <div className="text-lg sm:text-2xl font-bold text-red-600">
                         {formatCurrency(balance.totalOwed)}
                       </div>
-                      <div className="text-xs sm:text-sm text-muted-foreground">Outstanding</div>
-                      <AgingIndicator daysPastDue={balance.daysPastDue} className="mt-1" />
+                      <div className="text-xs sm:text-sm text-muted-foreground">
+                        Outstanding
+                      </div>
+                      <AgingIndicator
+                        daysPastDue={balance.daysPastDue}
+                        className="mt-1"
+                      />
                     </div>
 
                     {/* Credit Limit */}
@@ -339,9 +383,15 @@ export function CustomerDebtHistoryModal({
                       <div className="text-base sm:text-lg font-semibold">
                         {formatCurrency(balance.creditLimit)}
                       </div>
-                      <div className="text-xs sm:text-sm text-muted-foreground">Credit Limit</div>
+                      <div className="text-xs sm:text-sm text-muted-foreground">
+                        Credit Limit
+                      </div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        {((balance.totalOwed / balance.creditLimit) * 100).toFixed(1)}% utilized
+                        {(
+                          (balance.totalOwed / balance.creditLimit) *
+                          100
+                        ).toFixed(1)}
+                        % utilized
                       </div>
                     </div>
                   </div>
@@ -361,163 +411,213 @@ export function CustomerDebtHistoryModal({
               </Card>
             )}
 
-          {/* Tabs for different views */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
-            <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="payments" className="text-xs sm:text-sm">Payment History</TabsTrigger>
-              <TabsTrigger value="reminders" className="text-xs sm:text-sm">Reminder Notes</TabsTrigger>
-            </TabsList>
+            {/* Tabs for different views */}
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="flex-1"
+            >
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="payments" className="text-xs sm:text-sm">
+                  Payment History
+                </TabsTrigger>
+                <TabsTrigger value="reminders" className="text-xs sm:text-sm">
+                  Reminder Notes
+                </TabsTrigger>
+              </TabsList>
 
-            {/* Payment History Tab */}
-            <TabsContent value="payments" className="mt-0">
-              <Card className="border gap-0">
-                <CardHeader className="p-3 sm:p-4 pb-2 sm:pb-3">
-                  <CardTitle className="flex items-center justify-between text-sm sm:text-base">
-                    <span>Payment History</span>
-                    {paymentStats && (
-                      <div className="text-xs sm:text-sm text-muted-foreground font-normal">
-                        {paymentStats.paymentCount} payments • {paymentStats.unpaidCount} unpaid
-                      </div>
-                    )}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="h-80 sm:h-96 overflow-y-auto scroll-smooth will-change-transform" style={{ WebkitOverflowScrolling: 'touch' }}>
-                    {paymentsLoading ? (
-                      <div className="space-y-3 p-3 sm:p-4">
-                        {[...Array(5)].map((_, index) => (
-                          <Skeleton key={index} className="h-16 w-full" />
-                        ))}
-                      </div>
-                    ) : paymentsError ? (
-                      <div className="p-3 sm:p-4 text-center text-muted-foreground">
-                        <AlertCircle className="h-8 w-8 mx-auto mb-2" />
-                        <p className="text-xs sm:text-sm">Failed to load payment history</p>
-                      </div>
-                    ) : !payments || !Array.isArray(payments) || payments.length === 0 ? (
-                      <div className="p-3 sm:p-4 text-center text-muted-foreground">
-                        <DollarSign className="h-8 w-8 mx-auto mb-2" />
-                        <p className="text-xs sm:text-sm">No payment history found</p>
-                      </div>
-                    ) : (
-                      <div className="divide-y">
-                        {payments.map((payment) => (
-                          <div key={payment.id} className="p-3 sm:p-4 hover:bg-muted/50 will-change-colors">
-                            <div className="space-y-2">
-                              {/* Status and Date Row */}
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <PaymentStatusBadge status={payment.status} />
-                                {payment.dueDate && (
-                                  <span className="text-xs text-muted-foreground">
-                                    Due: {new Date(payment.dueDate).toLocaleDateString()}
-                                  </span>
-                                )}
-                              </div>
-                              
-                              {/* Created and Paid Dates */}
-                              <div className="text-xs text-muted-foreground">
-                                Created: {new Date(payment.createdAt).toLocaleDateString()}
-                                {payment.paidAt && (
-                                  <span className="ml-2">
-                                    • Paid: {new Date(payment.paidAt).toLocaleDateString()}
-                                  </span>
-                                )}
-                              </div>
-
-                              {/* Amount Info - Always visible */}
-                              <div className="flex gap-4 pt-1">
-                                <div>
-                                  <div className="font-semibold text-xs">
-                                    {formatCurrency(payment.amount)}
-                                  </div>
+              {/* Payment History Tab */}
+              <TabsContent value="payments" className="mt-0">
+                <Card className="border gap-0">
+                  <CardHeader className="p-3 sm:p-4 pb-2 sm:pb-3">
+                    <CardTitle className="flex items-center justify-between text-sm sm:text-base">
+                      <span>Payment History</span>
+                      {paymentStats && (
+                        <div className="text-xs sm:text-sm text-muted-foreground font-normal">
+                          {paymentStats.paymentCount} payments •{" "}
+                          {paymentStats.unpaidCount} unpaid
+                        </div>
+                      )}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div
+                      className="h-80 sm:h-96 overflow-y-auto scroll-smooth will-change-transform"
+                      style={{ WebkitOverflowScrolling: "touch" }}
+                    >
+                      {paymentsLoading ? (
+                        <div className="space-y-3 p-3 sm:p-4">
+                          {[...Array(5)].map((_, index) => (
+                            <Skeleton key={index} className="h-16 w-full" />
+                          ))}
+                        </div>
+                      ) : paymentsError ? (
+                        <div className="p-3 sm:p-4 text-center text-muted-foreground">
+                          <AlertCircle className="h-8 w-8 mx-auto mb-2" />
+                          <p className="text-xs sm:text-sm">
+                            Failed to load payment history
+                          </p>
+                        </div>
+                      ) : !payments ||
+                        !Array.isArray(payments) ||
+                        payments.length === 0 ? (
+                        <div className="p-3 sm:p-4 text-center text-muted-foreground">
+                          <DollarSign className="h-8 w-8 mx-auto mb-2" />
+                          <p className="text-xs sm:text-sm">
+                            No payment history found
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="divide-y">
+                          {payments.map((payment) => (
+                            <div
+                              key={payment.id}
+                              className="p-3 sm:p-4 hover:bg-muted/50 will-change-colors"
+                            >
+                              <div className="space-y-2">
+                                {/* Status and Date Row */}
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <PaymentStatusBadge status={payment.status} />
+                                  {payment.dueDate && (
+                                    <span className="text-xs text-muted-foreground">
+                                      Due:{" "}
+                                      {new Date(
+                                        payment.dueDate
+                                      ).toLocaleDateString()}
+                                    </span>
+                                  )}
                                 </div>
-                                {payment.paidAmount > 0 && (
-                                  <div className="text-xs text-green-600">
-                                    Paid: {formatCurrency(payment.paidAmount)}
-                                  </div>
-                                )}
-                                {payment.amount > payment.paidAmount && (
-                                  <div className="text-xs text-red-600">
-                                    Remaining: {formatCurrency(payment.amount - payment.paidAmount)}
-                                  </div>
-                                )}
-                              </div>
 
-                              {/* Notes if present */}
-                              {payment.notes && (
+                                {/* Created and Paid Dates */}
                                 <div className="text-xs text-muted-foreground">
-                                  Note: {payment.notes}
+                                  Created:{" "}
+                                  {new Date(
+                                    payment.createdAt
+                                  ).toLocaleDateString()}
+                                  {payment.paidAt && (
+                                    <span className="ml-2">
+                                      • Paid:{" "}
+                                      {new Date(
+                                        payment.paidAt
+                                      ).toLocaleDateString()}
+                                    </span>
+                                  )}
                                 </div>
-                              )}
 
-                              {/* Payment Transactions */}
-                              <PaymentTransactions payment={payment} />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                                {/* Amount Info - Always visible */}
+                                <div className="flex gap-4 pt-1">
+                                  <div>
+                                    <div className="font-semibold text-xs">
+                                      {formatCurrency(payment.amount)}
+                                    </div>
+                                  </div>
+                                  {payment.paidAmount > 0 && (
+                                    <div className="text-xs text-green-600">
+                                      Paid: {formatCurrency(payment.paidAmount)}
+                                    </div>
+                                  )}
+                                  {payment.amount > payment.paidAmount && (
+                                    <div className="text-xs text-red-600">
+                                      Remaining:{" "}
+                                      {formatCurrency(
+                                        payment.amount - payment.paidAmount
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
 
-            {/* Reminder Notes Tab */}
-            <TabsContent value="reminders" className="mt-0">
-              <Card className="border gap-0">
-                <CardHeader className="p-3 sm:p-4 pb-2 sm:pb-3">
-                  <CardTitle className="flex items-center justify-between text-sm sm:text-base">
-                    <span>Reminder Notes</span>
-                    {reminders && (
-                      <div className="text-xs sm:text-sm text-muted-foreground font-normal">
-                        {reminders.length} reminders
-                      </div>
-                    )}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="h-80 sm:h-96 overflow-y-auto scroll-smooth will-change-transform" style={{ WebkitOverflowScrolling: 'touch' }}>
-                    {remindersLoading ? (
-                      <div className="space-y-3 p-3 sm:p-4">
-                        {[...Array(3)].map((_, index) => (
-                          <Skeleton key={index} className="h-20 w-full" />
-                        ))}
-                      </div>
-                    ) : remindersError ? (
-                      <div className="p-3 sm:p-4 text-center text-muted-foreground">
-                        <AlertCircle className="h-8 w-8 mx-auto mb-2" />
-                        <p className="text-xs sm:text-sm">Failed to load reminder notes</p>
-                      </div>
-                    ) : !reminders || !Array.isArray(reminders) || reminders.length === 0 ? (
-                      <div className="p-3 sm:p-4 text-center text-muted-foreground">
-                        <MessageSquare className="h-8 w-8 mx-auto mb-2" />
-                        <p className="text-xs sm:text-sm">No reminder notes found</p>
-                      </div>
-                    ) : (
-                      <div className="divide-y">
-                        {reminders.map((reminder) => (
-                          <div key={reminder.id} className="p-3 sm:p-4 hover:bg-muted/50 will-change-colors">
-                            <div className="flex items-start gap-2 sm:gap-3">
-                              <MessageSquare className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
-                              <div className="flex-1 min-w-0">
-                                <div className="text-xs sm:text-sm font-medium mb-1">
-                                  {reminder.note}
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  {new Date(reminder.reminderDate).toLocaleDateString()} at{" "}
-                                  {new Date(reminder.reminderDate).toLocaleTimeString()}
-                                </div>
+                                {/* Notes if present */}
+                                {payment.notes && (
+                                  <div className="text-xs text-muted-foreground">
+                                    Note: {payment.notes}
+                                  </div>
+                                )}
+
+                                {/* Payment Transactions */}
+                                <PaymentTransactions payment={payment} />
                               </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Reminder Notes Tab */}
+              <TabsContent value="reminders" className="mt-0">
+                <Card className="border gap-0">
+                  <CardHeader className="p-3 sm:p-4 pb-2 sm:pb-3">
+                    <CardTitle className="flex items-center justify-between text-sm sm:text-base">
+                      <span>Reminder Notes</span>
+                      {reminders && (
+                        <div className="text-xs sm:text-sm text-muted-foreground font-normal">
+                          {reminders.length} reminders
+                        </div>
+                      )}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div
+                      className="h-80 sm:h-96 overflow-y-auto scroll-smooth will-change-transform"
+                      style={{ WebkitOverflowScrolling: "touch" }}
+                    >
+                      {remindersLoading ? (
+                        <div className="space-y-3 p-3 sm:p-4">
+                          {[...Array(3)].map((_, index) => (
+                            <Skeleton key={index} className="h-20 w-full" />
+                          ))}
+                        </div>
+                      ) : remindersError ? (
+                        <div className="p-3 sm:p-4 text-center text-muted-foreground">
+                          <AlertCircle className="h-8 w-8 mx-auto mb-2" />
+                          <p className="text-xs sm:text-sm">
+                            Failed to load reminder notes
+                          </p>
+                        </div>
+                      ) : !reminders ||
+                        !Array.isArray(reminders) ||
+                        reminders.length === 0 ? (
+                        <div className="p-3 sm:p-4 text-center text-muted-foreground">
+                          <MessageSquare className="h-8 w-8 mx-auto mb-2" />
+                          <p className="text-xs sm:text-sm">
+                            No reminder notes found
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="divide-y">
+                          {reminders.map((reminder) => (
+                            <div
+                              key={reminder.id}
+                              className="p-3 sm:p-4 hover:bg-muted/50 will-change-colors"
+                            >
+                              <div className="flex items-start gap-2 sm:gap-3">
+                                <MessageSquare className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-xs sm:text-sm font-medium mb-1">
+                                    {reminder.note}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {new Date(
+                                      reminder.reminderDate
+                                    ).toLocaleDateString()}{" "}
+                                    at{" "}
+                                    {new Date(
+                                      reminder.reminderDate
+                                    ).toLocaleTimeString()}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
 

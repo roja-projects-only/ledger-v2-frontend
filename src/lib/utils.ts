@@ -24,8 +24,9 @@ export function cn(...inputs: ClassValue[]) {
  * @param amount - Amount to format
  * @returns Formatted currency string (e.g., "\u20B112,345.67")
  */
-export function formatCurrency(amount: number): string {
-  return `${CURRENCY_SYMBOL}${amount.toLocaleString("en-PH", {
+export function formatCurrency(amount: number | undefined | null): string {
+  const value = amount ?? 0;
+  return `${CURRENCY_SYMBOL}${value.toLocaleString("en-PH", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
