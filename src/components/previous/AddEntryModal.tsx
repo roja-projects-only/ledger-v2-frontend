@@ -268,15 +268,18 @@ export function AddEntryModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Add Entry for {formatDate(date)}</DialogTitle>
-          <DialogDescription>
-            Add a new sale entry for the selected date.
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="w-[95vw] sm:w-full sm:max-w-[520px] max-h-[95vh] sm:max-h-[90vh] p-0 overflow-hidden">
+        <form onSubmit={handleSubmit} className="flex h-full flex-col">
+          <DialogHeader className="border-b px-4 py-3 sm:px-6 sm:py-4">
+            <DialogTitle className="text-lg sm:text-xl">
+              Add Entry for {formatDate(date)}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Add a new sale entry for the selected date.
+            </DialogDescription>
+          </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 space-y-3">
           {/* Payment Type Toggle */}
           <div className="space-y-2">
             <Label>Payment Type</Label>
@@ -404,12 +407,12 @@ export function AddEntryModal({
                 </Button>
               </PopoverTrigger>
               <PopoverContent
-                className="w-[var(--radix-popover-trigger-width)] p-0"
+                className="w-[var(--radix-popover-trigger-width)] max-w-[92vw] p-0"
                 align="start"
               >
                 <Command>
                   <CommandInput placeholder="Search customer..." />
-                  <CommandList>
+                  <CommandList className="max-h-60 overflow-y-auto">
                     <CommandEmpty>No customer found.</CommandEmpty>
                     <CommandGroup>
                       {filteredCustomers.map((customer) => (
@@ -591,14 +594,16 @@ export function AddEntryModal({
               className="w-full"
             />
           </div>
+          </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+          <DialogFooter className="flex-col-reverse gap-2 border-t px-4 py-3 sm:flex-row sm:items-center sm:justify-end sm:gap-3 sm:px-6 sm:py-4">
+            <Button type="button" variant="outline" onClick={onClose} className="w-full sm:w-auto">
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={paymentType === "CREDIT" && isCreditLimitExceeded}
+              className="w-full sm:w-auto"
             >
               Add {paymentType === "CREDIT" ? "Credit" : "Cash"} Entry
             </Button>
