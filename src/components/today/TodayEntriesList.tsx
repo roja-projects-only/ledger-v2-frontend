@@ -53,9 +53,9 @@ export function TodayEntriesList({
           const scrollableDiv = containerRef.current.querySelector('.overflow-y-auto');
           if (scrollableDiv) {
             const rect = scrollableDiv.getBoundingClientRect();
-            // Calculate remaining space from current position to bottom
-            const availableHeight = window.innerHeight - rect.top - 80; // 80px buffer for footer and spacing
-            setMaxHeight(`${Math.max(availableHeight, 400)}px`);
+            // Calculate remaining space from current position to bottom, match QuickAddForm
+            const availableHeight = window.innerHeight - rect.top - 40; // Reduced buffer to 40px
+            setMaxHeight(`${Math.max(availableHeight, 350)}px`);
           }
         }
       }
@@ -106,7 +106,7 @@ export function TodayEntriesList({
   return (
     <div className="flex flex-col h-full" ref={containerRef}>
       {/* Scrollable container with responsive height */}
-      <div className="overflow-y-auto pr-2 space-y-3" style={{ maxHeight, minHeight: "400px" }}>
+      <div className="overflow-y-auto pr-2 space-y-3" style={{ maxHeight, minHeight: "350px" }}>
         {displayedItems.map((sale) => {
           const customer = customers.find((c) => c.id === sale.customerId);
           return (
