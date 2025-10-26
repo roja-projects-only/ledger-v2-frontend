@@ -61,23 +61,12 @@ export function TodayEntriesList({
       }
     };
 
-    // Calculate on mount after a small delay to ensure DOM is fully rendered
-    const timeoutId = setTimeout(calculateHeight, 100);
+    // Calculate on mount
+    calculateHeight();
 
     // Recalculate on resize/zoom
     window.addEventListener('resize', calculateHeight);
-    
-    // Also recalculate on layout changes
-    const observer = new ResizeObserver(calculateHeight);
-    if (containerRef.current?.closest('.grid')) {
-      observer.observe(containerRef.current.closest('.grid') as Element);
-    }
-
-    return () => {
-      clearTimeout(timeoutId);
-      window.removeEventListener('resize', calculateHeight);
-      observer.disconnect();
-    };
+    return () => window.removeEventListener('resize', calculateHeight);
   }, []);
 
   // Infinite scroll pagination
