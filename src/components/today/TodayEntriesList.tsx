@@ -9,6 +9,7 @@
  * - Infinite scroll pagination
  */
 
+import { useState, useEffect, useRef } from "react";
 import { EntryCard } from "@/components/shared/EntryCard";
 import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 import type { Sale, Customer } from "@/lib/types";
@@ -39,6 +40,35 @@ export function TodayEntriesList({
   loading = false,
   itemsPerPage = 10,
 }: TodayEntriesListProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [maxHeight, setMaxHeight] = useState<string>("calc(100vh - 500px)");
+
+  // Recalculate height on resize
+  useEffect(() => {
+    const calculateHeight = () => {
+      if (containerRef.current) {
+        const container = containerRef.current.closest('.grid');
+        if (container) {
+          // Get the top position of the scrollable area
+          const scrollableDiv = containerRef.current.querySelector('.overflow-y-auto');
+          if (scrollableDiv) {
+            const rect = scrollableDiv.getBoundingClientRect();
+            // Calculate remaining space from current position to bottom
+            const availableHeight = window.innerHeight - rect.top - 80; // 80px buffer for footer and spacing
+            setMaxHeight(`${Math.max(availableHeight, 400)}px`);
+          }
+        }
+      }
+    };
+
+    // Calculate on mount
+    calculateHeight();
+
+    // Recalculate on resize/zoom
+    window.addEventListener('resize', calculateHeight);
+    return () => window.removeEventListener('resize', calculateHeight);
+  }, []);
+
   // Infinite scroll pagination
   const {
     displayedItems,
@@ -74,9 +104,9 @@ export function TodayEntriesList({
   }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Scrollable container with fixed height */}
-      <div className="overflow-y-auto pr-2 space-y-3" style={{ maxHeight: "calc(100vh - 500px)", minHeight: "400px" }}>
+    <div className="flex flex-col h-full" ref={containerRef}>
+      {/* Scrollable container with responsive height */}
+      <div className="overflow-y-auto pr-2 space-y-3" style={{ maxHeight, minHeight: "400px" }}>
         {displayedItems.map((sale) => {
           const customer = customers.find((c) => c.id === sale.customerId);
           return (
