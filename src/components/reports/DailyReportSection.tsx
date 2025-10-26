@@ -1,5 +1,16 @@
 import { useMemo, useState } from "react";
 import {
+  AlertCircle,
+  BarChart3,
+  CalendarIcon,
+  Clock,
+  Download,
+  Inbox,
+  Loader2,
+  Receipt,
+  TrendingUp,
+} from "lucide-react";
+import {
   Card,
   CardContent,
   CardHeader,
@@ -33,19 +44,9 @@ import {
   formatDate,
   formatDateTime,
 } from "@/lib/utils";
-import type { Location, Payment, PaymentStatus } from "@/lib/types";
+import { useIsMobile } from "@/lib/hooks/useIsMobile";
 import type { DailyPaymentsReportData } from "@/components/reports/types";
-import {
-  AlertCircle,
-  BarChart3,
-  CalendarIcon,
-  Clock,
-  Download,
-  Inbox,
-  Loader2,
-  Receipt,
-  TrendingUp,
-} from "lucide-react";
+import type { Location, Payment, PaymentStatus } from "@/lib/types";
 
 const PENDING_STATUSES: PaymentStatus[] = [
   "UNPAID",
@@ -64,6 +65,7 @@ const paymentSorter = (a: Payment, b: Payment) =>
   toTimestamp(a.paidAt ?? a.updatedAt ?? a.createdAt);
 
 const TIMELINE_HEIGHT = "min(60vh, 420px)";
+const TIMELINE_HEIGHT_MOBILE = "min(70vh, 360px)";
 const SIDE_CARD_MIN_HEIGHT = 176;
 const SIDE_CARD_FILL_ROWS = 3;
 const TIMELINE_FILL_ROWS = 3;
@@ -88,6 +90,7 @@ export function DailyReportSection({
   onSelectDate,
 }: DailyReportSectionProps) {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const insights = useMemo(() => {
     if (!report) return null;
@@ -188,6 +191,14 @@ export function DailyReportSection({
   }, [report]);
 
   const showLoadingIndicator = (Boolean(isFetching) || isLoading) && Boolean(report);
+  const timelineHeight = isMobile ? TIMELINE_HEIGHT_MOBILE : TIMELINE_HEIGHT;
+  const timelineMinHeightStyle = { minHeight: timelineHeight };
+  const timelineScrollStyle = { maxHeight: timelineHeight };
+  const sideCardContentStyle = isMobile ? undefined : { minHeight: SIDE_CARD_MIN_HEIGHT };
+  const topCustomerPlaceholderCount = Math.max(
+    0,
+    (isMobile ? 1 : SIDE_CARD_FILL_ROWS) - (insights?.topCustomers.length ?? 0)
+  );
 
   const handleExport = () => {
     if (!report) return;
@@ -372,38 +383,52 @@ export function DailyReportSection({
               Most recent payments appear first to highlight today’s activity.
             </p>
           </CardHeader>
-          <CardContent className="pb-2 sm:pb-0" style={{ minHeight: TIMELINE_HEIGHT }}>
-            <div className="relative" style={{ minHeight: TIMELINE_HEIGHT }}>
+          <CardContent className="p-4 sm:p-6 sm:pb-0 overflow-y-auto sm:overflow-visible" style={timelineMinHeightStyle}>
+            <div className="relative overflow-y-auto sm:overflow-visible -mx-4 sm:mx-0 px-4 sm:px-0" style={timelineMinHeightStyle}>
               {showLoadingIndicator && (
-                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-lg bg-background/90 backdrop-blur-sm">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden />
-                  <div className="text-center text-sm text-muted-foreground" aria-live="polite">
-                    Refreshing payments…
-                    <div className="text-xs text-muted-foreground/80">Pulling the latest entries for the selected date.</div>
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 rounded-lg bg-background/95 backdrop-blur-sm p-4 sm:p-6 -mx-4 sm:mx-0">
+                  <div className="flex flex-col items-center gap-3">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden />
+                    <div className="text-center space-y-2">
+                      <h3 className="text-sm font-semibold text-foreground">Refreshing payments…</h3>
+                      <p className="text-xs text-muted-foreground">Pulling the latest entries for the selected date.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-1">
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary/40 animate-pulse" />
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary/60 animate-pulse" style={{ animationDelay: "0.2s" }} />
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary/80 animate-pulse" style={{ animationDelay: "0.4s" }} />
                   </div>
                 </div>
               )}
               {insights.payments.length === 0 ? (
                 <div
-                  className="flex h-full w-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border/50 bg-background/60 p-8 text-center"
+                  className="flex h-full w-full flex-col items-center justify-center gap-4 sm:gap-6 rounded-lg border border-dashed border-border/30 bg-background p-4 sm:p-8 text-center"
                 >
-                  <Inbox className="h-8 w-8 text-muted-foreground/60" aria-hidden />
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">No payments recorded on this date.</p>
-                    <p className="text-xs text-muted-foreground/80">
-                      Try selecting another day or log a new collection to see it here instantly.
-                    </p>
+                  <div className="space-y-3">
+                    <div className="flex justify-center">
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-muted rounded-full blur-xl" />
+                        <Inbox className="h-12 w-12 text-muted-foreground/40 relative" aria-hidden />
+                      </div>
+                    </div>
+                    <div className="space-y-2 max-w-xs sm:max-w-sm">
+                      <h3 className="text-base font-semibold text-foreground">No payments recorded on this date</h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground/80 leading-relaxed">
+                        The payment timeline is empty. Start collecting by logging a new transaction or select a different date to view existing records.
+                      </p>
+                    </div>
                   </div>
                 </div>
               ) : (
-                <ScrollArea className="pr-2" style={{ maxHeight: TIMELINE_HEIGHT }}>
-                  <div className="space-y-3 pb-4 sm:pb-3">
+                <ScrollArea className="w-full" style={timelineScrollStyle}>
+                  <div className="space-y-2 sm:space-y-3 pb-2 sm:pb-4 px-2 sm:px-0">
                     {insights.payments.map((payment) => (
                       <div
                         key={payment.id}
-                        className="rounded-lg border border-border/60 bg-background/60 p-3 shadow-sm"
+                        className="rounded-lg border border-border/60 bg-background/60 p-2 sm:p-3 shadow-sm"
                       >
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex flex-col gap-2 sm:gap-3 sm:flex-row sm:items-center sm:justify-between">
                           <div className="space-y-1">
                             <div className="flex flex-wrap items-center gap-2">
                               <p className="font-semibold leading-tight">
@@ -432,7 +457,7 @@ export function DailyReportSection({
                           </div>
                         </div>
 
-                        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                        <div className="mt-2 sm:mt-3 flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs">
                           <SemanticBadge tone={getStatusTone(payment.status)}>
                             {PAYMENT_STATUS_LABELS[payment.status]}
                           </SemanticBadge>
@@ -467,7 +492,7 @@ export function DailyReportSection({
                 <BarChart3 className="h-4 w-4" /> Payment Methods
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3" style={{ minHeight: SIDE_CARD_MIN_HEIGHT }}>
+            <CardContent className="space-y-3" style={sideCardContentStyle}>
               {insights.methodBreakdown.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No payments recorded yet.</p>
               ) : (
@@ -489,8 +514,25 @@ export function DailyReportSection({
                           aria-hidden
                         />
                       </div>
+                      <p className="text-xs text-muted-foreground/70">
+                        {method.percentage > 50
+                          ? "Primary collection method · Dominant payment channel"
+                          : method.percentage > 25
+                          ? "Secondary collection method · Moderate usage"
+                          : "Alternative payment option · Minimal adoption"}
+                      </p>
                     </div>
                   ))}
+
+                  <div className="mt-3 rounded-lg border border-border/50 bg-muted/20 p-2.5 space-y-1.5">
+                    <p className="text-xs font-medium text-muted-foreground">Collection Overview</p>
+                    <div className="text-xs text-muted-foreground/80 space-y-0.5">
+                      <p>• Total methods used: {insights.methodBreakdown.length}</p>
+                      <p>• Total collected: {formatCurrency(report.summary.totalAmount)}</p>
+                      <p>• Avg per method: {formatCurrency(insights.methodBreakdown.length > 0 ? report.summary.totalAmount / insights.methodBreakdown.length : 0)}</p>
+                      <p>• Payment diversity: {insights.methodBreakdown.length === 1 ? "Single method only" : `${insights.methodBreakdown.length} methods active`}</p>
+                    </div>
+                  </div>
 
                   {insights.methodBreakdown.length === 1 && (
                     <p className="text-xs text-muted-foreground/80">
@@ -508,7 +550,7 @@ export function DailyReportSection({
                 <AlertCircle className="h-4 w-4" /> Status Breakdown
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3" style={{ minHeight: SIDE_CARD_MIN_HEIGHT }}>
+            <CardContent className="space-y-3" style={sideCardContentStyle}>
               {insights.statusBreakdown.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   No payment status information available yet.
@@ -531,6 +573,17 @@ export function DailyReportSection({
                     </div>
                   ))}
 
+                  <div className="mt-2 space-y-1.5 rounded-lg border border-border/50 bg-muted/20 p-2.5">
+                    <p className="text-xs font-medium text-muted-foreground">Collection Summary</p>
+                    <div className="text-xs text-muted-foreground/80 space-y-0.5">
+                      <p>• Total transactions: {insights.statusBreakdown.reduce((sum, s) => sum + s.count, 0)}</p>
+                      <p>• Total collected: {formatCurrency(insights.statusBreakdown.reduce((sum, s) => sum + s.amount, 0))}</p>
+                      {insights.pendingCount > 0 && (
+                        <p>• Pending resolution: {insights.pendingCount} {insights.pendingCount === 1 ? "item" : "items"}</p>
+                      )}
+                    </div>
+                  </div>
+
                   {insights.statusBreakdown.length === 1 && (
                     <p className="text-xs text-muted-foreground/80">
                       Every recorded payment is currently marked as {PAYMENT_STATUS_LABELS[insights.statusBreakdown[0].status]}.
@@ -547,7 +600,7 @@ export function DailyReportSection({
                 <TrendingUp className="h-4 w-4" /> Top Customers
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3" style={{ minHeight: SIDE_CARD_MIN_HEIGHT }}>
+            <CardContent className="space-y-3" style={sideCardContentStyle}>
               {insights.topCustomers.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No customer payments recorded yet.</p>
               ) : (
@@ -573,7 +626,7 @@ export function DailyReportSection({
                 ))
               )}
               {Array.from({
-                length: Math.max(0, SIDE_CARD_FILL_ROWS - insights.topCustomers.length),
+                length: topCustomerPlaceholderCount,
               }).map((_, index) => (
                 <div
                   key={`customers-placeholder-${index}`}
@@ -593,6 +646,11 @@ export function DailyReportSection({
 }
 
 export function DailyReportSkeleton() {
+  const isMobile = useIsMobile();
+  const timelineHeight = isMobile ? TIMELINE_HEIGHT_MOBILE : TIMELINE_HEIGHT;
+  const timelineMinHeightStyle = { minHeight: timelineHeight };
+  const sideCardContentStyle = isMobile ? undefined : { minHeight: SIDE_CARD_MIN_HEIGHT };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -612,8 +670,8 @@ export function DailyReportSkeleton() {
 
       <div className="grid gap-4 xl:grid-cols-[2fr_1fr]">
         <Card>
-          <CardContent className="pb-2 sm:pb-0" style={{ minHeight: TIMELINE_HEIGHT }}>
-            <div className="space-y-3" style={{ minHeight: TIMELINE_HEIGHT }}>
+          <CardContent className="pb-2 sm:pb-0" style={timelineMinHeightStyle}>
+            <div className="space-y-3" style={timelineMinHeightStyle}>
               {Array.from({ length: 5 }).map((_, index) => (
                 <Skeleton key={index} className="h-20 w-full" />
               ))}
@@ -623,7 +681,7 @@ export function DailyReportSkeleton() {
         <div className="space-y-4">
           {Array.from({ length: 3 }).map((_, index) => (
             <Card key={index}>
-              <CardContent className="space-y-3 pt-6" style={{ minHeight: SIDE_CARD_MIN_HEIGHT }}>
+              <CardContent className="space-y-3 pt-6" style={sideCardContentStyle}>
                 {Array.from({ length: 3 }).map((__, inner) => (
                   <Skeleton key={inner} className="h-5 w-full" />
                 ))}
