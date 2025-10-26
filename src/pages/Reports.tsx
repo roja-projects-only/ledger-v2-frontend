@@ -10,6 +10,7 @@
 import { useState } from "react";
 import { Container } from "@/components/layout/Container";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { KPICard } from "@/components/shared/KPICard";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -221,6 +222,7 @@ export function Reports() {
   // ============================================================================
 
   const errorTone = getSemanticColor("error");
+  const infoTone = getSemanticColor("info");
 
   const renderDailyReport = () => {
     if (dailyLoading) {
@@ -299,50 +301,45 @@ export function Reports() {
         </Card>
 
         {/* Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base font-medium">Total Payments</CardTitle>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <KPICard
+            icon={Receipt}
+            label="Total Payments"
+            value={dailyReport.summary.totalPayments}
+            semanticTone="info"
+          />
+          <KPICard
+            icon={DollarSign}
+            label="Total Amount"
+            value={formatCurrency(dailyReport.summary.totalAmount)}
+            semanticTone="success"
+          />
+          <Card
+            className={cn(
+              "h-full border-2",
+              infoTone.bg,
+              infoTone.border
+            )}
+          >
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Payment Methods
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <p className="text-2xl font-bold">
-                  {dailyReport.summary.totalPayments}
-                </p>
-                <Receipt className="h-8 w-8 text-muted-foreground" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base font-medium">Total Amount</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <p className="text-2xl font-bold">
-                  {formatCurrency(dailyReport.summary.totalAmount)}
-                </p>
-                <DollarSign className="h-8 w-8 text-muted-foreground" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base font-medium">Payment Methods</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-1">
-                {Object.entries(dailyReport.summary.paymentMethods).map(
-                  ([method, amount]) => (
-                    <div key={method} className="flex justify-between text-sm">
-                      <span>{method}:</span>
-                      <span className="font-medium">
-                        {formatCurrency(amount)}
-                      </span>
-                    </div>
-                  )
-                )}
-              </div>
+            <CardContent className="pt-1 space-y-1.5 text-sm">
+              {Object.entries(dailyReport.summary.paymentMethods).map(
+                ([method, amount]) => (
+                  <div
+                    key={method}
+                    className="flex items-center justify-between rounded-md bg-background/40 px-2 py-1"
+                  >
+                    <span className="text-muted-foreground">{method}</span>
+                    <span className="font-semibold">
+                      {formatCurrency(amount)}
+                    </span>
+                  </div>
+                )
+              )}
             </CardContent>
           </Card>
         </div>
@@ -435,47 +432,31 @@ export function Reports() {
         </div>
 
         {/* Summary */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base font-medium text-center">0-30 days</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <div className="text-2xl font-bold text-green-600">
-                {formatCurrency(agingReport.summary.current)}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base font-medium text-center">31-60 days</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <div className="text-2xl font-bold text-yellow-600">
-                {formatCurrency(agingReport.summary.days31to60)}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base font-medium text-center">61-90 days</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <div className="text-2xl font-bold text-orange-600">
-                {formatCurrency(agingReport.summary.days61to90)}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base font-medium text-center">90+ days</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <div className="text-2xl font-bold text-red-600">
-                {formatCurrency(agingReport.summary.over90Days)}
-              </div>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <KPICard
+            icon={DollarSign}
+            label="0-30 days"
+            value={formatCurrency(agingReport.summary.current)}
+            semanticTone="success"
+          />
+          <KPICard
+            icon={Clock}
+            label="31-60 days"
+            value={formatCurrency(agingReport.summary.days31to60)}
+            semanticTone="warning"
+          />
+          <KPICard
+            icon={Clock}
+            label="61-90 days"
+            value={formatCurrency(agingReport.summary.days61to90)}
+            semanticTone="warning"
+          />
+          <KPICard
+            icon={Clock}
+            label="90+ days"
+            value={formatCurrency(agingReport.summary.over90Days)}
+            semanticTone="error"
+          />
         </div>
 
         {/* Aging Table */}
