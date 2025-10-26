@@ -75,6 +75,17 @@ export function formatDateTime(isoDate: string): string {
 }
 
 /**
+ * Convert a Date object to an ISO date string (YYYY-MM-DD) using the local timezone
+ * @param date - Date instance to convert
+ * @returns ISO date string adjusted for local timezone
+ */
+export function toLocalISODate(date: Date): string {
+  const offsetMs = date.getTimezoneOffset() * 60_000;
+  const localMidnight = new Date(date.getTime() - offsetMs);
+  return localMidnight.toISOString().split("T")[0];
+}
+
+/**
  * Get today's date in ISO format (YYYY-MM-DD) in the configured timezone
  * @returns ISO date string for today (Asia/Manila timezone)
  */

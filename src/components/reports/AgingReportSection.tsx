@@ -1,19 +1,8 @@
 import { useMemo } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -38,35 +27,31 @@ import {
   formatDate,
   formatDateTime,
   formatLocation,
+  toLocalISODate,
 } from "@/lib/utils";
 import type { CollectionStatus, Location } from "@/lib/types";
 import type { AgingReportData } from "@/components/reports/types";
 import {
   AlertCircle,
   BarChart3,
-  CalendarIcon,
   Clock,
   Download,
   MapPin,
   TrendingUp,
 } from "lucide-react";
 
+const TOP_RANK_LIMIT = 3;
+
 export interface AgingReportSectionProps {
   report?: AgingReportData;
   isLoading: boolean;
   error: unknown;
-  selectedDate: Date;
-  selectedDateISO: string;
-  onSelectDate: (date: Date) => void;
 }
 
 export function AgingReportSection({
   report,
   isLoading,
   error,
-  selectedDate,
-  selectedDateISO,
-  onSelectDate,
 }: AgingReportSectionProps) {
   const insights = useMemo(() => {
     if (!report) return null;
@@ -112,14 +97,16 @@ export function AgingReportSection({
 
     const topRiskCustomers = [...report.customers]
       .sort((a, b) => b.totalOwed - a.totalOwed)
-      .slice(0, MAX_TOP_CUSTOMERS);
+      .slice(0, Math.min(MAX_TOP_CUSTOMERS, TOP_RANK_LIMIT));
 
     const severelyOverdue = report.customers.filter((customer) => customer.over90Days > 0).length;
 
     return {
       bucketTotals,
       statusBreakdown: Array.from(statusBreakdown.values()).sort((a, b) => b.amount - a.amount),
-      locationBreakdown: Array.from(locationBreakdown.values()).sort((a, b) => b.amount - a.amount),
+      locationBreakdown: Array.from(locationBreakdown.values())
+        .sort((a, b) => b.amount - a.amount)
+        .slice(0, TOP_RANK_LIMIT),
       topRiskCustomers,
       severelyOverdue,
       averageDebt:
@@ -131,6 +118,7 @@ export function AgingReportSection({
 
   const handleExport = () => {
     if (!report) return;
+    const exportDate = toLocalISODate(new Date(report.generatedAt ?? Date.now()));
 
     const headers = [
       "Customer",
@@ -176,13 +164,13 @@ export function AgingReportSection({
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.href = url;
-    link.download = `aging-report-${new Date().toISOString().split("T")[0]}.csv`;
+    link.download = `aging-report-${exportDate}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  if (isLoading) {
+  if (isLoading && !report) {
     return <AgingReportSkeleton />;
   }
 
@@ -214,28 +202,11 @@ export function AgingReportSection({
             <CardTitle>Credit Aging Overview</CardTitle>
           </div>
           <p className="text-sm text-muted-foreground">
-            As of {formatDate(selectedDateISO)} · {report.summary.totalCustomers} customers · generated {formatDateTime(report.generatedAt)}
+            As of {formatDate(report.generatedAt)} · {report.summary.totalCustomers} customers · generated {formatDateTime(report.generatedAt)}
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap items-center gap-3">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-[240px] justify-start">
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formatDate(selectedDateISO)}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="start" className="p-0">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => date && onSelectDate(date)}
-                  disabled={(date) => date > new Date()}
-                />
-              </PopoverContent>
-            </Popover>
-
             <Button variant="outline" size="sm" onClick={handleExport}>
               <Download className="mr-2 h-4 w-4" />
               Export CSV
@@ -243,6 +214,9 @@ export function AgingReportSection({
             <Badge variant="secondary" className="gap-1">
               <AlertCircle className="h-3.5 w-3.5" />
               {insights.severelyOverdue} severely overdue accounts
+            </Badge>
+            <Badge variant="outline" className="gap-1 text-xs">
+              Generated {formatDateTime(report.generatedAt)}
             </Badge>
           </div>
 
@@ -265,7 +239,7 @@ export function AgingReportSection({
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 xl:grid-cols-[2fr_1fr]">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[2fr_1fr]">
         <Card className="xl:col-span-1">
           <CardHeader className="space-y-1">
             <CardTitle>Customer Aging Detail</CardTitle>
@@ -273,13 +247,13 @@ export function AgingReportSection({
               Review outstanding balances and spot accounts that require follow-up.
             </p>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pb-2 sm:pb-6">
             {report.customers.length === 0 ? (
               <div className="py-16 text-center text-muted-foreground">
                 All customer balances are cleared.
               </div>
             ) : (
-              <ScrollArea className="max-h-[520px]">
+              <ScrollArea className="h-[min(60vh,520px)] sm:h-[520px] pr-2">
                 <Table>
                   <TableHeader>
                     <TableRow>

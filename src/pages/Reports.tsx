@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Container } from "@/components/layout/Container";
 import { KPICard } from "@/components/shared/KPICard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { paymentsApi } from "@/lib/api/payments.api";
 import { queryKeys } from "@/lib/queryKeys";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, toLocalISODate } from "@/lib/utils";
 import { DailyReportSection } from "@/components/reports/DailyReportSection";
 import { AgingReportSection } from "@/components/reports/AgingReportSection";
 import type {
@@ -22,17 +22,17 @@ import {
 
 export function Reports() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const selectedDateISO = selectedDate.toISOString().split("T")[0];
-  const [agingDate, setAgingDate] = useState<Date>(new Date());
-  const agingDateISO = agingDate.toISOString().split("T")[0];
+  const selectedDateISO = toLocalISODate(selectedDate);
 
   const {
     data: dailyReport,
     isLoading: dailyLoading,
+    isFetching: dailyFetching,
     error: dailyError,
   } = useQuery<DailyPaymentsReportData>({
     queryKey: queryKeys.payments.dailyReport(selectedDateISO),
     queryFn: () => paymentsApi.getDailyPaymentsReport(selectedDateISO),
+    placeholderData: keepPreviousData,
   });
 
   const {
@@ -40,8 +40,9 @@ export function Reports() {
     isLoading: agingLoading,
     error: agingError,
   } = useQuery<AgingReportData>({
-    queryKey: queryKeys.payments.agingReport(agingDateISO),
+    queryKey: queryKeys.payments.agingReport(),
     queryFn: () => paymentsApi.getAgingReport(),
+    placeholderData: keepPreviousData,
   });
 
   const customersOverSixtyDays = useMemo(() => {
@@ -109,6 +110,7 @@ export function Reports() {
               <DailyReportSection
                 report={dailyReport}
                 isLoading={dailyLoading}
+                isFetching={dailyFetching}
                 error={dailyError}
                 selectedDate={selectedDate}
                 selectedDateISO={selectedDateISO}
@@ -121,9 +123,6 @@ export function Reports() {
                 report={agingReport}
                 isLoading={agingLoading}
                 error={agingError}
-                selectedDate={agingDate}
-                selectedDateISO={agingDateISO}
-                onSelectDate={setAgingDate}
               />
             </TabsContent>
           </Tabs>

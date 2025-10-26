@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -41,6 +41,8 @@ import {
   CalendarIcon,
   Clock,
   Download,
+  Inbox,
+  Loader2,
   Receipt,
   TrendingUp,
 } from "lucide-react";
@@ -61,9 +63,15 @@ const paymentSorter = (a: Payment, b: Payment) =>
   toTimestamp(b.paidAt ?? b.updatedAt ?? b.createdAt) -
   toTimestamp(a.paidAt ?? a.updatedAt ?? a.createdAt);
 
+const TIMELINE_HEIGHT = "min(60vh, 420px)";
+const SIDE_CARD_MIN_HEIGHT = 176;
+const SIDE_CARD_FILL_ROWS = 3;
+const TIMELINE_FILL_ROWS = 3;
+
 export interface DailyReportSectionProps {
   report?: DailyPaymentsReportData;
   isLoading: boolean;
+  isFetching?: boolean;
   error: unknown;
   selectedDate: Date;
   selectedDateISO: string;
@@ -73,11 +81,14 @@ export interface DailyReportSectionProps {
 export function DailyReportSection({
   report,
   isLoading,
+  isFetching,
   error,
   selectedDate,
   selectedDateISO,
   onSelectDate,
 }: DailyReportSectionProps) {
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+
   const insights = useMemo(() => {
     if (!report) return null;
 
@@ -176,6 +187,8 @@ export function DailyReportSection({
     };
   }, [report]);
 
+  const showLoadingIndicator = (Boolean(isFetching) || isLoading) && Boolean(report);
+
   const handleExport = () => {
     if (!report) return;
 
@@ -226,7 +239,7 @@ export function DailyReportSection({
     document.body.removeChild(link);
   };
 
-  if (isLoading) {
+  if (isLoading && !report) {
     return <DailyReportSkeleton />;
   }
 
@@ -264,24 +277,37 @@ export function DailyReportSection({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap items-center gap-3">
-            <Popover>
+            <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-[240px] justify-start">
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {formatDate(selectedDateISO)}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent align="start" className="p-0">
+              <PopoverContent
+                align="start"
+                sideOffset={4}
+                className="w-auto p-3"
+              >
                 <Calendar
                   mode="single"
                   selected={selectedDate}
-                  onSelect={(date) => date && onSelectDate(date)}
+                  onSelect={(date) => {
+                    if (!date) return;
+                    setIsDatePickerOpen(false);
+                    onSelectDate(date);
+                  }}
                   disabled={(date) => date > new Date()}
                 />
               </PopoverContent>
             </Popover>
 
-            <Button variant="outline" size="sm" onClick={handleExport}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+              disabled={isLoading || Boolean(isFetching)}
+            >
               <Download className="mr-2 h-4 w-4" />
               Export CSV
             </Button>
@@ -299,7 +325,6 @@ export function DailyReportSection({
               </Badge>
             )}
           </div>
-
           <Separator />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
@@ -339,7 +364,7 @@ export function DailyReportSection({
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 xl:grid-cols-[2fr_1fr]">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[2fr_1fr]">
         <Card className="xl:col-span-1">
           <CardHeader className="space-y-1">
             <CardTitle>Payment Timeline</CardTitle>
@@ -347,138 +372,182 @@ export function DailyReportSection({
               Most recent payments appear first to highlight today’s activity.
             </p>
           </CardHeader>
-          <CardContent>
-            {insights.payments.length === 0 ? (
-              <div className="py-16 text-center text-muted-foreground">
-                No payments recorded on this date.
-              </div>
-            ) : (
-              <ScrollArea className="max-h-[440px] pr-2">
-                <div className="space-y-3">
-                  {insights.payments.map((payment) => (
-                    <div
-                      key={payment.id}
-                      className="rounded-lg border border-border/60 bg-background/60 p-3 shadow-sm"
-                    >
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="space-y-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <p className="font-semibold leading-tight">
-                              {payment.customer?.name ?? "Unknown customer"}
-                            </p>
-                            {payment.customer?.location && (
-                              <LocationBadge
-                                location={payment.customer.location}
-                                size="sm"
-                                showIcon
-                              />
-                            )}
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            {formatDateTime(payment.paidAt ?? payment.createdAt)}
-                            {payment.notes ? ` • ${payment.notes}` : ""}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-lg font-semibold leading-none">
-                            {formatCurrency(payment.paidAmount ?? payment.amount ?? 0)}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {capitalize((payment.paymentMethod ?? "CASH").toLowerCase())}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                        <SemanticBadge tone={getStatusTone(payment.status)}>
-                          {PAYMENT_STATUS_LABELS[payment.status]}
-                        </SemanticBadge>
-                        {payment.saleId && (
-                          <Badge variant="outline" className="text-muted-foreground">
-                            Sale #{payment.saleId.slice(-6)}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+          <CardContent className="pb-2 sm:pb-0" style={{ minHeight: TIMELINE_HEIGHT }}>
+            <div className="relative" style={{ minHeight: TIMELINE_HEIGHT }}>
+              {showLoadingIndicator && (
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-lg bg-background/90 backdrop-blur-sm">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden />
+                  <div className="text-center text-sm text-muted-foreground" aria-live="polite">
+                    Refreshing payments…
+                    <div className="text-xs text-muted-foreground/80">Pulling the latest entries for the selected date.</div>
+                  </div>
                 </div>
-              </ScrollArea>
-            )}
+              )}
+              {insights.payments.length === 0 ? (
+                <div
+                  className="flex h-full w-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border/50 bg-background/60 p-8 text-center"
+                >
+                  <Inbox className="h-8 w-8 text-muted-foreground/60" aria-hidden />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-muted-foreground">No payments recorded on this date.</p>
+                    <p className="text-xs text-muted-foreground/80">
+                      Try selecting another day or log a new collection to see it here instantly.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <ScrollArea className="pr-2" style={{ maxHeight: TIMELINE_HEIGHT }}>
+                  <div className="space-y-3 pb-4 sm:pb-3">
+                    {insights.payments.map((payment) => (
+                      <div
+                        key={payment.id}
+                        className="rounded-lg border border-border/60 bg-background/60 p-3 shadow-sm"
+                      >
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="space-y-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-semibold leading-tight">
+                                {payment.customer?.name ?? "Unknown customer"}
+                              </p>
+                              {payment.customer?.location && (
+                                <LocationBadge
+                                  location={payment.customer.location}
+                                  size="sm"
+                                  showIcon
+                                />
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {formatDateTime(payment.paidAt ?? payment.createdAt)}
+                              {payment.notes ? ` • ${payment.notes}` : ""}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-lg font-semibold leading-none">
+                              {formatCurrency(payment.paidAmount ?? payment.amount ?? 0)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {capitalize((payment.paymentMethod ?? "CASH").toLowerCase())}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                          <SemanticBadge tone={getStatusTone(payment.status)}>
+                            {PAYMENT_STATUS_LABELS[payment.status]}
+                          </SemanticBadge>
+                          {payment.saleId && (
+                            <Badge variant="outline" className="text-muted-foreground">
+                              Sale #{payment.saleId.slice(-6)}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {Array.from({
+                      length: Math.max(0, TIMELINE_FILL_ROWS - insights.payments.length),
+                    }).map((_, index) => (
+                      <div
+                        key={`payment-placeholder-${index}`}
+                        className="rounded-lg border border-dashed border-border/40 bg-muted/10 p-3"
+                        aria-hidden
+                      />
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
+            </div>
           </CardContent>
         </Card>
 
         <div className="space-y-4">
-          <Card>
+          <Card className="xl:h-fit">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 <BarChart3 className="h-4 w-4" /> Payment Methods
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3" style={{ minHeight: SIDE_CARD_MIN_HEIGHT }}>
               {insights.methodBreakdown.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No payments recorded yet.</p>
               ) : (
-                insights.methodBreakdown.map((method) => (
-                  <div key={method.method} className="space-y-1.5">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium">
-                        {capitalize(method.method.replace(/_/g, " "))}
-                      </span>
-                      <span className="text-muted-foreground">
-                        {formatCurrency(method.amount)} · {method.percentage.toFixed(0)}%
-                      </span>
+                <>
+                  {insights.methodBreakdown.map((method) => (
+                    <div key={method.method} className="space-y-1.5">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium">
+                          {capitalize(method.method.replace(/_/g, " "))}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {formatCurrency(method.amount)} · {method.percentage.toFixed(0)}%
+                        </span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-muted">
+                        <div
+                          className="h-2 rounded-full bg-sky-500"
+                          style={{ width: `${Math.min(method.percentage, 100)}%` }}
+                          aria-hidden
+                        />
+                      </div>
                     </div>
-                    <div className="h-2 w-full rounded-full bg-muted">
-                      <div
-                        className="h-2 rounded-full bg-sky-500"
-                        style={{ width: `${Math.min(method.percentage, 100)}%` }}
-                        aria-hidden
-                      />
-                    </div>
-                  </div>
-                ))
+                  ))}
+
+                  {insights.methodBreakdown.length === 1 && (
+                    <p className="text-xs text-muted-foreground/80">
+                      Only {capitalize(insights.methodBreakdown[0].method.replace(/_/g, " "))} payments were collected on this date.
+                    </p>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="xl:h-fit">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 <AlertCircle className="h-4 w-4" /> Status Breakdown
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3" style={{ minHeight: SIDE_CARD_MIN_HEIGHT }}>
               {insights.statusBreakdown.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   No payment status information available yet.
                 </p>
               ) : (
-                insights.statusBreakdown.map((status) => (
-                  <div key={status.status} className="flex items-center justify-between">
-                    <SemanticBadge tone={getStatusTone(status.status)}>
-                      {PAYMENT_STATUS_LABELS[status.status]}
-                    </SemanticBadge>
-                    <div className="flex items-baseline gap-3">
-                      <span className="font-semibold">
-                        {formatCurrency(status.amount)}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {status.count} {status.count === 1 ? "entry" : "entries"}
-                      </span>
+                <>
+                  {insights.statusBreakdown.map((status) => (
+                    <div key={status.status} className="flex items-center justify-between">
+                      <SemanticBadge tone={getStatusTone(status.status)}>
+                        {PAYMENT_STATUS_LABELS[status.status]}
+                      </SemanticBadge>
+                      <div className="flex items-baseline gap-3">
+                        <span className="font-semibold">
+                          {formatCurrency(status.amount)}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {status.count} {status.count === 1 ? "entry" : "entries"}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  ))}
+
+                  {insights.statusBreakdown.length === 1 && (
+                    <p className="text-xs text-muted-foreground/80">
+                      Every recorded payment is currently marked as {PAYMENT_STATUS_LABELS[insights.statusBreakdown[0].status]}.
+                    </p>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="xl:h-fit">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 <TrendingUp className="h-4 w-4" /> Top Customers
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3" style={{ minHeight: SIDE_CARD_MIN_HEIGHT }}>
               {insights.topCustomers.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No customer payments recorded yet.</p>
               ) : (
@@ -503,6 +572,18 @@ export function DailyReportSection({
                   </div>
                 ))
               )}
+              {Array.from({
+                length: Math.max(0, SIDE_CARD_FILL_ROWS - insights.topCustomers.length),
+              }).map((_, index) => (
+                <div
+                  key={`customers-placeholder-${index}`}
+                  className="flex items-center justify-between gap-3 rounded border border-dashed border-border/40 px-3 py-2 text-xs text-muted-foreground/70"
+                  aria-hidden
+                >
+                  <span>Waiting for activity</span>
+                  <span>—</span>
+                </div>
+              ))}
             </CardContent>
           </Card>
         </div>
@@ -531,16 +612,18 @@ export function DailyReportSkeleton() {
 
       <div className="grid gap-4 xl:grid-cols-[2fr_1fr]">
         <Card>
-          <CardContent className="space-y-3 pt-6">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <Skeleton key={index} className="h-24 w-full" />
-            ))}
+          <CardContent className="pb-2 sm:pb-0" style={{ minHeight: TIMELINE_HEIGHT }}>
+            <div className="space-y-3" style={{ minHeight: TIMELINE_HEIGHT }}>
+              {Array.from({ length: 5 }).map((_, index) => (
+                <Skeleton key={index} className="h-20 w-full" />
+              ))}
+            </div>
           </CardContent>
         </Card>
         <div className="space-y-4">
           {Array.from({ length: 3 }).map((_, index) => (
             <Card key={index}>
-              <CardContent className="space-y-3 pt-6">
+              <CardContent className="space-y-3 pt-6" style={{ minHeight: SIDE_CARD_MIN_HEIGHT }}>
                 {Array.from({ length: 3 }).map((__, inner) => (
                   <Skeleton key={inner} className="h-5 w-full" />
                 ))}
