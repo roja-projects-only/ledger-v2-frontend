@@ -5,12 +5,15 @@
  */
 
 import { apiClient } from "./client";
-import type { 
-  Payment, 
-  PaymentStatus, 
+import type {
+  Payment,
+  PaymentStatus,
   PaymentMethod,
-  ReminderNote, 
-  OutstandingBalance
+  ReminderNote,
+  OutstandingBalance,
+  AgingReportData,
+  DailyPaymentsReport,
+  PaymentSummary,
 } from "@/lib/types";
 import { 
   adaptItemResponse, 
@@ -178,27 +181,27 @@ export const paymentsApi = {
   /**
    * Get aging report
    */
-  getAgingReport: async (): Promise<any> => {
+  getAgingReport: async (): Promise<AgingReportData> => {
     const response = await apiClient.get("/payments/reports/aging");
-    return response.data;
+    return response.data as AgingReportData;
   },
 
   /**
    * Get daily payments report
    */
-  getDailyPaymentsReport: async (date: string): Promise<any> => {
-    const response = await apiClient.get("/payments/reports/payments/daily", { 
-      params: { date } 
+  getDailyPaymentsReport: async (date: string): Promise<DailyPaymentsReport> => {
+    const response = await apiClient.get("/payments/reports/payments/daily", {
+      params: { date },
     });
-    return response.data;
+    return response.data as DailyPaymentsReport;
   },
 
   /**
    * Get payment summary/KPIs
    */
-  getPaymentSummary: async (): Promise<any> => {
+  getPaymentSummary: async (): Promise<PaymentSummary> => {
     const response = await apiClient.get("/payments/summary");
-    return response.data;
+    return response.data as PaymentSummary;
   },
 };
 
