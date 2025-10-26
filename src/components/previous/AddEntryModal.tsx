@@ -111,6 +111,12 @@ export function AddEntryModal({
   }>({});
   const containersInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
+  const dialogStyle = isMobile
+    ? {
+        maxHeight: "calc(100dvh - 1rem)",
+        width: "calc(100vw - 0.75rem)",
+      }
+    : undefined;
   const focusContainersInput = useCallback(() => {
     if (!isMobile) {
       containersInputRef.current?.focus();
@@ -268,7 +274,10 @@ export function AddEntryModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] sm:w-full sm:max-w-[520px] max-h-[95vh] sm:max-h-[90vh] p-0 overflow-hidden">
+      <DialogContent
+        className="w-full sm:w-full sm:max-w-[520px] max-h-[95vh] sm:max-h-[90vh] p-0 overflow-hidden rounded-none sm:rounded-lg"
+        style={dialogStyle}
+      >
         <form onSubmit={handleSubmit} className="flex h-full flex-col">
           <DialogHeader className="border-b px-4 py-3 sm:px-6 sm:py-4">
             <DialogTitle className="text-lg sm:text-xl">
@@ -596,7 +605,12 @@ export function AddEntryModal({
           </div>
           </div>
 
-          <DialogFooter className="flex-col-reverse gap-2 border-t px-4 py-3 sm:flex-row sm:items-center sm:justify-end sm:gap-3 sm:px-6 sm:py-4">
+          <DialogFooter
+            className={cn(
+              "flex-col-reverse gap-2 border-t px-4 py-3 sm:flex-row sm:items-center sm:justify-end sm:gap-3 sm:px-6 sm:py-4",
+              isMobile && "pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]"
+            )}
+          >
             <Button type="button" variant="outline" onClick={onClose} className="w-full sm:w-auto">
               Cancel
             </Button>
