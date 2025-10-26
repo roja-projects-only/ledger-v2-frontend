@@ -9,6 +9,8 @@ import type {
   Payment, 
   PaymentStatus, 
   PaymentMethod,
+  PaymentTransaction,
+  PaymentTransactionWithBalance,
   ReminderNote, 
   OutstandingBalance
 } from "@/lib/types";
@@ -80,6 +82,16 @@ export interface DailyPaymentsReport {
   totalAmount: number;
   paymentCount: number;
   payments: Payment[];
+}
+
+export interface CreatePaymentTransactionRequest {
+  amount: number;
+  paymentMethod: PaymentMethod;
+  notes?: string;
+}
+
+export interface UpdatePaymentTransactionRequest {
+  notes?: string;
 }
 
 // ============================================================================
@@ -199,6 +211,39 @@ export const paymentsApi = {
   getPaymentSummary: async (): Promise<any> => {
     const response = await apiClient.get("/payments/summary");
     return response.data;
+  },
+
+  /**
+   * Create payment transaction (record partial or full payment)
+   */
+  createTransaction: async (paymentId: string, data: CreatePaymentTransactionRequest): Promise<Payment> => {
+    const response = await apiClient.post(`/payments/${paymentId}/transactions`, data);
+    return adaptItemResponse<Payment>(response).data;
+  },
+
+  /**
+   * Get payment transactions with running balance
+   */
+  getTransactions: async (paymentId: string): Promise<PaymentTransactionWithBalance[]> => {
+    const response = await apiClient.get(`/payments/${paymentId}/transactions`);
+    // Backend returns { paymentId, transactions: [...], totalTransactions, totalPaid }
+    return response.data.transactions || [];
+  },
+
+  /**
+   * Update payment transaction notes
+   */
+  updateTransaction: async (transactionId: string, data: UpdatePaymentTransactionRequest): Promise<PaymentTransaction> => {
+    const response = await apiClient.put(`/payments/transactions/${transactionId}`, data);
+    return adaptItemResponse<PaymentTransaction>(response).data;
+  },
+
+  /**
+   * Delete payment transaction (admin only)
+   */
+  deleteTransaction: async (transactionId: string): Promise<void> => {
+    const response = await apiClient.delete(`/payments/transactions/${transactionId}`);
+    adaptMutationResponse<null>(response);
   },
 };
 

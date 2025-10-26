@@ -22,6 +22,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { LocationBadge } from "./LocationBadge";
 import { AgingIndicator, CollectionStatusBadge } from "./OutstandingBalanceCard";
 import { PaymentRecordingModal } from "./PaymentRecordingModal";
@@ -37,7 +42,10 @@ import {
   CreditCard,
   AlertCircle,
   CheckCircle,
-  XCircle
+  XCircle,
+  ChevronDown,
+  ChevronRight,
+  Receipt
 } from "lucide-react";
 
 // ============================================================================
@@ -51,6 +59,84 @@ interface CustomerDebtHistoryModalProps {
   customerName?: string;
   outstandingBalance?: OutstandingBalance;
   onRecordPayment?: (customerId: string) => void;
+}
+
+// ============================================================================
+// Payment Transactions Component
+// ============================================================================
+
+function PaymentTransactions({ payment }: { payment: Payment }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Check if payment has transactions
+  const hasTransactions = payment.transactions && payment.transactions.length > 0;
+
+  if (!hasTransactions) {
+    return null;
+  }
+
+  const transactions = payment.transactions!;
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <CollapsibleTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start text-xs h-7 px-2 mt-2"
+        >
+          {isOpen ? (
+            <ChevronDown className="h-3 w-3 mr-1" />
+          ) : (
+            <ChevronRight className="h-3 w-3 mr-1" />
+          )}
+          <Receipt className="h-3 w-3 mr-1" />
+          {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="mt-2">
+        <div className="space-y-2 pl-4 border-l-2 border-muted ml-2">
+          {transactions.map((transaction, index) => {
+            // Calculate running balance
+            const previousTransactions = transactions.slice(0, index + 1);
+            const totalPaidSoFar = previousTransactions.reduce((sum, t) => sum + t.amount, 0);
+            const runningBalance = payment.amount - totalPaidSoFar;
+
+            return (
+              <div
+                key={transaction.id}
+                className="bg-muted/30 rounded-md p-2 space-y-1"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">
+                      {transaction.paymentMethod}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(transaction.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <span className="text-xs font-semibold text-green-600">
+                    {formatCurrency(transaction.amount)}
+                  </span>
+                </div>
+                
+                {transaction.notes && (
+                  <div className="text-xs text-muted-foreground">
+                    Note: {transaction.notes}
+                  </div>
+                )}
+                
+                <div className="text-xs text-muted-foreground">
+                  Balance after: {formatCurrency(Math.max(0, runningBalance))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
 }
 
 // ============================================================================
@@ -363,6 +449,9 @@ export function CustomerDebtHistoryModal({
                                   Note: {payment.notes}
                                 </div>
                               )}
+
+                              {/* Payment Transactions */}
+                              <PaymentTransactions payment={payment} />
                             </div>
                           </div>
                         ))}

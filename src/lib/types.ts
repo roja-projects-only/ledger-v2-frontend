@@ -102,6 +102,31 @@ export interface Payment {
   sale?: Sale;
   customer?: Customer;
   recordedBy?: User;
+  transactions?: PaymentTransaction[]; // Payment transaction history
+}
+
+/**
+ * Payment transaction entity - represents individual partial payment transactions
+ */
+export interface PaymentTransaction {
+  id: string;
+  amount: number; // Amount paid in this transaction
+  paymentMethod: PaymentMethod;
+  notes?: string; // Optional note for this specific transaction
+  paymentId: string;
+  recordedById: string;
+  createdAt: string; // ISO 8601 date string
+  
+  // Relations
+  payment?: Payment;
+  recordedBy?: User;
+}
+
+/**
+ * Payment transaction with running balance - includes calculated balance after transaction
+ */
+export interface PaymentTransactionWithBalance extends PaymentTransaction {
+  runningBalance: number; // Remaining balance after this transaction
 }
 
 /**
@@ -133,6 +158,65 @@ export interface OutstandingBalance {
   creditLimit: number;
   collectionStatus: CollectionStatus;
   lastPaymentDate?: string; // ISO 8601 date string
+}
+
+/**
+ * Aging report data for a customer
+ */
+export interface AgingReportCustomer {
+  customerId: string;
+  customerName: string;
+  location: Location;
+  current: number; // 0-30 days
+  days31to60: number; // 31-60 days
+  days61to90: number; // 61-90 days
+  over90Days: number; // 90+ days
+  totalOwed: number;
+  collectionStatus: CollectionStatus;
+}
+
+/**
+ * Complete aging report data
+ */
+export interface AgingReportData {
+  summary: {
+    totalCustomers: number;
+    totalOutstanding: number;
+    current: number;
+    days31to60: number;
+    days61to90: number;
+    over90Days: number;
+  };
+  customers: AgingReportCustomer[];
+  generatedAt: string; // ISO 8601 date string
+}
+
+/**
+ * Daily payments report
+ */
+export interface DailyPaymentsReport {
+  summary: {
+    date: string; // ISO 8601 date string
+    totalPayments: number;
+    totalAmount: number;
+    paymentMethods: Record<string, number>;
+  };
+  payments: Payment[];
+  transactions: PaymentTransaction[];
+  generatedAt: string; // ISO 8601 date string
+}
+
+/**
+ * Payment summary/KPIs
+ */
+export interface PaymentSummary {
+  totalOutstanding: number;
+  totalOverdue: number;
+  customersWithDebt: number;
+  overdueCustomers: number;
+  averageDebtAge: number;
+  totalPaymentsToday: number;
+  paymentsReceivedToday: number;
 }
 
 // ============================================================================
