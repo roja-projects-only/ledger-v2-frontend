@@ -10,8 +10,7 @@ export { customersApi } from "./customers.api";
 export { salesApi } from "./sales.api";
 export { settingsApi } from "./settings.api";
 export { usersApi } from "./users.api";
-export { paymentsApi, reminderNotesApi } from "./payments.api";
-export { remindersApi } from "./reminders.api";
+export { paymentsApi } from "./payments.api";
 
 // Re-export common types
 export type { LoginRequest, LoginResponse, RegisterRequest } from "./auth.api";
@@ -25,13 +24,6 @@ export type {
   RecordPaymentRequest, 
   UpdatePaymentRequest, 
   PaymentFilters, 
-  CreateReminderNoteRequest,
   AgingReport,
   DailyPaymentsReport 
 } from "./payments.api";
-export type {
-  BulkReminderNotesRequest,
-  ReminderFilters,
-  CustomerNeedingReminder,
-  ReminderStats
-} from "./reminders.api";

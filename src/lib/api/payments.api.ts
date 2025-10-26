@@ -1,7 +1,7 @@
 /**
  * Payments API
  * 
- * Handles payment CRUD operations, outstanding balances, and reminder notes.
+ * Handles payment CRUD operations and outstanding balances.
  */
 
 import { apiClient } from "./client";
@@ -11,7 +11,6 @@ import type {
   PaymentMethod,
   PaymentTransaction,
   PaymentTransactionWithBalance,
-  ReminderNote, 
   OutstandingBalance
 } from "@/lib/types";
 import { 
@@ -57,10 +56,7 @@ export interface PaymentFilters {
   limit?: number;
 }
 
-export interface CreateReminderNoteRequest {
-  customerId: string;
-  note: string;
-}
+
 
 export interface AgingReport {
   summary: {
@@ -247,34 +243,3 @@ export const paymentsApi = {
   },
 };
 
-// ============================================================================
-// Reminder Notes API
-// ============================================================================
-
-export const reminderNotesApi = {
-  /**
-   * Add reminder note for customer
-   */
-  create: async (data: CreateReminderNoteRequest): Promise<ReminderNote> => {
-    const response = await apiClient.post("/reminders/notes", data);
-    return adaptItemResponse<ReminderNote>(response).data;
-  },
-
-  /**
-   * Get customer reminder history
-   */
-  getCustomerReminders: async (customerId: string): Promise<ReminderNote[]> => {
-    const response = await apiClient.get(`/customers/${customerId}/reminders`);
-    return adaptSimpleListResponse<ReminderNote>(response).data;
-  },
-
-  /**
-   * Get customers needing reminders (overdue)
-   */
-  getOverdueCustomers: async (daysSinceLastReminder: number = 7): Promise<OutstandingBalance[]> => {
-    const response = await apiClient.get("/reminders/overdue", {
-      params: { daysSinceLastReminder }
-    });
-    return adaptSimpleListResponse<OutstandingBalance>(response).data;
-  },
-};

@@ -29,7 +29,6 @@ import {
   ChevronRight,
   BarChart3,
   DollarSign,
-  Bell,
   FileText,
 } from "lucide-react";
 
@@ -60,7 +59,7 @@ const NAV_LINKS: NavLink[] = [
   { label: "Analysis", path: "/analysis", icon: TrendingUp },
   { label: "Customers", path: "/customers", icon: Users },
   { label: "Outstanding", path: "/outstanding", icon: DollarSign },
-  { label: "Reminders", path: "/reminders", icon: Bell },
+
   { label: "Reports", path: "/reports", icon: FileText },
   { label: "History", path: "/history", icon: History },
   { label: "Settings", path: "/settings", icon: Settings, adminOnly: true },

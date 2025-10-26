@@ -20,7 +20,7 @@ import { CustomerHistory } from "@/pages/CustomerHistory";
 import { Settings } from "@/pages/Settings";
 import { Customers } from "@/pages/Customers";
 import { OutstandingBalances } from "@/pages/OutstandingBalances";
-import { Reminders } from "@/pages/Reminders";
+
 import { Reports } from "@/pages/Reports";
 import { NotFound } from "@/pages/NotFound";
 import { Toaster } from "@/components/ui/sonner";
@@ -118,8 +118,7 @@ function AppLayout() {
             {/* Outstanding Balances Page */}
             <Route path="/outstanding" element={<OutstandingBalances />} />
             
-            {/* Reminders Page */}
-            <Route path="/reminders" element={<Reminders />} />
+
             
             {/* Reports Page */}
             <Route path="/reports" element={<Reports />} />

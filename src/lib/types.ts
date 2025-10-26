@@ -129,21 +129,7 @@ export interface PaymentTransactionWithBalance extends PaymentTransaction {
   runningBalance: number; // Remaining balance after this transaction
 }
 
-/**
- * Reminder note entity - tracks customer payment reminders
- */
-export interface ReminderNote {
-  id: string;
-  note: string;
-  reminderDate: string; // ISO 8601 date string
-  customerId: string;
-  createdById: string;
-  createdAt: string; // ISO 8601 date string
-  
-  // Relations
-  customer?: Customer;
-  createdBy?: User;
-}
+
 
 /**
  * Outstanding balance summary for customers with debt
@@ -242,7 +228,6 @@ export interface Customer {
   
   // Relations
   payments?: Payment[];
-  reminderNotes?: ReminderNote[];
 }
 
 /**
@@ -429,13 +414,7 @@ export interface PaymentFormData {
   notes?: string;
 }
 
-/**
- * Form data for adding a reminder note
- */
-export interface ReminderNoteFormData {
-  customerId: string;
-  note: string;
-}
+
 
 /**
  * Form data for settings
