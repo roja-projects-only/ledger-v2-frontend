@@ -290,34 +290,36 @@ export function OutstandingBalances() {
           </div>
 
           {/* Summary KPIs */}
-          {summaryStats && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              <KPICard
-                label="Total Outstanding"
-                value={formatCurrency(summaryStats.totalOutstanding)}
-                icon={DollarSign}
-                variant="revenue"
-              />
-              <KPICard
-                label="Customers with Debt"
-                value={summaryStats.totalCustomers}
-                icon={Users}
-                variant="customers"
-              />
-              <KPICard
-                label="Average Debt"
-                value={formatCurrency(summaryStats.averageDebt)}
-                icon={TrendingUp}
-                variant="average"
-              />
-              <KPICard
-                label="90+ Days Overdue"
-                value={summaryStats.aging.ninetyDaysPlus.count}
-                icon={AlertTriangle}
-                variant="quantity"
-              />
-            </div>
-          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <KPICard
+              label="Total Outstanding"
+              value={summaryStats ? formatCurrency(summaryStats.totalOutstanding) : "₱0.00"}
+              icon={DollarSign}
+              variant="revenue"
+              loading={isLoading}
+            />
+            <KPICard
+              label="Customers with Debt"
+              value={summaryStats?.totalCustomers ?? 0}
+              icon={Users}
+              variant="customers"
+              loading={isLoading}
+            />
+            <KPICard
+              label="Average Debt"
+              value={summaryStats ? formatCurrency(summaryStats.averageDebt) : "₱0.00"}
+              icon={TrendingUp}
+              variant="average"
+              loading={isLoading}
+            />
+            <KPICard
+              label="90+ Days Overdue"
+              value={summaryStats?.aging.ninetyDaysPlus.count ?? 0}
+              icon={AlertTriangle}
+              variant="quantity"
+              loading={isLoading}
+            />
+          </div>
 
           {/* Aging Summary */}
           {summaryStats && (

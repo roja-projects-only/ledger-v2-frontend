@@ -305,43 +305,55 @@ export function Reports() {
           <KPICard
             icon={Receipt}
             label="Total Payments"
-            value={dailyReport.summary.totalPayments}
+            value={dailyReport?.summary.totalPayments ?? 0}
             semanticTone="info"
+            loading={dailyLoading}
           />
           <KPICard
             icon={DollarSign}
             label="Total Amount"
-            value={formatCurrency(dailyReport.summary.totalAmount)}
+            value={dailyLoading ? "₱0.00" : formatCurrency(dailyReport?.summary.totalAmount ?? 0)}
             semanticTone="success"
+            loading={dailyLoading}
           />
-          <Card
-            className={cn(
-              "h-full border-2",
-              infoTone.bg,
-              infoTone.border
-            )}
-          >
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Payment Methods
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-1 space-y-1.5 text-sm">
-              {Object.entries(dailyReport.summary.paymentMethods).map(
-                ([method, amount]) => (
-                  <div
-                    key={method}
-                    className="flex items-center justify-between rounded-md bg-background/40 px-2 py-1"
-                  >
-                    <span className="text-muted-foreground">{method}</span>
-                    <span className="font-semibold">
-                      {formatCurrency(amount)}
-                    </span>
-                  </div>
-                )
+          {dailyLoading ? (
+            <KPICard
+              icon={Receipt}
+              label="Payment Methods"
+              value="Loading..."
+              semanticTone="info"
+              loading={true}
+            />
+          ) : (
+            <Card
+              className={cn(
+                "h-full border-2",
+                infoTone.bg,
+                infoTone.border
               )}
-            </CardContent>
-          </Card>
+            >
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Payment Methods
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-1 space-y-1.5 text-sm">
+                {Object.entries(dailyReport?.summary.paymentMethods ?? {}).map(
+                  ([method, amount]) => (
+                    <div
+                      key={method}
+                      className="flex items-center justify-between rounded-md bg-background/40 px-2 py-1"
+                    >
+                      <span className="text-muted-foreground">{method}</span>
+                      <span className="font-semibold">
+                        {formatCurrency(amount)}
+                      </span>
+                    </div>
+                  )
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Payments List */}
@@ -436,26 +448,30 @@ export function Reports() {
           <KPICard
             icon={DollarSign}
             label="0-30 days"
-            value={formatCurrency(agingReport.summary.current)}
+            value={agingLoading ? "₱0.00" : formatCurrency(agingReport?.summary.current ?? 0)}
             semanticTone="success"
+            loading={agingLoading}
           />
           <KPICard
             icon={Clock}
             label="31-60 days"
-            value={formatCurrency(agingReport.summary.days31to60)}
+            value={agingLoading ? "₱0.00" : formatCurrency(agingReport?.summary.days31to60 ?? 0)}
             semanticTone="warning"
+            loading={agingLoading}
           />
           <KPICard
             icon={Clock}
             label="61-90 days"
-            value={formatCurrency(agingReport.summary.days61to90)}
+            value={agingLoading ? "₱0.00" : formatCurrency(agingReport?.summary.days61to90 ?? 0)}
             semanticTone="warning"
+            loading={agingLoading}
           />
           <KPICard
             icon={Clock}
             label="90+ days"
-            value={formatCurrency(agingReport.summary.over90Days)}
+            value={agingLoading ? "₱0.00" : formatCurrency(agingReport?.summary.over90Days ?? 0)}
             semanticTone="error"
+            loading={agingLoading}
           />
         </div>
 

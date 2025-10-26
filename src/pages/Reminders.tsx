@@ -88,7 +88,10 @@ export function Reminders() {
   });
 
   // Fetch reminder stats
-  const { data: stats } = useQuery({
+  const {
+    data: stats,
+    isLoading: statsLoading,
+  } = useQuery({
     queryKey: queryKeys.reminders.stats(),
     queryFn: remindersApi.getStats,
   });
@@ -195,34 +198,36 @@ export function Reminders() {
           </div>
 
           {/* Summary KPIs */}
-          {stats && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <KPICard
-                icon={Bell}
-                label="Reminders Today"
-                value={stats.remindersToday}
-                semanticTone="info"
-              />
-              <KPICard
-                icon={Clock}
-                label="Reminders This Week"
-                value={stats.remindersThisWeek}
-                semanticTone="warning"
-              />
-              <KPICard
-                icon={Users}
-                label="Customers with Debt"
-                value={stats.customersWithDebt}
-                semanticTone="error"
-              />
-              <KPICard
-                icon={AlertTriangle}
-                label="Need Reminders"
-                value={needRemindersCount}
-                semanticTone="warning"
-              />
-            </div>
-          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <KPICard
+              icon={Bell}
+              label="Reminders Today"
+              value={stats?.remindersToday ?? 0}
+              semanticTone="info"
+              loading={statsLoading}
+            />
+            <KPICard
+              icon={Clock}
+              label="Reminders This Week"
+              value={stats?.remindersThisWeek ?? 0}
+              semanticTone="warning"
+              loading={statsLoading}
+            />
+            <KPICard
+              icon={Users}
+              label="Customers with Debt"
+              value={stats?.customersWithDebt ?? 0}
+              semanticTone="error"
+              loading={statsLoading}
+            />
+            <KPICard
+              icon={AlertTriangle}
+              label="Need Reminders"
+              value={needRemindersCount}
+              semanticTone="warning"
+              loading={isLoading}
+            />
+          </div>
 
           {/* Filters and Actions */}
           <Card>
