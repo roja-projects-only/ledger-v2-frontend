@@ -47,6 +47,7 @@ import {
   XCircle,
   History,
 } from "lucide-react";
+import { useIsMobile } from "@/lib/hooks/useIsMobile";
 
 // ============================================================================
 // Types
@@ -146,6 +147,7 @@ export function PaymentRecordingModal({
   }>({});
 
   const paymentAmountRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const errorTone = getSemanticColor("error");
 
@@ -267,17 +269,27 @@ export function PaymentRecordingModal({
 
   // Reset form when modal opens/closes
   useEffect(() => {
-    if (open) {
-      setPaymentAmount("");
-      setNotes("");
-      setErrors({});
-      setSelectedPaymentId("");
-      // Focus payment amount input after a short delay
-      setTimeout(() => {
-        paymentAmountRef.current?.focus();
-      }, 100);
+    if (!open) {
+      return;
     }
-  }, [open]);
+
+    setPaymentAmount("");
+    setNotes("");
+    setErrors({});
+    setSelectedPaymentId("");
+
+    if (isMobile) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      paymentAmountRef.current?.focus();
+    }, 100);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [isMobile, open]);
 
   // Handle quick amount selection
   const handleQuickAmount = (amount: number) => {

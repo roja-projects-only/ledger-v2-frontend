@@ -27,12 +27,14 @@ import {
 } from "@/components/ui/input-otp";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { useAuth } from "@/lib/hooks/useAuth";
+import { useIsMobile } from "@/lib/hooks/useIsMobile";
 import { PASSCODE_LENGTH } from "@/lib/constants";
 import { Loader2, Droplet } from "lucide-react";
 
 export function Login() {
   const navigate = useNavigate();
   const { login, isAuthenticated, isLoggingIn, loginError } = useAuth();
+  const isMobile = useIsMobile();
 
   // Form state
   const [username, setUsername] = useState("");
@@ -59,14 +61,24 @@ export function Login() {
 
   // Clear passcode on error and refocus
   useEffect(() => {
-    if (loginError) {
-      setPasscode("");
-      // Refocus the passcode input after clearing for better UX
-      setTimeout(() => {
-        passcodeRef.current?.focus();
-      }, 0);
+    if (!loginError) {
+      return;
     }
-  }, [loginError]);
+
+    setPasscode("");
+
+    if (isMobile) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      passcodeRef.current?.focus();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [isMobile, loginError]);
 
   /**
    * Validate form inputs
@@ -154,7 +166,7 @@ export function Login() {
                   onChange={(e) => setUsername(e.target.value)}
                   disabled={isLoggingIn}
                   autoComplete="username"
-                  autoFocus
+                  autoFocus={!isMobile}
                   className="h-11"
                 />
                 <p className="text-xs text-muted-foreground">
@@ -173,7 +185,7 @@ export function Login() {
                     onChange={(value) => setPasscode(value)}
                     disabled={isLoggingIn}
                     pattern={REGEXP_ONLY_DIGITS}
-                    autoFocus={!!loginError || !!clientError}
+                    autoFocus={!isMobile && (!!loginError || !!clientError)}
                   >
                     <InputOTPGroup>
                       {Array.from({ length: PASSCODE_LENGTH }).map((_, index) => (

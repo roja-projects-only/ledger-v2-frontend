@@ -14,7 +14,7 @@
  * - Optional notes field
  */
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -64,6 +64,7 @@ import { cn, formatCurrency, formatDate, formatLocation } from "@/lib/utils";
 import { useSettings } from "@/lib/contexts/SettingsContext";
 import { usePricing } from "@/lib/hooks/usePricing";
 import { useKeyboardShortcut } from "@/lib/hooks/useKeyboardShortcut";
+import { useIsMobile } from "@/lib/hooks/useIsMobile";
 import type { Customer, Sale, Location, PaymentType } from "@/lib/types";
 import { LOCATIONS } from "@/lib/constants";
 import { paymentsApi } from "@/lib/api/payments.api";
@@ -109,6 +110,12 @@ export function AddEntryModal({
     credit?: string;
   }>({});
   const containersInputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
+  const focusContainersInput = useCallback(() => {
+    if (!isMobile) {
+      containersInputRef.current?.focus();
+    }
+  }, [isMobile]);
   const errorTone = getSemanticColor("error");
   const infoTone = getSemanticColor("info");
 
@@ -164,25 +171,35 @@ export function AddEntryModal({
       setSelectedCustomerId(walkInCustomer.id);
       setLocationFilter("all"); // Reset filter to show all customers
       setErrors((prev) => ({ ...prev, customer: undefined })); // Clear customer error
-      containersInputRef.current?.focus(); // Focus containers input
+      focusContainersInput(); // Focus containers input
     }
   };
 
   // Reset form when modal opens/closes
   useEffect(() => {
-    if (open) {
-      setLocationFilter("all");
-      setSelectedCustomerId("");
-      setContainers("");
-      setPaymentType("CASH");
-      setErrors({});
-      setNotes("");
-      // Focus containers input after a short delay
-      setTimeout(() => {
-        containersInputRef.current?.focus();
-      }, 100);
+    if (!open) {
+      return;
     }
-  }, [open]);
+
+    setLocationFilter("all");
+    setSelectedCustomerId("");
+    setContainers("");
+    setPaymentType("CASH");
+    setErrors({});
+    setNotes("");
+
+    if (isMobile) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      focusContainersInput();
+    }, 100);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [focusContainersInput, isMobile, open]);
 
   // Keyboard shortcuts
   useKeyboardShortcut({
@@ -402,7 +419,7 @@ export function AddEntryModal({
                           onSelect={() => {
                             setSelectedCustomerId(customer.id);
                             setCustomerSearchOpen(false);
-                            containersInputRef.current?.focus();
+                            focusContainersInput();
                           }}
                         >
                           <Check

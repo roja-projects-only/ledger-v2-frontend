@@ -15,7 +15,7 @@
  * - Form resets after successful submission
  */
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,6 +47,7 @@ import { getLocationColor, getSemanticColor } from "@/lib/colors";
 import { cn, formatCurrency, formatLocation, getTodayISO } from "@/lib/utils";
 import { useSettings } from "@/lib/contexts/SettingsContext";
 import { usePricing } from "@/lib/hooks/usePricing";
+import { useIsMobile } from "@/lib/hooks/useIsMobile";
 import { Plus, Check, ChevronsUpDown, DollarSign, AlertCircle, UserPlus, CreditCard, Banknote, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { NumberInput } from "@/components/shared/NumberInput";
@@ -79,6 +80,12 @@ export function QuickAddForm({ customers, userId, onSave, loading = false }: Qui
     customPricingEnabled 
   } = usePricing();
   const containersInputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
+  const focusContainersInput = useCallback(() => {
+    if (!isMobile) {
+      containersInputRef.current?.focus();
+    }
+  }, [isMobile]);
   const errorTone = getSemanticColor("error");
   const infoTone = getSemanticColor("info");
 
@@ -93,12 +100,8 @@ export function QuickAddForm({ customers, userId, onSave, loading = false }: Qui
 
   // Auto-focus containers input on mount (desktop only, not mobile)
   useEffect(() => {
-    // Only auto-focus on desktop (screen width > 768px)
-    const isDesktop = window.matchMedia('(min-width: 768px)').matches;
-    if (isDesktop) {
-      containersInputRef.current?.focus();
-    }
-  }, []);
+    focusContainersInput();
+  }, [focusContainersInput]);
 
   // Filtered customers based on location filter
   const filteredCustomers = locationFilter === "all"
@@ -149,7 +152,7 @@ export function QuickAddForm({ customers, userId, onSave, loading = false }: Qui
       setCustomerId(walkInCustomer.id);
       setLocationFilter("all"); // Reset filter to show all customers
       setErrors((prev) => ({ ...prev, customer: undefined })); // Clear customer error
-      containersInputRef.current?.focus(); // Focus containers input
+      focusContainersInput(); // Focus containers input
     }
   };
 
@@ -206,8 +209,8 @@ export function QuickAddForm({ customers, userId, onSave, loading = false }: Qui
     setErrors({});
 
     // Refocus containers field
-    setTimeout(() => {
-      containersInputRef.current?.focus();
+    window.setTimeout(() => {
+      focusContainersInput();
     }, 100);
   };
 
@@ -360,7 +363,7 @@ export function QuickAddForm({ customers, userId, onSave, loading = false }: Qui
                         onSelect={() => {
                           setCustomerId(customer.id);
                           setComboboxOpen(false);
-                          containersInputRef.current?.focus();
+                          focusContainersInput();
                         }}
                       >
                         <Check
