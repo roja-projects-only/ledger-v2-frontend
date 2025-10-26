@@ -25,6 +25,7 @@ import { remindersApi } from "@/lib/api/reminders.api";
 import { queryKeys } from "@/lib/queryKeys";
 import { notify } from "@/lib/notifications";
 import { handleApiError } from "@/lib/api/client";
+import { useIsMobile } from "@/lib/hooks/useIsMobile";
 import { Bell, Calendar, User as UserIcon } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -51,6 +52,7 @@ export function ReminderNoteModal({
 }: ReminderNoteModalProps) {
   const queryClient = useQueryClient();
   const [note, setNote] = useState("");
+  const isMobile = useIsMobile();
 
   // Fetch reminder history
   const { data: reminderHistory, isLoading: historyLoading } = useQuery({
@@ -109,7 +111,14 @@ export function ReminderNoteModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="w-full max-w-2xl max-h-[90vh] sm:max-h-[95vh] flex flex-col p-0 gap-0 overflow-hidden mx-0 sm:mx-auto rounded-b-none sm:rounded-lg">
+      <DialogContent
+        className="w-full max-w-2xl max-h-[90vh] sm:max-h-[95vh] flex flex-col p-0 gap-0 overflow-hidden mx-0 sm:mx-auto rounded-b-none sm:rounded-lg"
+        onOpenAutoFocus={(event) => {
+          if (isMobile) {
+            event.preventDefault();
+          }
+        }}
+      >
         <DialogHeader className="p-4 sm:p-6 pb-3 sm:pb-4 border-b flex-shrink-0">
           <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
             <Bell className="h-5 w-5" />

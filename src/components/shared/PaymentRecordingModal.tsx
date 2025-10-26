@@ -277,19 +277,7 @@ export function PaymentRecordingModal({
     setNotes("");
     setErrors({});
     setSelectedPaymentId("");
-
-    if (isMobile) {
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      paymentAmountRef.current?.focus();
-    }, 100);
-
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [isMobile, open]);
+  }, [open]);
 
   // Handle quick amount selection
   const handleQuickAmount = (amount: number) => {
@@ -342,7 +330,14 @@ export function PaymentRecordingModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-2xl max-h-[90vh] sm:max-h-[95vh] flex flex-col p-0 gap-0 overflow-hidden mx-0 sm:mx-auto rounded-b-none sm:rounded-lg">
+      <DialogContent
+        className="w-full max-w-2xl max-h-[90vh] sm:max-h-[95vh] flex flex-col p-0 gap-0 overflow-hidden mx-0 sm:mx-auto rounded-b-none sm:rounded-lg"
+        onOpenAutoFocus={(event) => {
+          if (isMobile) {
+            event.preventDefault();
+          }
+        }}
+      >
         <div className="flex-shrink-0 p-4 sm:p-6 pb-3 sm:pb-4 border-b">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
