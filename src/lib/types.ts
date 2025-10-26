@@ -179,6 +179,16 @@ export interface DailyPaymentsReport {
   generatedAt: string; // ISO 8601 date string
 }
 
+export interface PaymentSummary {
+  totalOutstanding: number;
+  totalOverdue: number;
+  customersWithDebt: number;
+  overdueCustomers: number;
+  averageDebtAge: number;
+  totalPaymentsToday: number;
+  paymentsReceivedToday: number;
+}
+
 // ============================================================================
 // Core Entities
 // ============================================================================
