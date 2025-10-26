@@ -16,7 +16,6 @@
 import { useState, useMemo } from "react";
 import { Container } from "@/components/layout/Container";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
-import { ReminderNoteModal } from "@/components/shared/ReminderNoteModal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -62,7 +61,6 @@ export function CustomerHistory() {
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
   const [dateRangeOpen, setDateRangeOpen] = useState(false);
-  const [reminderModalOpen, setReminderModalOpen] = useState(false);
 
   // Date range state (default: last 30 days)
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>(() => {
@@ -319,22 +317,6 @@ export function CustomerHistory() {
           {/* Customer Summary (only show if customer selected) */}
           {selectedCustomer && (
             <>
-              {/* Customer Actions */}
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setReminderModalOpen(true)}
-                      className="flex items-center gap-2"
-                    >
-                      <User className="h-4 w-4" />
-                      Add Reminder Note
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
               {/* KPI Row */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {customerKPIs.map((kpi, index) => (
@@ -400,14 +382,6 @@ export function CustomerHistory() {
           cancelText="Cancel"
           onConfirm={confirmDeleteSale}
           variant="destructive"
-        />
-
-        {/* Reminder Note Modal */}
-        <ReminderNoteModal
-          open={reminderModalOpen}
-          onOpenChange={setReminderModalOpen}
-          customerId={selectedCustomerId}
-          customerName={selectedCustomer?.name || ""}
         />
       </Container>
     </div>

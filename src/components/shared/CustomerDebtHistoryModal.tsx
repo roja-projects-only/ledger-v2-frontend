@@ -5,7 +5,6 @@
  * - Complete payment history with dates and amounts
  * - Outstanding balance summary
  * - Credit limit information
- * - Reminder notes history
  * - Payment recording capability
  */
 
@@ -21,7 +20,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Collapsible,
   CollapsibleContent,
@@ -34,14 +32,13 @@ import {
 } from "./OutstandingBalanceCard";
 import { PaymentRecordingModal } from "./PaymentRecordingModal";
 import { useQuery } from "@tanstack/react-query";
-import { paymentsApi, reminderNotesApi } from "@/lib/api/payments.api";
+import { paymentsApi } from "@/lib/api/payments.api";
 import { queryKeys } from "@/lib/queryKeys";
 import type { Payment, OutstandingBalance } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 import {
   DollarSign,
   Clock,
-  MessageSquare,
   CreditCard,
   AlertCircle,
   CheckCircle,
@@ -222,7 +219,6 @@ export function CustomerDebtHistoryModal({
   outstandingBalance,
   onRecordPayment,
 }: CustomerDebtHistoryModalProps) {
-  const [activeTab, setActiveTab] = useState("payments");
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
 
   // Fetch customer payments
@@ -246,41 +242,6 @@ export function CustomerDebtHistoryModal({
         Array.isArray(data.payments)
       ) {
         return data.payments;
-      }
-      // If data is an object with a data property, use that
-      if (
-        typeof data === "object" &&
-        "data" in data &&
-        Array.isArray(data.data)
-      ) {
-        return data.data;
-      }
-      // Fallback to empty array
-      return [];
-    },
-  });
-
-  // Fetch customer reminders
-  const {
-    data: reminders,
-    isLoading: remindersLoading,
-    error: remindersError,
-  } = useQuery({
-    queryKey: queryKeys.reminders.customerHistory(customerId || ""),
-    queryFn: () => reminderNotesApi.getCustomerReminders(customerId!),
-    enabled: !!customerId && open,
-    retry: 1, // Only retry once to avoid excessive requests if endpoint doesn't exist
-    select: (data: any) => {
-      // Ensure we always return an array
-      if (!data) return [];
-      if (Array.isArray(data)) return data;
-      // If data is an object with a reminders property, use that
-      if (
-        typeof data === "object" &&
-        "reminders" in data &&
-        Array.isArray(data.reminders)
-      ) {
-        return data.reminders;
       }
       // If data is an object with a data property, use that
       if (
@@ -411,23 +372,10 @@ export function CustomerDebtHistoryModal({
               </Card>
             )}
 
-            {/* Tabs for different views */}
-            <Tabs
-              value={activeTab}
-              onValueChange={setActiveTab}
-              className="flex-1"
-            >
-              <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="payments" className="text-xs sm:text-sm">
-                  Payment History
-                </TabsTrigger>
-                <TabsTrigger value="reminders" className="text-xs sm:text-sm">
-                  Reminder Notes
-                </TabsTrigger>
-              </TabsList>
-
+            {/* Payment History */}
+            <div>
               {/* Payment History Tab */}
-              <TabsContent value="payments" className="mt-0">
+              <div>
                 <Card className="border gap-0">
                   <CardHeader className="p-3 sm:p-4 pb-2 sm:pb-3">
                     <CardTitle className="flex items-center justify-between text-sm sm:text-base">
@@ -543,81 +491,8 @@ export function CustomerDebtHistoryModal({
                     </div>
                   </CardContent>
                 </Card>
-              </TabsContent>
-
-              {/* Reminder Notes Tab */}
-              <TabsContent value="reminders" className="mt-0">
-                <Card className="border gap-0">
-                  <CardHeader className="p-3 sm:p-4 pb-2 sm:pb-3">
-                    <CardTitle className="flex items-center justify-between text-sm sm:text-base">
-                      <span>Reminder Notes</span>
-                      {reminders && (
-                        <div className="text-xs sm:text-sm text-muted-foreground font-normal">
-                          {reminders.length} reminders
-                        </div>
-                      )}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <div
-                      className="h-80 sm:h-96 overflow-y-auto scroll-smooth will-change-transform"
-                      style={{ WebkitOverflowScrolling: "touch" }}
-                    >
-                      {remindersLoading ? (
-                        <div className="space-y-3 p-3 sm:p-4">
-                          {[...Array(3)].map((_, index) => (
-                            <Skeleton key={index} className="h-20 w-full" />
-                          ))}
-                        </div>
-                      ) : remindersError ? (
-                        <div className="p-3 sm:p-4 text-center text-muted-foreground">
-                          <AlertCircle className="h-8 w-8 mx-auto mb-2" />
-                          <p className="text-xs sm:text-sm">
-                            Failed to load reminder notes
-                          </p>
-                        </div>
-                      ) : !reminders ||
-                        !Array.isArray(reminders) ||
-                        reminders.length === 0 ? (
-                        <div className="p-3 sm:p-4 text-center text-muted-foreground">
-                          <MessageSquare className="h-8 w-8 mx-auto mb-2" />
-                          <p className="text-xs sm:text-sm">
-                            No reminder notes found
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="divide-y">
-                          {reminders.map((reminder) => (
-                            <div
-                              key={reminder.id}
-                              className="p-3 sm:p-4 hover:bg-muted/50 will-change-colors"
-                            >
-                              <div className="flex items-start gap-2 sm:gap-3">
-                                <MessageSquare className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
-                                <div className="flex-1 min-w-0">
-                                  <div className="text-xs sm:text-sm font-medium mb-1">
-                                    {reminder.note}
-                                  </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {new Date(
-                                      reminder.reminderDate
-                                    ).toLocaleDateString()}{" "}
-                                    at{" "}
-                                    {new Date(
-                                      reminder.reminderDate
-                                    ).toLocaleTimeString()}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+              </div>
+            </div>
           </div>
         </div>
 

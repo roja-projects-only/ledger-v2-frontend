@@ -26,7 +26,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LocationBadge } from "@/components/shared/LocationBadge";
-import { ReminderNoteModal } from "@/components/shared/ReminderNoteModal";
 import { KPICard } from "@/components/shared/KPICard";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { remindersApi } from "@/lib/api/reminders.api";
@@ -70,12 +69,7 @@ export function Reminders() {
   const [bulkNote, setBulkNote] = useState("");
   const [showBulkForm, setShowBulkForm] = useState(false);
 
-  // Single reminder modal state
-  const [reminderModalOpen, setReminderModalOpen] = useState(false);
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(
-    null
-  );
-  const [selectedCustomerName, setSelectedCustomerName] = useState("");
+
 
   // Fetch customers needing reminders
   const {
@@ -171,11 +165,7 @@ export function Reminders() {
     });
   };
 
-  const handleSingleReminder = (customerId: string, customerName: string) => {
-    setSelectedCustomerId(customerId);
-    setSelectedCustomerName(customerName);
-    setReminderModalOpen(true);
-  };
+
 
   // ============================================================================
   // Render
@@ -506,20 +496,6 @@ export function Reminders() {
                           </div>
                         </div>
 
-                        {/* Action Button */}
-                        {!showBulkForm && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              handleSingleReminder(customer.id, customer.name)
-                            }
-                            className="w-full sm:w-auto"
-                          >
-                            <Bell className="h-3.5 w-3.5 mr-2" />
-                            Add Reminder Note
-                          </Button>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -529,14 +505,6 @@ export function Reminders() {
           )}
         </div>
       </Container>
-
-      {/* Single Reminder Modal */}
-      <ReminderNoteModal
-        open={reminderModalOpen}
-        onOpenChange={setReminderModalOpen}
-        customerId={selectedCustomerId}
-        customerName={selectedCustomerName}
-      />
     </div>
   );
 }

@@ -26,7 +26,6 @@ import { KPICard } from "@/components/shared/KPICard";
 import { OutstandingBalanceCard } from "@/components/shared/OutstandingBalanceCard";
 import { CustomerDebtHistoryModal } from "@/components/shared/CustomerDebtHistoryModal";
 import { PaymentRecordingModal } from "@/components/shared/PaymentRecordingModal";
-import { ReminderNoteModal } from "@/components/shared/ReminderNoteModal";
 import { PaginationControls } from "@/components/shared/PaginationControls";
 import { usePagination } from "@/lib/hooks/usePagination";
 import { useQuery } from "@tanstack/react-query";
@@ -96,7 +95,6 @@ export function OutstandingBalances() {
     useState<OutstandingBalance | null>(null);
   const [debtHistoryModalOpen, setDebtHistoryModalOpen] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
-  const [reminderModalOpen, setReminderModalOpen] = useState(false);
 
   // ============================================================================
   // Computed Values
@@ -243,17 +241,6 @@ export function OutstandingBalances() {
       setSelectedCustomerName(balance.customerName);
       setSelectedBalance(balance);
       setPaymentModalOpen(true);
-    }
-  };
-
-  const handleAddReminder = (customerId: string) => {
-    const balance = outstandingBalances?.find(
-      (b) => b.customerId === customerId
-    );
-    if (balance) {
-      setSelectedCustomerId(customerId);
-      setSelectedCustomerName(balance.customerName);
-      setReminderModalOpen(true);
     }
   };
 
@@ -550,7 +537,7 @@ export function OutstandingBalances() {
                     key={balance.customerId}
                     balance={balance}
                     onRecordPayment={handleRecordPayment}
-                    onAddReminder={handleAddReminder}
+                    onAddReminder={() => {}}
                     onViewHistory={handleViewHistory}
                   />
                 ))}
@@ -598,14 +585,6 @@ export function OutstandingBalances() {
           // Refresh the outstanding balances data
           // The query will automatically refetch due to invalidation in the modal
         }}
-      />
-
-      {/* Reminder Note Modal */}
-      <ReminderNoteModal
-        open={reminderModalOpen}
-        onOpenChange={setReminderModalOpen}
-        customerId={selectedCustomerId}
-        customerName={selectedCustomerName}
       />
     </div>
   );
