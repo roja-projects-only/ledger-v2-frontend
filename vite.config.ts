@@ -19,6 +19,11 @@ export default defineConfig(({ mode }) => {
         injectManifest: {
           globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         },
+        pwaAssets: {
+          config: true,
+          includeHtmlHeadLinks: false,
+          overrideManifestIcons: true,
+        },
         manifest: {
           name: "Water Refilling Ledger",
           short_name: "Ledger",
@@ -56,7 +61,7 @@ export default defineConfig(({ mode }) => {
           suppressWarnings: true,
           navigateFallback: "index.html",
         },
-        includeAssets: ["vite.svg"],
+        includeAssets: ["mask-icon.svg"],
       }),
     ],
     resolve: {
