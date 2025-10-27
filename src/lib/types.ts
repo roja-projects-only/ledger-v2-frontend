@@ -452,3 +452,74 @@ export interface SortParams {
   field: string;
   direction: "asc" | "desc";
 }
+
+// ============================================================================
+// Date Configuration Types
+// ============================================================================
+
+/**
+ * Date configuration for the application
+ */
+export interface DateConfig {
+  timezone: string; // Target timezone (e.g., "Asia/Manila")
+  locale: string; // Locale for formatting (e.g., "en-US")
+  dateFormat: string; // Date format string for date-fns
+  dateTimeFormat: string; // DateTime format string for date-fns
+  relativeThreshold: number; // Days threshold for relative formatting
+  businessDays: number[]; // Array of business days (0-6, Sunday=0)
+  holidays: string[]; // Array of holiday dates in ISO format
+}
+
+/**
+ * Date period types for filtering and analysis
+ */
+export type DatePeriod = '7D' | '30D' | '90D' | '1Y' | 'custom';
+
+/**
+ * Date range with period information
+ */
+export interface DateRangeWithPeriod {
+  start: Date;
+  end: Date;
+  period: DatePeriod;
+  label: string;
+}
+
+/**
+ * Options for relative date formatting
+ */
+export interface RelativeDateOptions {
+  maxDays?: number; // Maximum days to show relative format
+  includeTime?: boolean; // Include time in relative format
+}
+
+/**
+ * Options for date formatting
+ */
+export interface DateFormatOptions {
+  includeTime?: boolean; // Include time in format
+  includeYear?: boolean; // Include year in format
+  relative?: boolean; // Use relative formatting if applicable
+  timezone?: string; // Override default timezone
+}
+
+/**
+ * Date validation result
+ */
+export interface DateValidationResult {
+  isValid: boolean;
+  error?: string;
+  normalizedDate?: string; // ISO format if valid
+}
+
+/**
+ * Date range validation result
+ */
+export interface DateRangeValidationResult {
+  isValid: boolean;
+  error?: string;
+  normalizedRange?: {
+    start: string;
+    end: string;
+  };
+}
