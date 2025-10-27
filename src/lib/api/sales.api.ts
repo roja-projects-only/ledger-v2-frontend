@@ -6,13 +6,20 @@
 
 import { apiClient } from "./client";
 import type { Sale } from "@/lib/types";
-import { 
-  adaptSalesListResponse, 
-  adaptItemResponse, 
+import {
+  adaptSalesListResponse,
+  adaptItemResponse,
   adaptMutationResponse,
-  adaptSimpleListResponse 
+  adaptSimpleListResponse,
+  asEnvelope,
 } from "./adapters";
-import type { ListResponse } from "./adapters";
+import type {
+  ItemApiEnvelope,
+  ListResponse,
+  MutationApiEnvelope,
+  SalesListApiEnvelope,
+  SimpleListApiEnvelope,
+} from "./adapters";
 
 // ============================================================================
 // Types
@@ -83,91 +90,114 @@ export const salesApi = {
    * List sales with filters and pagination
    */
   list: async (filters?: SaleFilters): Promise<ListResponse<Sale>> => {
-    const response = await apiClient.get("/sales", { params: filters });
-    return adaptSalesListResponse<Sale>(response);
+    const response = await apiClient.get<SalesListApiEnvelope<Sale>>("/sales", { params: filters });
+    return adaptSalesListResponse<Sale>(asEnvelope<SalesListApiEnvelope<Sale>>(response));
   },
 
   /**
    * Get sale by ID
    */
   get: async (id: string): Promise<Sale> => {
-    const response = await apiClient.get(`/sales/${id}`);
-    return adaptItemResponse<Sale>(response).data;
+    const response = await apiClient.get<ItemApiEnvelope<Sale>>(`/sales/${id}`);
+    return adaptItemResponse<Sale>(asEnvelope<ItemApiEnvelope<Sale>>(response)).data;
   },
 
   /**
    * Create new sale (total auto-calculated)
    */
   create: async (data: CreateSaleRequest): Promise<Sale> => {
-    const response = await apiClient.post("/sales", data);
-    return adaptItemResponse<Sale>(response).data;
+    const response = await apiClient.post<ItemApiEnvelope<Sale>>("/sales", data);
+    return adaptItemResponse<Sale>(asEnvelope<ItemApiEnvelope<Sale>>(response)).data;
   },
 
   /**
    * Update sale (total recalculated if qty/price changed)
    */
   update: async (id: string, data: UpdateSaleRequest): Promise<Sale> => {
-    const response = await apiClient.patch(`/sales/${id}`, data);
-    return adaptItemResponse<Sale>(response).data;
+    const response = await apiClient.patch<ItemApiEnvelope<Sale>>(`/sales/${id}`, data);
+    return adaptItemResponse<Sale>(asEnvelope<ItemApiEnvelope<Sale>>(response)).data;
   },
 
   /**
    * Delete sale (admin or own within 24h)
    */
   delete: async (id: string): Promise<void> => {
-    const response = await apiClient.delete(`/sales/${id}`);
-    adaptMutationResponse<null>(response);
+    const response = await apiClient.delete<MutationApiEnvelope<null>>(`/sales/${id}`);
+    adaptMutationResponse<null>(asEnvelope<MutationApiEnvelope<null>>(response));
   },
 
   /**
    * Get today's sales
    */
   today: async (): Promise<Sale[]> => {
-    const response = await apiClient.get("/sales/today");
-    return adaptSalesListResponse<Sale>(response).data;
+    const response = await apiClient.get<SalesListApiEnvelope<Sale>>("/sales/today");
+    return adaptSalesListResponse<Sale>(
+      asEnvelope<SalesListApiEnvelope<Sale>>(response)
+    ).data;
   },
 
   /**
    * Get sales by specific date
    */
   byDate: async (date: string): Promise<Sale[]> => {
-    const response = await apiClient.get(`/sales/date/${date}`);
-    return adaptSalesListResponse<Sale>(response).data;
+    const response = await apiClient.get<SalesListApiEnvelope<Sale>>(`/sales/date/${date}`);
+    return adaptSalesListResponse<Sale>(
+      asEnvelope<SalesListApiEnvelope<Sale>>(response)
+    ).data;
   },
 
   /**
    * Get customer purchase history (grouped by date)
    */
   customerHistory: async (customerId: string): Promise<Sale[]> => {
-    const response = await apiClient.get(`/sales/customer/${customerId}/history`);
-    return adaptSalesListResponse<Sale>(response).data;
+    const response = await apiClient.get<SalesListApiEnvelope<Sale>>(
+      `/sales/customer/${customerId}/history`
+    );
+    return adaptSalesListResponse<Sale>(
+      asEnvelope<SalesListApiEnvelope<Sale>>(response)
+    ).data;
   },
 
   /**
    * Get daily sales trend (for charts)
    */
   dailyTrend: async (startDate: string, endDate: string): Promise<DailySalesTrend[]> => {
-    const response = await apiClient.get("/sales/analytics/daily-trend", {
-      params: { startDate, endDate },
-    });
-    return adaptSimpleListResponse<DailySalesTrend>(response).data;
+    const response = await apiClient.get<SimpleListApiEnvelope<DailySalesTrend>>(
+      "/sales/analytics/daily-trend",
+      {
+        params: { startDate, endDate },
+      }
+    );
+    return adaptSimpleListResponse<DailySalesTrend>(
+      asEnvelope<SimpleListApiEnvelope<DailySalesTrend>>(response)
+    ).data;
   },
 
   /**
    * Get location performance (for charts)
    */
   locationPerformance: async (startDate: string, endDate: string): Promise<LocationPerformance[]> => {
-    const response = await apiClient.get("/sales/analytics/location-performance", {
-      params: { startDate, endDate },
-    });
-    return adaptSimpleListResponse<LocationPerformance>(response).data;
+    const response = await apiClient.get<SimpleListApiEnvelope<LocationPerformance>>(
+      "/sales/analytics/location-performance",
+      {
+        params: { startDate, endDate },
+      }
+    );
+    return adaptSimpleListResponse<LocationPerformance>(
+      asEnvelope<SimpleListApiEnvelope<LocationPerformance>>(response)
+    ).data;
   },
 
   /**
    * Get sales summary statistics
    */
   summary: async (filters?: { startDate?: string; endDate?: string }): Promise<SalesSummary> => {
-    const response = await apiClient.get("/sales/summary", { params: filters });
-    return adaptItemResponse<SalesSummary>(response).data;
+    const response = await apiClient.get<ItemApiEnvelope<SalesSummary>>(
+      "/sales/summary",
+      { params: filters }
+    );
+    return adaptItemResponse<SalesSummary>(
+      asEnvelope<ItemApiEnvelope<SalesSummary>>(response)
+    ).data;
   },
 };

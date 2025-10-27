@@ -45,6 +45,59 @@ export interface MutationResponse<T> {
   message?: string;
 }
 
+export interface ApiListPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext?: boolean;
+  hasPrev?: boolean;
+}
+
+export interface SalesListApiEnvelope<T> {
+  success: boolean;
+  data: {
+    data: T[];
+    pagination?: ApiListPagination;
+  };
+  message?: string;
+}
+
+export interface CustomersListApiEnvelope<T> {
+  success: boolean;
+  data: T[];
+  pagination?: ApiListPagination;
+  message?: string;
+}
+
+export interface SimpleListApiEnvelope<T> {
+  success: boolean;
+  data: T[];
+  message?: string;
+}
+
+export interface ItemApiEnvelope<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
+export interface MutationApiEnvelope<T> {
+  success: boolean;
+  data: T | null;
+  message?: string;
+}
+
+export interface AuthApiEnvelope {
+  success: boolean;
+  data: AuthResponse;
+  message?: string;
+}
+
+export const asEnvelope = <T>(response: unknown): T => {
+  return response as T;
+};
+
 /**
  * Adapter for Sales API (double nested structure)
  * 
@@ -57,12 +110,10 @@ export interface MutationResponse<T> {
  *   }
  * }
  */
-export function adaptSalesListResponse<T>(response: any): ListResponse<T> {
-  // Axios interceptor already unwrapped response.data
-  // response = { success: true, data: { data: [...], pagination: {...} } }
+export function adaptSalesListResponse<T>(response: SalesListApiEnvelope<T>): ListResponse<T> {
   return {
-    data: response.data.data,
-    pagination: response.data.pagination,
+    data: response.data?.data ?? [],
+    pagination: response.data?.pagination,
   };
 }
 
@@ -76,11 +127,9 @@ export function adaptSalesListResponse<T>(response: any): ListResponse<T> {
  *   pagination: {...}
  * }
  */
-export function adaptCustomersListResponse<T>(response: any): ListResponse<T> {
-  // Axios interceptor already unwrapped response.data
-  // response = { success: true, data: [...], pagination: {...} }
+export function adaptCustomersListResponse<T>(response: CustomersListApiEnvelope<T>): ListResponse<T> {
   return {
-    data: response.data,
+    data: response.data ?? [],
     pagination: response.pagination,
   };
 }
@@ -94,11 +143,9 @@ export function adaptCustomersListResponse<T>(response: any): ListResponse<T> {
  *   data: [...]
  * }
  */
-export function adaptSimpleListResponse<T>(response: any): ListResponse<T> {
-  // Axios interceptor already unwrapped response.data
-  // response = { success: true, data: [...] }
+export function adaptSimpleListResponse<T>(response: SimpleListApiEnvelope<T>): ListResponse<T> {
   return {
-    data: response.data,
+    data: response.data ?? [],
     pagination: undefined,
   };
 }
@@ -112,9 +159,7 @@ export function adaptSimpleListResponse<T>(response: any): ListResponse<T> {
  *   data: {...}
  * }
  */
-export function adaptItemResponse<T>(response: any): ItemResponse<T> {
-  // Axios interceptor already unwrapped response.data
-  // response = { success: true, data: {...} }
+export function adaptItemResponse<T>(response: ItemApiEnvelope<T>): ItemResponse<T> {
   return {
     data: response.data,
   };
@@ -130,9 +175,7 @@ export function adaptItemResponse<T>(response: any): ItemResponse<T> {
  *   message: "..."
  * }
  */
-export function adaptMutationResponse<T>(response: any): MutationResponse<T> {
-  // Axios interceptor already unwrapped response.data
-  // response = { success: true, data: {...}, message: "..." }
+export function adaptMutationResponse<T>(response: MutationApiEnvelope<T>): MutationResponse<T> {
   return {
     data: response.data,
     message: response.message,
@@ -163,9 +206,7 @@ export interface AuthResponse {
   refreshToken: string;
 }
 
-export function adaptAuthResponse(response: any): AuthResponse {
-  // Axios interceptor already unwrapped response.data
-  // response = { success: true, data: { user, accessToken, refreshToken } }
+export function adaptAuthResponse(response: AuthApiEnvelope): AuthResponse {
   return {
     user: response.data.user,
     accessToken: response.data.accessToken,

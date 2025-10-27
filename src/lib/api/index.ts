@@ -24,6 +24,7 @@ export type {
   RecordPaymentRequest, 
   UpdatePaymentRequest, 
   PaymentFilters, 
-  AgingReport,
-  DailyPaymentsReport 
+  CreatePaymentTransactionRequest,
+  UpdatePaymentTransactionRequest
 } from "./payments.api";
+export type { AgingReportData, DailyPaymentsReport, PaymentSummary } from "@/lib/types";
