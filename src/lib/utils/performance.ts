@@ -4,32 +4,37 @@
 
 import { useEffect, useRef } from "react";
 
+type PropsRecord = Record<string, unknown>;
+
 /**
  * Hook to track component re-renders in development
  * Logs when a component re-renders and what props changed
  */
-export function useRenderTracker(componentName: string, props?: Record<string, any>) {
+export function useRenderTracker<Props extends PropsRecord = PropsRecord>(
+  componentName: string,
+  props?: Props
+) {
   const renderCount = useRef(0);
-  const prevProps = useRef<Record<string, any> | undefined>(undefined);
+  const prevProps = useRef<Props | undefined>(undefined);
 
   useEffect(() => {
     renderCount.current += 1;
-    
-    if (typeof window !== 'undefined' && import.meta.env.DEV) {
+    const isBrowser = typeof window !== "undefined";
+
+    if (isBrowser && import.meta.env.DEV) {
       console.log(`[${componentName}] Render #${renderCount.current}`);
-      
+
       if (props && prevProps.current) {
-        const changedProps = Object.keys(props).filter(
-          key => props[key] !== prevProps.current![key]
-        );
-        
+        const keys = Object.keys(props) as Array<keyof Props>;
+        const changedProps = keys.filter((key) => props[key] !== prevProps.current?.[key]);
+
         if (changedProps.length > 0) {
           console.log(`[${componentName}] Changed props:`, changedProps);
         }
       }
-      
-      prevProps.current = props;
     }
+
+    prevProps.current = props;
   });
 }
 
@@ -59,20 +64,25 @@ export function createMemoizedSelector<T, R>(
   selector: (input: T) => R,
   equalityFn?: (a: R, b: R) => boolean
 ) {
-  let lastInput: T;
-  let lastResult: R;
-  
+  let lastInput: T | undefined;
+  let lastResult: R | undefined;
+  let hasCachedValue = false;
+
   return (input: T): R => {
-    if (input !== lastInput) {
+    if (!hasCachedValue || input !== lastInput) {
       const newResult = selector(input);
-      
-      if (!equalityFn || !equalityFn(lastResult, newResult)) {
+
+      const shouldUpdate =
+        !hasCachedValue || !equalityFn || !equalityFn(lastResult as R, newResult);
+
+      if (shouldUpdate) {
         lastResult = newResult;
       }
-      
+
       lastInput = input;
+      hasCachedValue = true;
     }
-    
-    return lastResult;
+
+    return lastResult as R;
   };
 }

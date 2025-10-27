@@ -7,6 +7,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
+import { isAxiosError } from "axios";
 import { paymentsApi } from "@/lib/api/payments.api";
 import { queryKeys } from "@/lib/queryKeys";
 
@@ -50,7 +51,7 @@ export function useDebtData({
     error,
     refetch,
     isRefetching,
-  } = useQuery({
+  } = useQuery<OutstandingBalance | null, Error>({
     queryKey: queryKeys.payments.customerOutstanding(customerId || ""),
     queryFn: async () => {
       if (!customerId) return null;
@@ -58,34 +59,48 @@ export function useDebtData({
       try {
         const data = await paymentsApi.getCustomerOutstanding(customerId);
         return data;
-      } catch (error: any) {
+      } catch (err: unknown) {
+        if (isAxiosError(err)) {
+          const status = err.response?.status;
+
+          if (status === 404) {
+            // Customer not found or no debt records - this is not an error
+            return null;
+          }
+
+          if (status === 503 || err.code === "ERR_NETWORK") {
+            throw new Error("Debt service is temporarily unavailable");
+          }
+
+          if (status === 401 || status === 403) {
+            // Surface auth errors directly
+            throw err;
+          }
+
+          throw err;
+        }
+
         // Handle specific error cases
-        if (error?.response?.status === 404) {
-          // Customer not found or no debt records - this is not an error
-          return null;
-        }
-        
-        if (error?.response?.status === 503 || error?.code === 'NETWORK_ERROR') {
-          // Service unavailable - debt service might be down
-          throw new Error('Debt service is temporarily unavailable');
-        }
-        
-        // Re-throw other errors
-        throw error;
+        throw err instanceof Error
+          ? err
+          : new Error("Failed to retrieve outstanding balance");
       }
     },
     enabled: enabled && !!customerId,
-    retry: (failureCount, error: any) => {
+    retry: (failureCount, retryError) => {
       // Don't retry on 404 (customer not found)
-      if (error?.response?.status === 404) {
-        return false;
+      if (isAxiosError(retryError)) {
+        const status = retryError.response?.status;
+
+        if (status === 404) {
+          return false;
+        }
+
+        if (status === 401 || status === 403) {
+          return false;
+        }
       }
-      
-      // Don't retry on 401/403 (auth errors)
-      if (error?.response?.status === 401 || error?.response?.status === 403) {
-        return false;
-      }
-      
+
       // Retry up to 2 times for other errors
       return failureCount < 2;
     },
@@ -96,18 +111,6 @@ export function useDebtData({
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
     refetchInterval: false, // Don't auto-refetch unless explicitly needed
-    select: (data: any) => {
-      // Ensure we have a valid OutstandingBalance object or null
-      if (!data) return null;
-      
-      // If the API returns the expected structure, use it
-      if (typeof data === "object" && "customerId" in data) {
-        return data as OutstandingBalance;
-      }
-      
-      // Fallback to null if data structure is unexpected
-      return null;
-    },
   });
 
   const retry = useCallback(() => {
@@ -131,17 +134,19 @@ export function useDebtData({
     [isError, error]
   );
 
-  return useMemo(() => ({
-    outstandingBalance: outstandingBalance || null,
-    isLoading,
-    isError,
-    error: error as Error | null,
-    isRetrying: isRefetching,
-    retry,
-    refetch,
-    hasDebt,
-    isDebtServiceAvailable,
-  }), [
+  return useMemo(
+    () => ({
+      outstandingBalance: outstandingBalance || null,
+      isLoading,
+      isError,
+      error: error ?? null,
+      isRetrying: isRefetching,
+      retry,
+      refetch,
+      hasDebt,
+      isDebtServiceAvailable,
+    }),
+    [
     outstandingBalance,
     isLoading,
     isError,
@@ -151,5 +156,6 @@ export function useDebtData({
     refetch,
     hasDebt,
     isDebtServiceAvailable,
-  ]);
+    ]
+  );
 }
