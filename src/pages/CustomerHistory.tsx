@@ -13,7 +13,7 @@
  * - Most recent purchases first
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, memo, lazy, Suspense } from "react";
 import { Container } from "@/components/layout/Container";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,28 +41,43 @@ import {
 } from "@/components/ui/popover";
 import { Check, ChevronsUpDown, User, CalendarIcon } from "lucide-react";
 import { KPICard } from "@/components/shared/KPICard";
-import { CustomerDebtHistoryModal } from "@/components/shared/CustomerDebtHistoryModal";
-import { PaymentRecordingModal } from "@/components/shared/PaymentRecordingModal";
+
+// Lazy load modal components for better performance
+const CustomerDebtHistoryModal = lazy(() => 
+  import("@/components/shared/CustomerDebtHistoryModal").then(module => ({
+    default: module.CustomerDebtHistoryModal
+  }))
+);
+
+const PaymentRecordingModal = lazy(() => 
+  import("@/components/shared/PaymentRecordingModal").then(module => ({
+    default: module.PaymentRecordingModal
+  }))
+);
 import { PurchaseTimeline } from "@/components/customer-history/PurchaseTimeline";
 import { useSales } from "@/lib/hooks/useSales";
 import { useCustomers } from "@/lib/hooks/useCustomers";
 import { useKPIs } from "@/lib/hooks/useKPIs";
 import { usePricing } from "@/lib/hooks/usePricing";
 import { useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/queryKeys";
 import { notify } from "@/lib/notifications";
 import { useDebtData } from "@/lib/hooks/useDebtData";
+import { useDebounce } from "@/lib/hooks/useDebounce";
 import { DebtErrorBoundary } from "@/components/shared/DebtErrorBoundary";
 import { DebtKPICard } from "@/components/shared/DebtKPICard";
 import { DebtManagementSection } from "@/components/shared/DebtManagementSection";
-import type { KPI } from "@/lib/types";
+import { useRenderTracker } from "@/lib/utils/performance";
+import { formatKpiValue } from "@/lib/utils/kpiFormatters";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
 
 // ============================================================================
 // Customer History Page Component
 // ============================================================================
 
-export function CustomerHistory() {
+function CustomerHistoryComponent() {
+  // Performance monitoring in development
+  useRenderTracker('CustomerHistory');
+  
   const queryClient = useQueryClient();
   const { customers, loading: customersLoading } = useCustomers();
   const { 
@@ -77,6 +92,9 @@ export function CustomerHistory() {
 
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   
+  // Debounce customer selection to prevent excessive API calls
+  const debouncedCustomerId = useDebounce(selectedCustomerId, 300);
+  
   // Fetch customer debt data with error handling
   const {
     outstandingBalance,
@@ -87,8 +105,8 @@ export function CustomerHistory() {
     retry: retryDebtData,
     refetch: refetchOutstandingBalance,
   } = useDebtData({
-    customerId: selectedCustomerId,
-    enabled: !!selectedCustomerId,
+    customerId: debouncedCustomerId,
+    enabled: !!debouncedCustomerId,
   });
 
 
@@ -109,62 +127,61 @@ export function CustomerHistory() {
   });
   const [showAllTime, setShowAllTime] = useState(false);
 
-  // Get selected customer
-  const selectedCustomer = customers?.find((c) => c.id === selectedCustomerId);
+  // Get selected customer (memoized to prevent unnecessary re-renders)
+  const selectedCustomer = useMemo(() => 
+    customers?.find((c) => c.id === selectedCustomerId), 
+    [customers, selectedCustomerId]
+  );
 
-  // Get all sales for selected customer
-  const allCustomerSales = selectedCustomerId
-    ? getSalesByCustomer(selectedCustomerId)
-    : [];
+  // Get all sales for selected customer (memoized)
+  const allCustomerSales = useMemo(() => 
+    selectedCustomerId ? getSalesByCustomer(selectedCustomerId) : [],
+    [selectedCustomerId, getSalesByCustomer]
+  );
 
-  // Filter sales by date range
+  // Filter sales by date range (optimized with proper memoization)
   const customerSales = useMemo(() => {
     if (showAllTime) return allCustomerSales;
 
-    return allCustomerSales.filter((sale) => {
-      const saleDate = new Date(sale.date);
-      return saleDate >= dateRange.from && saleDate <= dateRange.to;
-    });
-  }, [allCustomerSales, dateRange, showAllTime]);
+    const fromTime = dateRange.from.getTime();
+    const toTime = dateRange.to.getTime();
 
-  // Date range presets
-  const setDateRangePreset = (days: number) => {
+    return allCustomerSales.filter((sale) => {
+      const saleTime = new Date(sale.date).getTime();
+      return saleTime >= fromTime && saleTime <= toTime;
+    });
+  }, [allCustomerSales, dateRange.from, dateRange.to, showAllTime]);
+
+  // Date range presets (memoized to prevent unnecessary re-renders)
+  const setDateRangePreset = useCallback((days: number) => {
     const today = new Date();
     const pastDate = new Date();
     pastDate.setDate(today.getDate() - days);
     setDateRange({ from: pastDate, to: today });
     setShowAllTime(false);
-  };
+  }, []);
 
-  const handleAllTime = () => {
+  const handleAllTime = useCallback(() => {
     setShowAllTime(true);
-  };
+  }, []);
 
-  // Calculate customer KPIs based on filtered sales
+  // Calculate customer KPIs based on filtered sales (optimized)
   const { getCustomerKPIs } = useKPIs(customerSales, customers || []);
   const baseCustomerKPIs = useMemo(
     () => (selectedCustomerId ? getCustomerKPIs(selectedCustomerId) : []),
     [getCustomerKPIs, selectedCustomerId]
   );
 
-  // Enhanced customer KPIs including debt information
-  const customerKPIs = useMemo(() => {
-    // Only include base KPIs, debt KPI is handled separately
-    return baseCustomerKPIs;
-  }, [baseCustomerKPIs]);
+  // Enhanced customer KPIs including debt information (simplified)
+  const customerKPIs = baseCustomerKPIs;
 
-  const loading = customersLoading || salesLoading || outstandingBalanceLoading;
-  const formatKpiValue = (kpi: KPI) => {
-    if (typeof kpi.value !== "number") {
-      return kpi.value;
-    }
+  // Memoize loading state calculation
+  const loading = useMemo(() => 
+    customersLoading || salesLoading || outstandingBalanceLoading,
+    [customersLoading, salesLoading, outstandingBalanceLoading]
+  );
 
-    if (kpi.variant === "revenue" || kpi.variant === "average") {
-      return formatCurrency(kpi.value);
-    }
-
-    return kpi.value.toLocaleString();
-  };
+  // Use optimized KPI formatter (already memoized with caching)
 
   return (
     <div className="py-6">
@@ -511,56 +528,66 @@ export function CustomerHistory() {
           variant="destructive"
         />
 
-        {/* Customer Debt History Modal with Error Boundary */}
+        {/* Customer Debt History Modal with Error Boundary and Lazy Loading */}
         <DebtErrorBoundary
           fallbackTitle="Debt History Unavailable"
           fallbackMessage="Unable to load debt history modal. Please try again later."
           onRetry={retryDebtData}
         >
-          <CustomerDebtHistoryModal
-            open={debtModalOpen}
-            onOpenChange={setDebtModalOpen}
-            customerId={selectedCustomerId}
-            customerName={selectedCustomer?.name}
-            outstandingBalance={outstandingBalance || undefined}
-            onRecordPayment={() => {
-              // Close debt modal and open payment modal
-              setDebtModalOpen(false);
-              setPaymentModalOpen(true);
-            }}
-          />
+          <Suspense fallback={<div>Loading...</div>}>
+            <CustomerDebtHistoryModal
+              open={debtModalOpen}
+              onOpenChange={setDebtModalOpen}
+              customerId={selectedCustomerId}
+              customerName={selectedCustomer?.name}
+              outstandingBalance={outstandingBalance || undefined}
+              onRecordPayment={() => {
+                // Close debt modal and open payment modal
+                setDebtModalOpen(false);
+                setPaymentModalOpen(true);
+              }}
+            />
+          </Suspense>
         </DebtErrorBoundary>
 
-        {/* Payment Recording Modal with Error Boundary */}
+        {/* Payment Recording Modal with Error Boundary and Lazy Loading */}
         <DebtErrorBoundary
           fallbackTitle="Payment Recording Unavailable"
           fallbackMessage="Unable to load payment recording modal. Please try again later."
           onRetry={retryDebtData}
         >
-          <PaymentRecordingModal
-            open={paymentModalOpen}
-            onOpenChange={setPaymentModalOpen}
-            customerId={selectedCustomerId}
-            customerName={selectedCustomer?.name}
-            outstandingBalance={outstandingBalance || undefined}
-            onPaymentRecorded={(customerId, amount) => {
-              // Refresh outstanding balance data
-              refetchOutstandingBalance();
-              
-              // Invalidate related queries to ensure data consistency
-              queryClient.invalidateQueries({
-                queryKey: queryKeys.payments.customerPayments(customerId),
-              });
-              queryClient.invalidateQueries({
-                queryKey: queryKeys.payments.customerOutstanding(customerId),
-              });
-              
-              // Show success notification
-              notify.success(`Payment of ${formatCurrency(amount)} recorded successfully`);
-            }}
-          />
+          <Suspense fallback={<div>Loading...</div>}>
+            <PaymentRecordingModal
+              open={paymentModalOpen}
+              onOpenChange={setPaymentModalOpen}
+              customerId={selectedCustomerId}
+              customerName={selectedCustomer?.name}
+              outstandingBalance={outstandingBalance || undefined}
+              onPaymentRecorded={useCallback((customerId: string, amount: number) => {
+                // Refresh outstanding balance data
+                refetchOutstandingBalance();
+                
+                // Batch invalidate related queries for better performance
+                queryClient.invalidateQueries({
+                  predicate: (query) => {
+                    const key = query.queryKey;
+                    return (
+                      key.includes('payments') && 
+                      key.includes(customerId)
+                    );
+                  },
+                });
+                
+                // Show success notification
+                notify.success(`Payment of ${formatCurrency(amount)} recorded successfully`);
+              }, [refetchOutstandingBalance, queryClient])}
+            />
+          </Suspense>
         </DebtErrorBoundary>
       </Container>
     </div>
   );
 }
+
+// Export memoized version for better performance
+export const CustomerHistory = memo(CustomerHistoryComponent);

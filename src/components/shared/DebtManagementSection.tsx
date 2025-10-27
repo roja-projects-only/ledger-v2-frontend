@@ -5,6 +5,7 @@
  * and fallback UI when debt service is unavailable.
  */
 
+import { memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Receipt, CreditCard, AlertCircle, RefreshCw, WifiOff } from "lucide-react";
@@ -31,7 +32,7 @@ interface DebtManagementSectionProps {
 // Component
 // ============================================================================
 
-export function DebtManagementSection({
+export const DebtManagementSection = memo(function DebtManagementSection({
   outstandingBalance,
   isLoading,
   isError,
@@ -145,4 +146,4 @@ export function DebtManagementSection({
       </CardContent>
     </Card>
   );
-}
+});

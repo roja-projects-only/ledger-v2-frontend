@@ -5,6 +5,7 @@
  * loading states, and fallback UI when debt service is unavailable.
  */
 
+import { memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -30,7 +31,7 @@ interface DebtKPICardProps {
 // Component
 // ============================================================================
 
-export function DebtKPICard({
+export const DebtKPICard = memo(function DebtKPICard({
   outstandingBalance,
   isLoading,
   isError,
@@ -194,4 +195,4 @@ export function DebtKPICard({
       </CardContent>
     </Card>
   );
-}
+});

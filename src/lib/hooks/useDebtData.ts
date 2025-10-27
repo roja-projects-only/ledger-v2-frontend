@@ -6,6 +6,7 @@
  */
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useMemo } from "react";
 import { paymentsApi } from "@/lib/api/payments.api";
 import { queryKeys } from "@/lib/queryKeys";
 
@@ -91,6 +92,10 @@ export function useDebtData({
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+    // Optimize background refetching
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    refetchInterval: false, // Don't auto-refetch unless explicitly needed
     select: (data: any) => {
       // Ensure we have a valid OutstandingBalance object or null
       if (!data) return null;
@@ -105,7 +110,7 @@ export function useDebtData({
     },
   });
 
-  const retry = () => {
+  const retry = useCallback(() => {
     // Clear any cached error state
     queryClient.removeQueries({
       queryKey: queryKeys.payments.customerOutstanding(customerId || ""),
@@ -113,15 +118,20 @@ export function useDebtData({
     
     // Refetch the data
     refetch();
-  };
+  }, [queryClient, customerId, refetch]);
 
-  const hasDebt = outstandingBalance ? outstandingBalance.totalOwed > 0 : false;
+  const hasDebt = useMemo(() => 
+    outstandingBalance ? outstandingBalance.totalOwed > 0 : false,
+    [outstandingBalance]
+  );
   
   // Determine if debt service is available based on error type
-  const isDebtServiceAvailable = !isError || 
-    (error && !error.message.includes('temporarily unavailable'));
+  const isDebtServiceAvailable = useMemo(() => 
+    !isError || (error && !error.message.includes('temporarily unavailable')),
+    [isError, error]
+  );
 
-  return {
+  return useMemo(() => ({
     outstandingBalance: outstandingBalance || null,
     isLoading,
     isError,
@@ -131,5 +141,15 @@ export function useDebtData({
     refetch,
     hasDebt,
     isDebtServiceAvailable,
-  };
+  }), [
+    outstandingBalance,
+    isLoading,
+    isError,
+    error,
+    isRefetching,
+    retry,
+    refetch,
+    hasDebt,
+    isDebtServiceAvailable,
+  ]);
 }
