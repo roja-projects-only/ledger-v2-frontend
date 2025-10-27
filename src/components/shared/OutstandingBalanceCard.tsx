@@ -22,7 +22,6 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { 
   Clock, 
   AlertTriangle, 
-  MessageSquare,
   CreditCard
 } from "lucide-react";
 
@@ -33,7 +32,6 @@ import {
 interface OutstandingBalanceCardProps {
   balance: OutstandingBalance;
   onRecordPayment?: (customerId: string) => void;
-  onAddReminder?: (customerId: string) => void;
   onViewHistory?: (customerId: string) => void;
   className?: string;
 }
@@ -250,18 +248,6 @@ export function OutstandingBalanceCard({
               >
                 <CreditCard className="h-3 w-3 mr-1" />
                 Record
-              </Button>
-            )}
-            
-            {onAddReminder && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onAddReminder(balance.customerId)}
-                className="flex-1 text-xs h-8"
-              >
-                <MessageSquare className="h-3 w-3 mr-1" />
-                Remind
               </Button>
             )}
             

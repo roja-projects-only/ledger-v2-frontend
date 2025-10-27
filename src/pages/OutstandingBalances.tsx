@@ -537,7 +537,6 @@ export function OutstandingBalances() {
                     key={balance.customerId}
                     balance={balance}
                     onRecordPayment={handleRecordPayment}
-                    onAddReminder={() => {}}
                     onViewHistory={handleViewHistory}
                   />
                 ))}
