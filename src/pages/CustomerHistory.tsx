@@ -36,14 +36,16 @@ import { Check, ChevronsUpDown, User, CalendarIcon, AlertCircle, CheckCircle, Al
 import { KPICard } from "@/components/shared/KPICard";
 import { CollectionStatusBadge } from "@/components/shared/CollectionStatusBadge";
 import { CustomerDebtHistoryModal } from "@/components/shared/CustomerDebtHistoryModal";
+import { PaymentRecordingModal } from "@/components/shared/PaymentRecordingModal";
 import { PurchaseTimeline } from "@/components/customer-history/PurchaseTimeline";
 import { useSales } from "@/lib/hooks/useSales";
 import { useCustomers } from "@/lib/hooks/useCustomers";
 import { useKPIs } from "@/lib/hooks/useKPIs";
 import { usePricing } from "@/lib/hooks/usePricing";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { paymentsApi } from "@/lib/api/payments.api";
 import { queryKeys } from "@/lib/queryKeys";
+import { notify } from "@/lib/notifications";
 import type { KPI, OutstandingBalance } from "@/lib/types";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
 
@@ -52,6 +54,7 @@ import { formatCurrency, formatDate, cn } from "@/lib/utils";
 // ============================================================================
 
 export function CustomerHistory() {
+  const queryClient = useQueryClient();
   const { customers, loading: customersLoading } = useCustomers();
   const { 
     getSalesByCustomer, 
@@ -69,6 +72,7 @@ export function CustomerHistory() {
   const {
     data: outstandingBalance,
     isLoading: outstandingBalanceLoading,
+    refetch: refetchOutstandingBalance,
   } = useQuery({
     queryKey: queryKeys.payments.customerOutstanding(selectedCustomerId || ""),
     queryFn: () => paymentsApi.getCustomerOutstanding(selectedCustomerId!),
@@ -96,11 +100,6 @@ export function CustomerHistory() {
   // Debt management modal states
   const [debtModalOpen, setDebtModalOpen] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
-  
-  // Temporary usage to avoid TypeScript warning (will be properly used in next task)
-  if (paymentModalOpen) {
-    // Payment modal state is available for future integration
-  }
 
   // Date range state (default: last 30 days)
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>(() => {
@@ -506,6 +505,30 @@ export function CustomerHistory() {
             // Close debt modal and open payment modal
             setDebtModalOpen(false);
             setPaymentModalOpen(true);
+          }}
+        />
+
+        {/* Payment Recording Modal */}
+        <PaymentRecordingModal
+          open={paymentModalOpen}
+          onOpenChange={setPaymentModalOpen}
+          customerId={selectedCustomerId}
+          customerName={selectedCustomer?.name}
+          outstandingBalance={outstandingBalance || undefined}
+          onPaymentRecorded={(customerId, amount) => {
+            // Refresh outstanding balance data
+            refetchOutstandingBalance();
+            
+            // Invalidate related queries to ensure data consistency
+            queryClient.invalidateQueries({
+              queryKey: queryKeys.payments.customerPayments(customerId),
+            });
+            queryClient.invalidateQueries({
+              queryKey: queryKeys.payments.customerOutstanding(customerId),
+            });
+            
+            // Show success notification
+            notify.success(`Payment of ${formatCurrency(amount)} recorded successfully`);
           }}
         />
       </Container>
