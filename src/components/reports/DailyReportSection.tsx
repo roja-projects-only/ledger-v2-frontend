@@ -1,8 +1,7 @@
-import { useMemo, useState, useRef } from "react";
+import { useMemo, useRef } from "react";
 import {
   AlertCircle,
   BarChart3,
-  CalendarIcon,
   Clock,
   Download,
   Inbox,

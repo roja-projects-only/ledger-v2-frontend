@@ -20,7 +20,7 @@ import { useSales } from "@/lib/hooks/useSales";
 import { useCustomers } from "@/lib/hooks/useCustomers";
 import { useKPIs } from "@/lib/hooks/useKPIs";
 import type { KPI } from "@/lib/types";
-import { formatDate, formatCurrency, getTodayISO } from "@/lib/utils";
+import { formatCurrency, getTodayISO } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
 // ============================================================================
@@ -40,6 +40,15 @@ export function DateRangeAnalysis() {
 
   const [startDate, setStartDate] = useState<Date>(sevenDaysAgo);
   const [endDate, setEndDate] = useState<Date>(today);
+
+  // Handlers for DateRangePicker that handle undefined
+  const handleStartDateChange = (date: Date | undefined) => {
+    if (date) setStartDate(date);
+  };
+
+  const handleEndDateChange = (date: Date | undefined) => {
+    if (date) setEndDate(date);
+  };
 
   // Get ISO date strings (use local date, not UTC)
   const getLocalISO = (date: Date) => {
@@ -147,8 +156,8 @@ export function DateRangeAnalysis() {
                   <PastDateRangePicker
                     startDate={startDate}
                     endDate={endDate}
-                    onStartDateChange={setStartDate}
-                    onEndDateChange={setEndDate}
+                    onStartDateChange={handleStartDateChange}
+                    onEndDateChange={handleEndDateChange}
                     maxRange={365}
                     placeholder="Select date range for analysis"
                     ariaLabel="Select date range for sales analysis"
