@@ -53,6 +53,12 @@ export function KPICard({
   } else if (variant) {
     theme = getKPIVariant(variant);
   }
+
+  const hasIconBackground = (
+    value: ReturnType<typeof getSemanticColor> | ReturnType<typeof getKPIVariant> | null
+  ): value is ReturnType<typeof getKPIVariant> => {
+    return Boolean(value && "iconBg" in value);
+  };
   
   const cardClasses = cn(
     "h-full gap-0 sm:gap-0 border-2",
@@ -86,8 +92,8 @@ export function KPICard({
             <div
               className={cn(
                 "p-1.5 rounded-md",
-                ("iconBg" in (theme ?? {}))
-                  ? (theme as any)?.iconBg
+                hasIconBackground(theme)
+                  ? theme.iconBg
                   : "bg-primary/10",
               )}
             >

@@ -229,29 +229,6 @@ export function CustomerDebtHistoryModal({
     queryFn: () => paymentsApi.getCustomerPayments(customerId!),
     enabled: !!customerId && open,
     retry: 1, // Only retry once to avoid excessive requests if endpoint doesn't exist
-    select: (data: any) => {
-      // Ensure we always return an array
-      if (!data) return [];
-      if (Array.isArray(data)) return data;
-      // If data is an object with a payments property, use that
-      if (
-        typeof data === "object" &&
-        "payments" in data &&
-        Array.isArray(data.payments)
-      ) {
-        return data.payments;
-      }
-      // If data is an object with a data property, use that
-      if (
-        typeof data === "object" &&
-        "data" in data &&
-        Array.isArray(data.data)
-      ) {
-        return data.data;
-      }
-      // Fallback to empty array
-      return [];
-    },
   });
 
   // Fetch current outstanding balance if not provided

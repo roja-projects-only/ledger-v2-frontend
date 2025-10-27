@@ -159,25 +159,6 @@ export function PaymentRecordingModal({
     queryFn: () => paymentsApi.getCustomerPayments(customerId!),
     enabled: !!customerId && open,
     retry: 1,
-    select: (data: any) => {
-      if (!data) return [];
-      if (Array.isArray(data)) return data;
-      if (
-        typeof data === "object" &&
-        "payments" in data &&
-        Array.isArray(data.payments)
-      ) {
-        return data.payments;
-      }
-      if (
-        typeof data === "object" &&
-        "data" in data &&
-        Array.isArray(data.data)
-      ) {
-        return data.data;
-      }
-      return [];
-    },
   });
 
   // Fetch current outstanding balance if not provided
@@ -259,9 +240,11 @@ export function PaymentRecordingModal({
       // Close modal
       onOpenChange(false);
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error("Failed to record payment:", error);
-      notify.error(error?.message || "Failed to record payment");
+      const message =
+        error instanceof Error ? error.message : "Failed to record payment";
+      notify.error(message);
     },
   });
 
@@ -293,8 +276,7 @@ export function PaymentRecordingModal({
   };
 
   // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = () => {
     setErrors({});
 
     const validationErrors: {
@@ -642,7 +624,7 @@ export function PaymentRecordingModal({
           <Button
             onClick={(e) => {
               e.preventDefault();
-              handleSubmit(e as any);
+              handleSubmit();
             }}
             disabled={
               recordPaymentMutation.isPending ||
