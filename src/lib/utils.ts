@@ -330,7 +330,7 @@ export function validateDate(dateString: string): { isValid: boolean; error?: st
       isValid: true, 
       normalizedDate 
     };
-  } catch (error) {
+  } catch {
     return { 
       isValid: false, 
       error: 'Invalid date format' 

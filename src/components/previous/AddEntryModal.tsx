@@ -61,7 +61,7 @@ import { NumberInput } from "@/components/shared/NumberInput";
 import { getLocationColor, getSemanticColor } from "@/lib/colors";
 import { notify } from "@/lib/notifications";
 import { cn, formatCurrency, formatDate, formatLocation } from "@/lib/utils";
-import { useSettings } from "@/lib/contexts/SettingsContext";
+import { useSettings } from "@/lib/hooks/useSettings";
 import { usePricing } from "@/lib/hooks/usePricing";
 import { useKeyboardShortcut } from "@/lib/hooks/useKeyboardShortcut";
 import { useIsMobile } from "@/lib/hooks/useIsMobile";

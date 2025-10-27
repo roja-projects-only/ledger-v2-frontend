@@ -52,7 +52,7 @@ import {
 import { useCustomers } from "@/lib/hooks/useCustomers";
 import { useSales } from "@/lib/hooks/useSales";
 import { usePagination } from "@/lib/hooks/usePagination";
-import { useSettings } from "@/lib/contexts/SettingsContext";
+import { useSettings } from "@/lib/hooks/useSettings";
 import { usePricing } from "@/lib/hooks/usePricing";
 import type { Customer, Location } from "@/lib/types";
 import { LOCATIONS } from "@/lib/constants";

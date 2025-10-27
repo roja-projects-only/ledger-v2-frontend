@@ -150,7 +150,7 @@ export function OutstandingBalances() {
   const filteredBalances = useMemo(() => {
     if (!outstandingBalances) return [];
 
-    let filtered = outstandingBalances.filter((balance) => {
+    const filtered = outstandingBalances.filter((balance) => {
       // Search filter
       const matchesSearch = balance.customerName
         .toLowerCase()
@@ -191,7 +191,7 @@ export function OutstandingBalances() {
     });
 
     // Sort
-    filtered.sort((a, b) => {
+    const sorted = [...filtered].sort((a, b) => {
       let comparison = 0;
 
       switch (sortConfig.field) {
@@ -212,7 +212,7 @@ export function OutstandingBalances() {
       return sortConfig.direction === "desc" ? -comparison : comparison;
     });
 
-    return filtered;
+    return sorted;
   }, [
     outstandingBalances,
     searchQuery,

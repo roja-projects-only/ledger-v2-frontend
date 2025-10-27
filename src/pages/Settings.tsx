@@ -85,7 +85,7 @@ import {
 
 } from "@/components/ui/select";
 
-import { useSettings } from "@/lib/contexts/SettingsContext";
+import { useSettings } from "@/lib/hooks/useSettings";
 import { useUsers } from "@/lib/hooks/useUsers";
 import { useCustomers } from "@/lib/hooks/useCustomers";
 import type { User } from "@/lib/api/users.api";

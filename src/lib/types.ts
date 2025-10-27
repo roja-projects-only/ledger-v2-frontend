@@ -298,14 +298,13 @@ export interface AuthCredentials {
 }
 
 /**
- * Authentication session - extends AuthState for future backend compatibility
+ * Authentication session - alias for AuthState until backend adds tokens
  */
-export interface AuthSession extends AuthState {
-  // Future backend fields:
-  // token?: string;
-  // refreshToken?: string;
-  // expiresAt?: number;
-}
+export type AuthSession = AuthState;
+// Future backend fields:
+// token?: string;
+// refreshToken?: string;
+// expiresAt?: number;
 
 /**
  * Authentication result - success or error response

@@ -5,42 +5,15 @@
  * Replaces per-component useSettings() calls with shared context.
  */
 
-import {
-  createContext,
-  useContext,
-  useCallback,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { settingsApi, handleApiError } from "@/lib/api";
 import { DEFAULT_SETTINGS } from "@/lib/constants";
-import type { Settings } from "@/lib/types";
 import type { SettingValue } from "@/lib/api/settings.api";
-
-// ============================================================================
-// Types
-// ============================================================================
-
-interface SettingsDictionary extends Settings {
-  [key: string]: SettingValue | undefined;
-}
-
-interface SettingsContextType {
-  settings: SettingsDictionary;
-  loading: boolean;
-  error: string | null;
-  updateSettings: (updates: Partial<SettingsDictionary>) => Promise<boolean>;
-  updateEnableCustomPricing: (enableCustomPricing: boolean) => Promise<boolean>;
-  resetToDefaults: () => Promise<boolean>;
-  refreshSettings: () => Promise<void>;
-}
-
-// ============================================================================
-// Context
-// ============================================================================
-
-const SettingsContext = createContext<SettingsContextType | null>(null);
+import {
+  SettingsContext,
+  type SettingsContextType,
+  type SettingsDictionary,
+} from "./SettingsContextBase";
 
 const buildSettingsState = (
   incoming?: Record<string, SettingValue>
@@ -207,14 +180,4 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// ============================================================================
-// Hook
-// ============================================================================
-
-export function useSettings() {
-  const context = useContext(SettingsContext);
-  if (!context) {
-    throw new Error("useSettings must be used within SettingsProvider");
-  }
-  return context;
-}
+// Hook lives in useSettings.ts to satisfy react-refresh lint constraints.

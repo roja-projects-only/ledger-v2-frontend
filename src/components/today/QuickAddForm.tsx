@@ -45,7 +45,7 @@ import { LOCATIONS } from "@/lib/constants";
 import { LocationBadge } from "@/components/shared/LocationBadge";
 import { getLocationColor, getSemanticColor } from "@/lib/colors";
 import { cn, formatCurrency, formatLocation, getTodayISO } from "@/lib/utils";
-import { useSettings } from "@/lib/contexts/SettingsContext";
+import { useSettings } from "@/lib/hooks/useSettings";
 import { usePricing } from "@/lib/hooks/usePricing";
 import { useIsMobile } from "@/lib/hooks/useIsMobile";
 import { Plus, Check, ChevronsUpDown, DollarSign, AlertCircle, UserPlus, CreditCard, Banknote, AlertTriangle } from "lucide-react";

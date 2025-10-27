@@ -5,7 +5,7 @@
  * easy access to date filtering functionality throughout the app.
  */
 
-import { useDateFilterContext } from "@/lib/contexts/DateFilterContext";
+import { useDateFilterContext } from "@/lib/contexts/useDateFilterContext";
 import type { DateFilterPreset, CustomDateRange } from "@/lib/types/dateFilter";
 
 // ============================================================================

@@ -8,7 +8,7 @@
 import { useMemo } from "react";
 import { useSales } from "./useSales";
 import { useCustomers } from "./useCustomers";
-import { useSettings } from "@/lib/contexts/SettingsContext";
+import { useSettings } from "@/lib/hooks/useSettings";
 import { useDateFilter } from "./useDateFilter";
 import {
   calculatePeriodMetrics,
