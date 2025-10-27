@@ -411,35 +411,41 @@ export function CustomerHistory() {
               </div>
 
               {/* Debt Management Actions */}
-              {outstandingBalance && outstandingBalance.totalOwed > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between text-lg">
-                      <span>Debt Management</span>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between text-lg">
+                    <span>Debt Management</span>
+                    {outstandingBalance && (
                       <CollectionStatusBadge status={outstandingBalance.collectionStatus} />
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <Button
-                        onClick={() => setDebtModalOpen(true)}
-                        variant="outline"
-                        className="flex-1"
-                      >
-                        <Receipt className="h-4 w-4 mr-2" />
-                        View Debt History
-                      </Button>
-                      <Button
-                        onClick={() => setPaymentModalOpen(true)}
-                        className="flex-1"
-                      >
-                        <CreditCard className="h-4 w-4 mr-2" />
-                        Record Payment
-                      </Button>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button
+                      onClick={() => setDebtModalOpen(true)}
+                      variant="outline"
+                      className="flex-1"
+                    >
+                      <Receipt className="h-4 w-4 mr-2" />
+                      View Debt History
+                    </Button>
+                    <Button
+                      onClick={() => setPaymentModalOpen(true)}
+                      className="flex-1"
+                      disabled={!outstandingBalance || outstandingBalance.totalOwed <= 0}
+                    >
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Record Payment
+                    </Button>
+                  </div>
+                  {outstandingBalance && outstandingBalance.totalOwed <= 0 && (
+                    <div className="mt-3 text-sm text-muted-foreground text-center">
+                      This customer has no outstanding balance
                     </div>
-                  </CardContent>
-                </Card>
-              )}
+                  )}
+                </CardContent>
+              </Card>
 
               {/* Purchase Timeline */}
               <div>

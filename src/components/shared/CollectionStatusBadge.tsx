@@ -25,7 +25,10 @@ interface CollectionStatusBadgeProps {
 // Collection Status Badge Component
 // ============================================================================
 
-export function CollectionStatusBadge({ status, className }: CollectionStatusBadgeProps) {
+export function CollectionStatusBadge({
+  status,
+  className,
+}: CollectionStatusBadgeProps) {
   const getStatusConfig = (status: CollectionStatus) => {
     switch (status) {
       case "ACTIVE":
@@ -58,10 +61,7 @@ export function CollectionStatusBadge({ status, className }: CollectionStatusBad
   const config = getStatusConfig(status);
 
   return (
-    <Badge 
-      variant={config.variant} 
-      className={cn(config.className, className)}
-    >
+    <Badge variant={config.variant} className={cn(config.className, className)}>
       {config.label}
     </Badge>
   );
