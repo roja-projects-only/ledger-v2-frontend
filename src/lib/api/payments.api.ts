@@ -182,10 +182,12 @@ export const paymentsApi = {
    * Get customer payment history
    */
   getCustomerPayments: async (customerId: string): Promise<Payment[]> => {
-    const response = await apiClient.get<CustomerPaymentsResponse>(
+    const response = await apiClient.get<ItemApiEnvelope<CustomerPaymentsResponse>>(
       `/payments/customers/${customerId}/payments`
     );
-    const data = asEnvelope<CustomerPaymentsResponse>(response);
+    const { data } = adaptItemResponse<CustomerPaymentsResponse>(
+      asEnvelope<ItemApiEnvelope<CustomerPaymentsResponse>>(response)
+    );
     return data.payments ?? [];
   },
 
@@ -193,10 +195,12 @@ export const paymentsApi = {
    * Get customer outstanding balance
    */
   getCustomerOutstanding: async (customerId: string): Promise<OutstandingBalance> => {
-    const response = await apiClient.get<CustomerOutstandingApiResponse>(
+    const response = await apiClient.get<ItemApiEnvelope<CustomerOutstandingApiResponse>>(
       `/payments/customers/${customerId}/outstanding`
     );
-    const data = asEnvelope<CustomerOutstandingApiResponse>(response);
+    const { data } = adaptItemResponse<CustomerOutstandingApiResponse>(
+      asEnvelope<ItemApiEnvelope<CustomerOutstandingApiResponse>>(response)
+    );
 
     let customerCreditLimit = data.creditLimit ?? 1000;
 
@@ -231,8 +235,10 @@ export const paymentsApi = {
    * Get all customers with outstanding balances
    */
   getOutstandingBalances: async (): Promise<OutstandingBalance[]> => {
-    const response = await apiClient.get<OutstandingBalancesResponse>("/payments/outstanding");
-    const data = asEnvelope<OutstandingBalancesResponse>(response);
+    const response = await apiClient.get<ItemApiEnvelope<OutstandingBalancesResponse>>("/payments/outstanding");
+    const { data } = adaptItemResponse<OutstandingBalancesResponse>(
+      asEnvelope<ItemApiEnvelope<OutstandingBalancesResponse>>(response)
+    );
     return data.customers ?? [];
   },
 
