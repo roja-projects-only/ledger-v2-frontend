@@ -24,6 +24,7 @@ export const apiClient = axios.create({
     "Content-Type": "application/json",
   },
   timeout: 10000, // 10 seconds
+  adapter: "fetch",
 });
 
 // ============================================================================

@@ -30,6 +30,9 @@ import { useAuth } from "@/lib/hooks/useAuth";
 import { SettingsProvider } from "@/lib/contexts/SettingsContext";
 import { queryClient } from "@/lib/queryClient";
 import { useSwipeGesture } from "@/lib/hooks/useSwipeGesture";
+import { registerOfflineSync } from "@/lib/offline/registerOfflineSync";
+
+registerOfflineSync(queryClient);
 
 /**
  * LoginRedirect - Redirect authenticated users away from login page

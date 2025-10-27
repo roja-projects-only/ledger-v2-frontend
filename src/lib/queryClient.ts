@@ -23,16 +23,22 @@ export const queryClient = new QueryClient({
       
       // Refetch on window focus for fresh data
       refetchOnWindowFocus: true,
-      
+
       // Don't refetch on mount if data is fresh
       refetchOnMount: false,
-      
-      // Disable refetch on reconnect (not critical for our use case)
-      refetchOnReconnect: false,
+
+      // Always refetch when connectivity returns so cached responses stay fresh
+      refetchOnReconnect: "always",
+
+      // Allow cached data to serve immediately when offline, resume once back online
+      networkMode: "offlineFirst",
     },
     mutations: {
       // Retry failed mutations once
       retry: 1,
+
+      // Keep optimistic updates queued while offline and replay on reconnect
+      networkMode: "offlineFirst",
     },
   },
 });
