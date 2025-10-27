@@ -32,7 +32,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Check, ChevronsUpDown, User, CalendarIcon } from "lucide-react";
+import { Check, ChevronsUpDown, User, CalendarIcon, AlertCircle, CheckCircle, AlertTriangle } from "lucide-react";
 import { KPICard } from "@/components/shared/KPICard";
 import { PurchaseTimeline } from "@/components/customer-history/PurchaseTimeline";
 import { useSales } from "@/lib/hooks/useSales";
@@ -87,11 +87,7 @@ export function CustomerHistory() {
     },
   });
 
-  // Note: outstandingBalance will be used in subsequent tasks for debt integration
-  // Temporary usage to avoid TypeScript warning
-  if (outstandingBalance) {
-    // Data is available for future integration
-  }
+
   const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
   const [dateRangeOpen, setDateRangeOpen] = useState(false);
 
@@ -137,10 +133,49 @@ export function CustomerHistory() {
 
   // Calculate customer KPIs based on filtered sales
   const { getCustomerKPIs } = useKPIs(customerSales, customers || []);
-  const customerKPIs = useMemo(
+  const baseCustomerKPIs = useMemo(
     () => (selectedCustomerId ? getCustomerKPIs(selectedCustomerId) : []),
     [getCustomerKPIs, selectedCustomerId]
   );
+
+  // Enhanced customer KPIs including debt information
+  const customerKPIs = useMemo(() => {
+    const kpis = [...baseCustomerKPIs];
+    
+    // Add outstanding balance KPI if customer has debt
+    if (outstandingBalance && outstandingBalance.totalOwed > 0) {
+      const daysPastDue = outstandingBalance.daysPastDue || 0;
+      
+      // Determine semantic tone and icon based on debt status
+      let semanticTone: "warning" | "error" = "warning";
+      let icon = AlertCircle;
+      
+      if (daysPastDue > 60) {
+        semanticTone = "error";
+        icon = AlertTriangle;
+      } else if (daysPastDue > 30) {
+        semanticTone = "warning";
+        icon = AlertCircle;
+      }
+      
+      kpis.push({
+        label: "Outstanding Balance",
+        value: outstandingBalance.totalOwed,
+        icon: icon,
+        semanticTone: semanticTone,
+      });
+    } else if (outstandingBalance && outstandingBalance.totalOwed === 0) {
+      // Show positive KPI when no debt
+      kpis.push({
+        label: "Outstanding Balance",
+        value: 0,
+        icon: CheckCircle,
+        semanticTone: "success",
+      });
+    }
+    
+    return kpis;
+  }, [baseCustomerKPIs, outstandingBalance]);
 
   const loading = customersLoading || salesLoading || outstandingBalanceLoading;
   const formatKpiValue = (kpi: KPI) => {
@@ -359,6 +394,7 @@ export function CustomerHistory() {
                     value={formatKpiValue(kpi)}
                     icon={kpi.icon}
                     variant={kpi.variant}
+                    semanticTone={kpi.semanticTone}
                     loading={loading}
                   />
                 ))}

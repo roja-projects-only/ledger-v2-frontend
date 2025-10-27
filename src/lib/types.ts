@@ -340,6 +340,7 @@ export interface KPI {
   icon?: LucideIcon; // Optional Lucide icon component
   trend?: "up" | "down" | "neutral"; // Optional trend indicator
   variant?: KPIVariant; // Optional visual variant for colored cards
+  semanticTone?: "success" | "warning" | "error" | "info"; // Optional semantic tone for colored cards
 }
 
 /**
