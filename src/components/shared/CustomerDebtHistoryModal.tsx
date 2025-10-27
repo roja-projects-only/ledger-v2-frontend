@@ -26,10 +26,8 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { LocationBadge } from "./LocationBadge";
-import {
-  AgingIndicator,
-  CollectionStatusBadge,
-} from "./OutstandingBalanceCard";
+import { AgingIndicator } from "./OutstandingBalanceCard";
+import { CollectionStatusBadge } from "./CollectionStatusBadge";
 import { PaymentRecordingModal } from "./PaymentRecordingModal";
 import { useQuery } from "@tanstack/react-query";
 import { paymentsApi } from "@/lib/api/payments.api";

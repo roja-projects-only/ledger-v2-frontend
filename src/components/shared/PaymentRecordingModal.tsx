@@ -28,10 +28,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { NumberInput } from "@/components/shared/NumberInput";
 import { LocationBadge } from "./LocationBadge";
-import {
-  AgingIndicator,
-  CollectionStatusBadge,
-} from "./OutstandingBalanceCard";
+import { AgingIndicator } from "./OutstandingBalanceCard";
+import { CollectionStatusBadge } from "./CollectionStatusBadge";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { paymentsApi } from "@/lib/api/payments.api";
 import { queryKeys } from "@/lib/queryKeys";

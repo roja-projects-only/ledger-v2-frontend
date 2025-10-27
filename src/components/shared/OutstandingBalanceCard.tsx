@@ -17,7 +17,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LocationBadge } from "./LocationBadge";
-import type { OutstandingBalance, CollectionStatus } from "@/lib/types";
+import { CollectionStatusBadge } from "./CollectionStatusBadge";
+import type { OutstandingBalance } from "@/lib/types";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { 
   Clock, 
@@ -88,57 +89,6 @@ export function AgingIndicator({ daysPastDue, className }: AgingIndicatorProps) 
       className={`${config.className} ${className}`}
     >
       <Icon className="h-3 w-3 mr-1" />
-      {config.label}
-    </Badge>
-  );
-}
-
-// ============================================================================
-// Collection Status Badge Component
-// ============================================================================
-
-interface CollectionStatusBadgeProps {
-  status: CollectionStatus;
-  className?: string;
-}
-
-export function CollectionStatusBadge({ status, className }: CollectionStatusBadgeProps) {
-  const getStatusConfig = (status: CollectionStatus) => {
-    switch (status) {
-      case "ACTIVE":
-        return {
-          label: "Active",
-          variant: "default" as const,
-          className: "bg-green-100 text-green-800 border-green-200",
-        };
-      case "OVERDUE":
-        return {
-          label: "Overdue",
-          variant: "default" as const,
-          className: "bg-yellow-100 text-yellow-800 border-yellow-200",
-        };
-      case "SUSPENDED":
-        return {
-          label: "Suspended",
-          variant: "destructive" as const,
-          className: "",
-        };
-      default:
-        return {
-          label: status,
-          variant: "outline" as const,
-          className: "",
-        };
-    }
-  };
-
-  const config = getStatusConfig(status);
-
-  return (
-    <Badge 
-      variant={config.variant} 
-      className={`${config.className} ${className}`}
-    >
       {config.label}
     </Badge>
   );
