@@ -35,6 +35,7 @@ import {
 import { Check, ChevronsUpDown, User, CalendarIcon, AlertCircle, CheckCircle, AlertTriangle, Receipt, CreditCard } from "lucide-react";
 import { KPICard } from "@/components/shared/KPICard";
 import { CollectionStatusBadge } from "@/components/shared/CollectionStatusBadge";
+import { CustomerDebtHistoryModal } from "@/components/shared/CustomerDebtHistoryModal";
 import { PurchaseTimeline } from "@/components/customer-history/PurchaseTimeline";
 import { useSales } from "@/lib/hooks/useSales";
 import { useCustomers } from "@/lib/hooks/useCustomers";
@@ -92,13 +93,13 @@ export function CustomerHistory() {
   const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
   const [dateRangeOpen, setDateRangeOpen] = useState(false);
   
-  // Debt management modal states (for future tasks)
+  // Debt management modal states
   const [debtModalOpen, setDebtModalOpen] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   
-  // Temporary usage to avoid TypeScript warnings (will be properly used in later tasks)
-  if (debtModalOpen || paymentModalOpen) {
-    // Modal states are available for future integration
+  // Temporary usage to avoid TypeScript warning (will be properly used in next task)
+  if (paymentModalOpen) {
+    // Payment modal state is available for future integration
   }
 
   // Date range state (default: last 30 days)
@@ -492,6 +493,20 @@ export function CustomerHistory() {
           cancelText="Cancel"
           onConfirm={confirmDeleteSale}
           variant="destructive"
+        />
+
+        {/* Customer Debt History Modal */}
+        <CustomerDebtHistoryModal
+          open={debtModalOpen}
+          onOpenChange={setDebtModalOpen}
+          customerId={selectedCustomerId}
+          customerName={selectedCustomer?.name}
+          outstandingBalance={outstandingBalance || undefined}
+          onRecordPayment={() => {
+            // Close debt modal and open payment modal
+            setDebtModalOpen(false);
+            setPaymentModalOpen(true);
+          }}
         />
       </Container>
     </div>
