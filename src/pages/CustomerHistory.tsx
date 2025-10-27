@@ -28,6 +28,13 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -96,6 +103,7 @@ export function CustomerHistory() {
 
   const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
   const [dateRangeOpen, setDateRangeOpen] = useState(false);
+  const [datePickerStep, setDatePickerStep] = useState<"from" | "to">("from");
   
   // Debt management modal states
   const [debtModalOpen, setDebtModalOpen] = useState(false);
@@ -283,19 +291,19 @@ export function CustomerHistory() {
 
           {/* Date Range Filter */}
           {selectedCustomer && (
-            <Card className="overflow-hidden">
+            <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Date Range</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {/* Quick Presets */}
-                  <div className="flex flex-wrap gap-2">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
                     <Button
                       variant={!showAllTime && dateRange.from.getTime() === new Date(new Date().setDate(new Date().getDate() - 7)).setHours(0, 0, 0, 0) ? "default" : "outline"}
                       size="sm"
                       onClick={() => setDateRangePreset(7)}
-                      className="flex-1 min-w-[80px]"
+                      className="h-9"
                     >
                       Last 7 days
                     </Button>
@@ -303,7 +311,7 @@ export function CustomerHistory() {
                       variant={!showAllTime && dateRange.from.getTime() === new Date(new Date().setDate(new Date().getDate() - 30)).setHours(0, 0, 0, 0) ? "default" : "outline"}
                       size="sm"
                       onClick={() => setDateRangePreset(30)}
-                      className="flex-1 min-w-[80px]"
+                      className="h-9"
                     >
                       Last 30 days
                     </Button>
@@ -311,7 +319,7 @@ export function CustomerHistory() {
                       variant={!showAllTime && dateRange.from.getTime() === new Date(new Date().setDate(new Date().getDate() - 90)).setHours(0, 0, 0, 0) ? "default" : "outline"}
                       size="sm"
                       onClick={() => setDateRangePreset(90)}
-                      className="flex-1 min-w-[80px]"
+                      className="h-9"
                     >
                       Last 90 days
                     </Button>
@@ -319,7 +327,7 @@ export function CustomerHistory() {
                       variant={showAllTime ? "default" : "outline"}
                       size="sm"
                       onClick={handleAllTime}
-                      className="flex-1 min-w-[80px]"
+                      className="h-9"
                     >
                       All Time
                     </Button>
@@ -327,54 +335,102 @@ export function CustomerHistory() {
 
                   {/* Custom Date Range Picker */}
                   {!showAllTime && (
-                    <Popover open={dateRangeOpen} onOpenChange={setDateRangeOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start text-left font-normal"
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {formatDate(dateRange.from.toISOString())} - {formatDate(dateRange.to.toISOString())}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <div className="flex flex-col sm:flex-row gap-2 p-3">
-                          <div className="space-y-2">
-                            <p className="text-sm font-medium">From</p>
-                            <Calendar
-                              mode="single"
-                              selected={dateRange.from}
-                              onSelect={(date) => date && setDateRange({ ...dateRange, from: date })}
-                              disabled={(date) => date > dateRange.to || date > new Date()}
-                            />
+                    <>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal"
+                        onClick={() => setDateRangeOpen(true)}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {formatDate(dateRange.from.toISOString())} - {formatDate(dateRange.to.toISOString())}
+                      </Button>
+
+                      {/* Date Range Modal */}
+                      <Dialog open={dateRangeOpen} onOpenChange={(open) => {
+                        setDateRangeOpen(open);
+                        if (open) {
+                          setDatePickerStep("from");
+                        }
+                      }}>
+                        <DialogContent className="w-[min(90vw,340px)] p-3 gap-3 overflow-hidden">
+                          <DialogHeader className="space-y-2">
+                            <DialogTitle className="text-base">
+                              Select {datePickerStep === "from" ? "Start" : "End"} Date
+                            </DialogTitle>
+                            <DialogDescription className="text-xs">
+                              {datePickerStep === "from" 
+                                ? "Choose the first date of your range"
+                                : `End date must be after ${formatDate(dateRange.from.toISOString())}`
+                              }
+                            </DialogDescription>
+                          </DialogHeader>
+
+                          {/* Calendar */}
+                          <div className="flex justify-center py-1">
+                            <div className="scale-90 origin-top">
+                              <Calendar
+                                mode="single"
+                                selected={datePickerStep === "from" ? dateRange.from : dateRange.to}
+                                onSelect={(date) => {
+                                  if (!date) return;
+                                  
+                                  if (datePickerStep === "from") {
+                                    setDateRange({ ...dateRange, from: date });
+                                  } else {
+                                    setDateRange({ ...dateRange, to: date });
+                                    setDateRangeOpen(false);
+                                  }
+                                }}
+                                disabled={(date) => {
+                                  if (datePickerStep === "from") {
+                                    return date > new Date() || date > dateRange.to;
+                                  } else {
+                                    return date > new Date() || date < dateRange.from;
+                                  }
+                                }}
+                              />
+                            </div>
                           </div>
-                          <div className="space-y-2">
-                            <p className="text-sm font-medium">To</p>
-                            <Calendar
-                              mode="single"
-                              selected={dateRange.to}
-                              onSelect={(date) => date && setDateRange({ ...dateRange, to: date })}
-                              disabled={(date) => date < dateRange.from || date > new Date()}
-                            />
+
+                          {/* Action Buttons */}
+                          <div className="flex gap-2 justify-end pt-1 border-t">
+                            {datePickerStep === "from" ? (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setDateRangeOpen(false)}
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  onClick={() => setDatePickerStep("to")}
+                                >
+                                  Next →
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setDatePickerStep("from")}
+                                >
+                                  ← Back
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  onClick={() => setDateRangeOpen(false)}
+                                >
+                                  Done
+                                </Button>
+                              </>
+                            )}
                           </div>
-                        </div>
-                        <div className="border-t p-3 flex justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setDateRangeOpen(false)}
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => setDateRangeOpen(false)}
-                          >
-                            Apply
-                          </Button>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                        </DialogContent>
+                      </Dialog>
+                    </>
                   )}
 
                   {/* Stats */}
@@ -396,7 +452,7 @@ export function CustomerHistory() {
           {selectedCustomer && (
             <>
               {/* KPI Row */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                 {customerKPIs.map((kpi, index) => (
                   <KPICard
                     key={index}
@@ -406,6 +462,7 @@ export function CustomerHistory() {
                     variant={kpi.variant}
                     semanticTone={kpi.semanticTone}
                     loading={loading}
+                    className={customerKPIs.length === 5 && index === 4 ? "col-span-2 lg:col-span-1" : ""}
                   />
                 ))}
               </div>

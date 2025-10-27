@@ -160,6 +160,16 @@ export const paymentsApi = {
     // Backend returns { customerId, outstandingBalance, calculatedAt }
     // We need to transform this to match our OutstandingBalance interface
     const data = response.data;
+    
+    // Get customer data to access credit limit
+    let customerCreditLimit = 1000; // Default fallback
+    try {
+      const customerResponse = await apiClient.get(`/customers/${customerId}`);
+      customerCreditLimit = customerResponse.data.creditLimit || 1000;
+    } catch (error) {
+      console.warn('Could not fetch customer credit limit, using default:', error);
+    }
+    
     return {
       customerId: data.customerId,
       customerName: "", // Will need to be fetched separately or included in backend response
@@ -167,7 +177,7 @@ export const paymentsApi = {
       totalOwed: data.outstandingBalance,
       oldestDebtDate: new Date().toISOString(), // Should be included in backend response
       daysPastDue: 0, // Should be calculated in backend
-      creditLimit: 0, // Should be included in backend response
+      creditLimit: customerCreditLimit, // Use actual customer credit limit
       collectionStatus: "ACTIVE", // Should be included in backend response
       lastPaymentDate: undefined, // Should be included in backend response
     };

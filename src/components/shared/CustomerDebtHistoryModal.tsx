@@ -344,10 +344,12 @@ export function CustomerDebtHistoryModal({
                         Credit Limit
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        {(
-                          (balance.totalOwed / balance.creditLimit) *
-                          100
-                        ).toFixed(1)}
+                        {balance.creditLimit > 0
+                          ? (
+                              (balance.totalOwed / balance.creditLimit) *
+                              100
+                            ).toFixed(1)
+                          : "0.0"}
                         % utilized
                       </div>
                     </div>

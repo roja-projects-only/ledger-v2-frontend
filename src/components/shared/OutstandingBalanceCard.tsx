@@ -107,7 +107,9 @@ export function OutstandingBalanceCard({
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Calculate utilization percentage
-  const utilizationPercentage = (balance.totalOwed / balance.creditLimit) * 100;
+  const utilizationPercentage = balance.creditLimit > 0 
+    ? (balance.totalOwed / balance.creditLimit) * 100 
+    : 0;
   const isNearLimit = utilizationPercentage >= 80;
   const isOverLimit = utilizationPercentage > 100;
 
