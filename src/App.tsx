@@ -26,6 +26,7 @@ import { NotFound } from "@/pages/NotFound";
 import { Toaster } from "@/components/ui/sonner";
 import { PWAInstallPrompt } from "@/components/shared/PWAInstallPrompt";
 import { OfflineIndicator } from "@/components/shared/OfflineIndicator";
+import { PWAUpdatePrompt } from "@/components/shared/PWAUpdatePrompt";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { SettingsProvider } from "@/lib/contexts/SettingsContext";
 import { queryClient } from "@/lib/queryClient";
@@ -93,6 +94,7 @@ function AppLayout() {
         <main className="flex-1 overflow-x-hidden overflow-y-auto min-w-0">
           <div className="px-4 md:px-8">
             <PWAInstallPrompt className="mx-auto mt-4 md:mt-6" remindLaterTtlMs={1000 * 60 * 60 * 12} />
+            <PWAUpdatePrompt className="mx-auto mt-4" />
           </div>
 
           <Routes>
