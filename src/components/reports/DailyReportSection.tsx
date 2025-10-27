@@ -12,15 +12,10 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { PastDatePicker } from "@/components/shared/DatePicker";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LocationBadge } from "@/components/shared/LocationBadge";
@@ -80,7 +75,7 @@ export function DailyReportSection({
   selectedDateISO,
   onSelectDate,
 }: DailyReportSectionProps) {
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+
   const isMobile = useIsMobile();
 
   // Refs for height matching
@@ -282,33 +277,12 @@ export function DailyReportSection({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-wrap items-center gap-3">
-              <Popover
-                open={isDatePickerOpen}
-                onOpenChange={setIsDatePickerOpen}
-              >
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-[240px] justify-start">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formatDate(selectedDateISO)}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  align="start"
-                  sideOffset={4}
-                  className="w-auto p-3"
-                >
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(date) => {
-                      if (!date) return;
-                      setIsDatePickerOpen(false);
-                      onSelectDate(date);
-                    }}
-                    disabled={(date) => date > new Date()}
-                  />
-                </PopoverContent>
-              </Popover>
+              <PastDatePicker
+                value={selectedDate}
+                onChange={(date) => date && onSelectDate(date)}
+                className="w-[240px]"
+                ariaLabel="Select date for daily report"
+              />
 
               <Button
                 variant="outline"

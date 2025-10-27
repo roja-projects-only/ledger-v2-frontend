@@ -40,7 +40,7 @@ import { useCustomers } from "@/lib/hooks/useCustomers";
 import { useKPIs } from "@/lib/hooks/useKPIs";
 import { usePricing } from "@/lib/hooks/usePricing";
 import type { KPI } from "@/lib/types";
-import { formatCurrency, cn } from "@/lib/utils";
+import { formatCurrency, formatDate, cn } from "@/lib/utils";
 
 // ============================================================================
 // Customer History Page Component
@@ -256,7 +256,7 @@ export function CustomerHistory() {
                           className="w-full justify-start text-left font-normal"
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          {dateRange.from.toLocaleDateString()} - {dateRange.to.toLocaleDateString()}
+                          {formatDate(dateRange.from.toISOString())} - {formatDate(dateRange.to.toISOString())}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
@@ -344,7 +344,7 @@ export function CustomerHistory() {
                       sale.id,
                       selectedCustomer?.name || 'Unknown',
                       `₱${recalculatedTotal.toFixed(2)}`,
-                      new Date(sale.date).toLocaleDateString()
+                      formatDate(sale.date)
                     );
                   }}
                 />

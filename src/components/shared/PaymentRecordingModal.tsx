@@ -36,7 +36,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { paymentsApi } from "@/lib/api/payments.api";
 import { queryKeys } from "@/lib/queryKeys";
 import { notify } from "@/lib/notifications";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import { getSemanticColor } from "@/lib/colors";
 import type { Payment, OutstandingBalance, PaymentMethod } from "@/lib/types";
 import {
@@ -432,9 +432,7 @@ export function PaymentRecordingModal({
                               {payment.dueDate && (
                                 <span className="text-xs text-muted-foreground whitespace-nowrap">
                                   Due:{" "}
-                                  {new Date(
-                                    payment.dueDate
-                                  ).toLocaleDateString()}
+                                  {formatDate(payment.dueDate)}
                                 </span>
                               )}
                             </div>
@@ -617,9 +615,7 @@ export function PaymentRecordingModal({
                           </div>
                         </div>
                         <div className="text-muted-foreground text-xs">
-                          {new Date(
-                            payment.createdAt
-                          ).toLocaleDateString()}
+                          {formatDate(payment.createdAt)}
                           {payment.paidAmount > 0 && (
                             <span className="ml-2 text-green-600">
                               Paid: {formatCurrency(payment.paidAmount)}

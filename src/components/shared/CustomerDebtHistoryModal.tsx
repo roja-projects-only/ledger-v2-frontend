@@ -35,7 +35,7 @@ import { useQuery } from "@tanstack/react-query";
 import { paymentsApi } from "@/lib/api/payments.api";
 import { queryKeys } from "@/lib/queryKeys";
 import type { Payment, OutstandingBalance } from "@/lib/types";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import {
   DollarSign,
   Clock,
@@ -118,7 +118,7 @@ function PaymentTransactions({ payment }: { payment: Payment }) {
                       {transaction.paymentMethod}
                     </Badge>
                     <span className="text-xs text-muted-foreground">
-                      {new Date(transaction.createdAt).toLocaleDateString()}
+                      {formatDate(transaction.createdAt)}
                     </span>
                   </div>
                   <span className="text-xs font-semibold text-green-600">
@@ -318,9 +318,7 @@ export function CustomerDebtHistoryModal({
                       {balance.lastPaymentDate && (
                         <div className="text-xs sm:text-sm text-muted-foreground">
                           Last payment:{" "}
-                          {new Date(
-                            balance.lastPaymentDate
-                          ).toLocaleDateString()}
+                          {formatDate(balance.lastPaymentDate)}
                         </div>
                       )}
                     </div>
@@ -429,9 +427,7 @@ export function CustomerDebtHistoryModal({
                                   {payment.dueDate && (
                                     <span className="text-xs text-muted-foreground">
                                       Due:{" "}
-                                      {new Date(
-                                        payment.dueDate
-                                      ).toLocaleDateString()}
+                                      {formatDate(payment.dueDate)}
                                     </span>
                                   )}
                                 </div>
@@ -439,15 +435,11 @@ export function CustomerDebtHistoryModal({
                                 {/* Created and Paid Dates */}
                                 <div className="text-xs text-muted-foreground">
                                   Created:{" "}
-                                  {new Date(
-                                    payment.createdAt
-                                  ).toLocaleDateString()}
+                                  {formatDate(payment.createdAt)}
                                   {payment.paidAt && (
                                     <span className="ml-2">
                                       • Paid:{" "}
-                                      {new Date(
-                                        payment.paidAt
-                                      ).toLocaleDateString()}
+                                      {formatDate(payment.paidAt)}
                                     </span>
                                   )}
                                 </div>

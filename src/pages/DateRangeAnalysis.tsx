@@ -12,13 +12,7 @@ import { useState, useMemo } from "react";
 import { Container } from "@/components/layout/Container";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { PastDateRangePicker } from "@/components/shared/DateRangePicker";
 import { KPICard } from "@/components/shared/KPICard";
 import { DailySalesTrendChart } from "@/components/analysis/DailySalesTrendChart";
 import { CustomerPerformanceChart } from "@/components/analysis/CustomerPerformanceChart";
@@ -148,58 +142,17 @@ export function DateRangeAnalysis() {
                 </div>
 
                 {/* Custom Date Range */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="w-full">
-                    <label className="text-sm font-medium mb-2 block">Start Date</label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !startDate && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {startDate ? formatDate(startDateISO) : "Pick a date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="p-0" align="start" matchTriggerWidth>
-                        <Calendar
-                          mode="single"
-                          selected={startDate}
-                          onSelect={(date) => date && setStartDate(date)}
-                          disabled={(date) => date > new Date() || date > endDate}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  <div className="w-full">
-                    <label className="text-sm font-medium mb-2 block">End Date</label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !endDate && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {endDate ? formatDate(endDateISO) : "Pick a date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="p-0" align="start" matchTriggerWidth>
-                        <Calendar
-                          mode="single"
-                          selected={endDate}
-                          onSelect={(date) => date && setEndDate(date)}
-                          disabled={(date) => date > new Date() || date < startDate}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Date Range</label>
+                  <PastDateRangePicker
+                    startDate={startDate}
+                    endDate={endDate}
+                    onStartDateChange={setStartDate}
+                    onEndDateChange={setEndDate}
+                    maxRange={365}
+                    placeholder="Select date range for analysis"
+                    ariaLabel="Select date range for sales analysis"
+                  />
                 </div>
               </div>
             </CardContent>

@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LocationBadge } from "./LocationBadge";
 import type { OutstandingBalance, CollectionStatus } from "@/lib/types";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import { 
   Clock, 
   AlertTriangle, 
@@ -229,12 +229,12 @@ export function OutstandingBalanceCard({
               {balance.lastPaymentDate && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Last payment:</span>
-                  <span>{new Date(balance.lastPaymentDate).toLocaleDateString()}</span>
+                  <span>{formatDate(balance.lastPaymentDate)}</span>
                 </div>
               )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Oldest debt:</span>
-                <span>{new Date(balance.oldestDebtDate).toLocaleDateString()}</span>
+                <span>{formatDate(balance.oldestDebtDate)}</span>
               </div>
             </div>
           )}
