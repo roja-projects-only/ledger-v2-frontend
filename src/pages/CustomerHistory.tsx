@@ -534,7 +534,7 @@ function CustomerHistoryComponent() {
           fallbackMessage="Unable to load debt history modal. Please try again later."
           onRetry={retryDebtData}
         >
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={null}>
             <CustomerDebtHistoryModal
               open={debtModalOpen}
               onOpenChange={setDebtModalOpen}
@@ -556,7 +556,7 @@ function CustomerHistoryComponent() {
           fallbackMessage="Unable to load payment recording modal. Please try again later."
           onRetry={retryDebtData}
         >
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={null}>
             <PaymentRecordingModal
               open={paymentModalOpen}
               onOpenChange={setPaymentModalOpen}
