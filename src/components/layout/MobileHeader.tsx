@@ -7,10 +7,11 @@
  * - Page context (business name + page title + description)
  */
 
-import { Button } from "@/components/ui/button";
-import { useSettings } from "@/lib/hooks/useSettings";
 import { Menu, ChevronRight } from "lucide-react";
 import { useLocation } from "react-router-dom";
+import { PWAInstallButton } from "@/components/shared/PWAInstallButton";
+import { Button } from "@/components/ui/button";
+import { useSettings } from "@/lib/hooks/useSettings";
 
 // ============================================================================
 // Types
@@ -52,12 +53,12 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-50 flex h-14 items-center justify-between border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-3 md:hidden">
+    <header className="sticky top-0 z-50 flex h-14 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
       {/* Hamburger Menu Button */}
-      <Button 
-        variant="ghost" 
-        size="icon" 
-        onClick={onMenuClick} 
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onMenuClick}
         className="h-11 w-11 -ml-2"
         aria-label="Open menu"
       >
@@ -66,26 +67,30 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
       </Button>
 
       {/* Page Context */}
-      <div className="flex-1 min-w-0 px-2">
+      <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-center gap-1 text-sm text-muted-foreground">
           {settings.businessName?.trim() && (
             <>
-              <span className="font-medium text-foreground truncate max-w-[100px]">
+              <span className="max-w-[100px] truncate font-medium text-foreground">
                 {settings.businessName}
               </span>
               <ChevronRight className="h-3.5 w-3.5 flex-shrink-0" />
             </>
           )}
-          <span className="font-semibold text-foreground truncate">
+          <span className="truncate font-semibold text-foreground">
             {pageInfo.title}
           </span>
         </div>
         {pageInfo.description && (
-          <p className="text-xs text-muted-foreground truncate">
+          <p className="truncate text-xs text-muted-foreground">
             {pageInfo.description}
           </p>
         )}
       </div>
+
+      <PWAInstallButton size="sm" variant="outline" className="shrink-0">
+        Install
+      </PWAInstallButton>
     </header>
   );
 }
