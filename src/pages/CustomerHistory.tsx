@@ -32,8 +32,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Check, ChevronsUpDown, User, CalendarIcon, AlertCircle, CheckCircle, AlertTriangle } from "lucide-react";
+import { Check, ChevronsUpDown, User, CalendarIcon, AlertCircle, CheckCircle, AlertTriangle, Receipt, CreditCard } from "lucide-react";
 import { KPICard } from "@/components/shared/KPICard";
+import { CollectionStatusBadge } from "@/components/shared/CollectionStatusBadge";
 import { PurchaseTimeline } from "@/components/customer-history/PurchaseTimeline";
 import { useSales } from "@/lib/hooks/useSales";
 import { useCustomers } from "@/lib/hooks/useCustomers";
@@ -90,6 +91,15 @@ export function CustomerHistory() {
 
   const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
   const [dateRangeOpen, setDateRangeOpen] = useState(false);
+  
+  // Debt management modal states (for future tasks)
+  const [debtModalOpen, setDebtModalOpen] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  
+  // Temporary usage to avoid TypeScript warnings (will be properly used in later tasks)
+  if (debtModalOpen || paymentModalOpen) {
+    // Modal states are available for future integration
+  }
 
   // Date range state (default: last 30 days)
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>(() => {
@@ -399,6 +409,37 @@ export function CustomerHistory() {
                   />
                 ))}
               </div>
+
+              {/* Debt Management Actions */}
+              {outstandingBalance && outstandingBalance.totalOwed > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between text-lg">
+                      <span>Debt Management</span>
+                      <CollectionStatusBadge status={outstandingBalance.collectionStatus} />
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Button
+                        onClick={() => setDebtModalOpen(true)}
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        <Receipt className="h-4 w-4 mr-2" />
+                        View Debt History
+                      </Button>
+                      <Button
+                        onClick={() => setPaymentModalOpen(true)}
+                        className="flex-1"
+                      >
+                        <CreditCard className="h-4 w-4 mr-2" />
+                        Record Payment
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Purchase Timeline */}
               <div>
