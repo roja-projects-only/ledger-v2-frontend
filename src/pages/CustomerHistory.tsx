@@ -39,9 +39,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Check, ChevronsUpDown, User, CalendarIcon, AlertCircle, CheckCircle, AlertTriangle, Receipt, CreditCard } from "lucide-react";
+import { Check, ChevronsUpDown, User, CalendarIcon } from "lucide-react";
 import { KPICard } from "@/components/shared/KPICard";
-import { CollectionStatusBadge } from "@/components/shared/CollectionStatusBadge";
 import { CustomerDebtHistoryModal } from "@/components/shared/CustomerDebtHistoryModal";
 import { PaymentRecordingModal } from "@/components/shared/PaymentRecordingModal";
 import { PurchaseTimeline } from "@/components/customer-history/PurchaseTimeline";
@@ -49,11 +48,14 @@ import { useSales } from "@/lib/hooks/useSales";
 import { useCustomers } from "@/lib/hooks/useCustomers";
 import { useKPIs } from "@/lib/hooks/useKPIs";
 import { usePricing } from "@/lib/hooks/usePricing";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { paymentsApi } from "@/lib/api/payments.api";
+import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import { notify } from "@/lib/notifications";
-import type { KPI, OutstandingBalance } from "@/lib/types";
+import { useDebtData } from "@/lib/hooks/useDebtData";
+import { DebtErrorBoundary } from "@/components/shared/DebtErrorBoundary";
+import { DebtKPICard } from "@/components/shared/DebtKPICard";
+import { DebtManagementSection } from "@/components/shared/DebtManagementSection";
+import type { KPI } from "@/lib/types";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
 
 // ============================================================================
@@ -75,29 +77,18 @@ export function CustomerHistory() {
 
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   
-  // Fetch customer outstanding balance
+  // Fetch customer debt data with error handling
   const {
-    data: outstandingBalance,
+    outstandingBalance,
     isLoading: outstandingBalanceLoading,
+    isError: debtError,
+    error: debtErrorDetails,
+    isDebtServiceAvailable,
+    retry: retryDebtData,
     refetch: refetchOutstandingBalance,
-  } = useQuery({
-    queryKey: queryKeys.payments.customerOutstanding(selectedCustomerId || ""),
-    queryFn: () => paymentsApi.getCustomerOutstanding(selectedCustomerId!),
+  } = useDebtData({
+    customerId: selectedCustomerId,
     enabled: !!selectedCustomerId,
-    retry: 1, // Only retry once to avoid excessive requests if endpoint doesn't exist
-    staleTime: 5 * 60 * 1000, // 5 minutes cache
-    select: (data: any) => {
-      // Ensure we have a valid OutstandingBalance object
-      if (!data) return null;
-      
-      // If the API returns the expected structure, use it
-      if (typeof data === "object" && "customerId" in data) {
-        return data as OutstandingBalance;
-      }
-      
-      // Fallback to null if data structure is unexpected
-      return null;
-    },
   });
 
 
@@ -158,42 +149,9 @@ export function CustomerHistory() {
 
   // Enhanced customer KPIs including debt information
   const customerKPIs = useMemo(() => {
-    const kpis = [...baseCustomerKPIs];
-    
-    // Add outstanding balance KPI if customer has debt
-    if (outstandingBalance && outstandingBalance.totalOwed > 0) {
-      const daysPastDue = outstandingBalance.daysPastDue || 0;
-      
-      // Determine semantic tone and icon based on debt status
-      let semanticTone: "warning" | "error" = "warning";
-      let icon = AlertCircle;
-      
-      if (daysPastDue > 60) {
-        semanticTone = "error";
-        icon = AlertTriangle;
-      } else if (daysPastDue > 30) {
-        semanticTone = "warning";
-        icon = AlertCircle;
-      }
-      
-      kpis.push({
-        label: "Outstanding Balance",
-        value: outstandingBalance.totalOwed,
-        icon: icon,
-        semanticTone: semanticTone,
-      });
-    } else if (outstandingBalance && outstandingBalance.totalOwed === 0) {
-      // Show positive KPI when no debt
-      kpis.push({
-        label: "Outstanding Balance",
-        value: 0,
-        icon: CheckCircle,
-        semanticTone: "success",
-      });
-    }
-    
-    return kpis;
-  }, [baseCustomerKPIs, outstandingBalance]);
+    // Only include base KPIs, debt KPI is handled separately
+    return baseCustomerKPIs;
+  }, [baseCustomerKPIs]);
 
   const loading = customersLoading || salesLoading || outstandingBalanceLoading;
   const formatKpiValue = (kpi: KPI) => {
@@ -462,47 +420,43 @@ export function CustomerHistory() {
                     variant={kpi.variant}
                     semanticTone={kpi.semanticTone}
                     loading={loading}
-                    className={customerKPIs.length === 5 && index === 4 ? "col-span-2 lg:col-span-1" : ""}
                   />
                 ))}
+                
+                {/* Debt KPI with error handling */}
+                <DebtErrorBoundary
+                  fallbackTitle="Debt KPI Unavailable"
+                  fallbackMessage="Unable to load outstanding balance information."
+                  onRetry={retryDebtData}
+                >
+                  <DebtKPICard
+                    outstandingBalance={outstandingBalance}
+                    isLoading={outstandingBalanceLoading}
+                    isError={debtError}
+                    isDebtServiceAvailable={isDebtServiceAvailable}
+                    onRetry={retryDebtData}
+                    className={customerKPIs.length === 4 ? "col-span-2 lg:col-span-1" : ""}
+                  />
+                </DebtErrorBoundary>
               </div>
 
-              {/* Debt Management Actions */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between text-lg">
-                    <span>Debt Management</span>
-                    {outstandingBalance && (
-                      <CollectionStatusBadge status={outstandingBalance.collectionStatus} />
-                    )}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Button
-                      onClick={() => setDebtModalOpen(true)}
-                      variant="outline"
-                      className="flex-1"
-                    >
-                      <Receipt className="h-4 w-4 mr-2" />
-                      View Debt History
-                    </Button>
-                    <Button
-                      onClick={() => setPaymentModalOpen(true)}
-                      className="flex-1"
-                      disabled={!outstandingBalance || outstandingBalance.totalOwed <= 0}
-                    >
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      Record Payment
-                    </Button>
-                  </div>
-                  {outstandingBalance && outstandingBalance.totalOwed <= 0 && (
-                    <div className="mt-3 text-sm text-muted-foreground text-center">
-                      This customer has no outstanding balance
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              {/* Debt Management Actions with Error Handling */}
+              <DebtErrorBoundary
+                fallbackTitle="Debt Management Unavailable"
+                fallbackMessage="Unable to load debt management features. You can still view purchase history."
+                onRetry={retryDebtData}
+              >
+                <DebtManagementSection
+                  outstandingBalance={outstandingBalance}
+                  isLoading={outstandingBalanceLoading}
+                  isError={debtError}
+                  error={debtErrorDetails}
+                  isDebtServiceAvailable={isDebtServiceAvailable}
+                  onViewDebtHistory={() => setDebtModalOpen(true)}
+                  onRecordPayment={() => setPaymentModalOpen(true)}
+                  onRetry={retryDebtData}
+                />
+              </DebtErrorBoundary>
 
               {/* Purchase Timeline */}
               <div>
@@ -557,43 +511,55 @@ export function CustomerHistory() {
           variant="destructive"
         />
 
-        {/* Customer Debt History Modal */}
-        <CustomerDebtHistoryModal
-          open={debtModalOpen}
-          onOpenChange={setDebtModalOpen}
-          customerId={selectedCustomerId}
-          customerName={selectedCustomer?.name}
-          outstandingBalance={outstandingBalance || undefined}
-          onRecordPayment={() => {
-            // Close debt modal and open payment modal
-            setDebtModalOpen(false);
-            setPaymentModalOpen(true);
-          }}
-        />
+        {/* Customer Debt History Modal with Error Boundary */}
+        <DebtErrorBoundary
+          fallbackTitle="Debt History Unavailable"
+          fallbackMessage="Unable to load debt history modal. Please try again later."
+          onRetry={retryDebtData}
+        >
+          <CustomerDebtHistoryModal
+            open={debtModalOpen}
+            onOpenChange={setDebtModalOpen}
+            customerId={selectedCustomerId}
+            customerName={selectedCustomer?.name}
+            outstandingBalance={outstandingBalance || undefined}
+            onRecordPayment={() => {
+              // Close debt modal and open payment modal
+              setDebtModalOpen(false);
+              setPaymentModalOpen(true);
+            }}
+          />
+        </DebtErrorBoundary>
 
-        {/* Payment Recording Modal */}
-        <PaymentRecordingModal
-          open={paymentModalOpen}
-          onOpenChange={setPaymentModalOpen}
-          customerId={selectedCustomerId}
-          customerName={selectedCustomer?.name}
-          outstandingBalance={outstandingBalance || undefined}
-          onPaymentRecorded={(customerId, amount) => {
-            // Refresh outstanding balance data
-            refetchOutstandingBalance();
-            
-            // Invalidate related queries to ensure data consistency
-            queryClient.invalidateQueries({
-              queryKey: queryKeys.payments.customerPayments(customerId),
-            });
-            queryClient.invalidateQueries({
-              queryKey: queryKeys.payments.customerOutstanding(customerId),
-            });
-            
-            // Show success notification
-            notify.success(`Payment of ${formatCurrency(amount)} recorded successfully`);
-          }}
-        />
+        {/* Payment Recording Modal with Error Boundary */}
+        <DebtErrorBoundary
+          fallbackTitle="Payment Recording Unavailable"
+          fallbackMessage="Unable to load payment recording modal. Please try again later."
+          onRetry={retryDebtData}
+        >
+          <PaymentRecordingModal
+            open={paymentModalOpen}
+            onOpenChange={setPaymentModalOpen}
+            customerId={selectedCustomerId}
+            customerName={selectedCustomer?.name}
+            outstandingBalance={outstandingBalance || undefined}
+            onPaymentRecorded={(customerId, amount) => {
+              // Refresh outstanding balance data
+              refetchOutstandingBalance();
+              
+              // Invalidate related queries to ensure data consistency
+              queryClient.invalidateQueries({
+                queryKey: queryKeys.payments.customerPayments(customerId),
+              });
+              queryClient.invalidateQueries({
+                queryKey: queryKeys.payments.customerOutstanding(customerId),
+              });
+              
+              // Show success notification
+              notify.success(`Payment of ${formatCurrency(amount)} recorded successfully`);
+            }}
+          />
+        </DebtErrorBoundary>
       </Container>
     </div>
   );
