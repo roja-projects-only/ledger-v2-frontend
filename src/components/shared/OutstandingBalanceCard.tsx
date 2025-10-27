@@ -33,6 +33,7 @@ interface OutstandingBalanceCardProps {
   balance: OutstandingBalance;
   onRecordPayment?: (customerId: string) => void;
   onViewHistory?: (customerId: string) => void;
+  onAddReminder?: (customerId: string) => void;
   className?: string;
 }
 
@@ -150,7 +151,6 @@ export function CollectionStatusBadge({ status, className }: CollectionStatusBad
 export function OutstandingBalanceCard({
   balance,
   onRecordPayment,
-  onAddReminder,
   onViewHistory,
   className,
 }: OutstandingBalanceCardProps) {

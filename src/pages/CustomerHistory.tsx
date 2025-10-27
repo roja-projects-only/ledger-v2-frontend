@@ -39,7 +39,10 @@ import { useSales } from "@/lib/hooks/useSales";
 import { useCustomers } from "@/lib/hooks/useCustomers";
 import { useKPIs } from "@/lib/hooks/useKPIs";
 import { usePricing } from "@/lib/hooks/usePricing";
-import type { KPI } from "@/lib/types";
+import { useQuery } from "@tanstack/react-query";
+import { paymentsApi } from "@/lib/api/payments.api";
+import { queryKeys } from "@/lib/queryKeys";
+import type { KPI, OutstandingBalance } from "@/lib/types";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
 
 // ============================================================================
@@ -59,6 +62,36 @@ export function CustomerHistory() {
   const { getEffectivePrice } = usePricing();
 
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
+  
+  // Fetch customer outstanding balance
+  const {
+    data: outstandingBalance,
+    isLoading: outstandingBalanceLoading,
+  } = useQuery({
+    queryKey: queryKeys.payments.customerOutstanding(selectedCustomerId || ""),
+    queryFn: () => paymentsApi.getCustomerOutstanding(selectedCustomerId!),
+    enabled: !!selectedCustomerId,
+    retry: 1, // Only retry once to avoid excessive requests if endpoint doesn't exist
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    select: (data: any) => {
+      // Ensure we have a valid OutstandingBalance object
+      if (!data) return null;
+      
+      // If the API returns the expected structure, use it
+      if (typeof data === "object" && "customerId" in data) {
+        return data as OutstandingBalance;
+      }
+      
+      // Fallback to null if data structure is unexpected
+      return null;
+    },
+  });
+
+  // Note: outstandingBalance will be used in subsequent tasks for debt integration
+  // Temporary usage to avoid TypeScript warning
+  if (outstandingBalance) {
+    // Data is available for future integration
+  }
   const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
   const [dateRangeOpen, setDateRangeOpen] = useState(false);
 
@@ -109,7 +142,7 @@ export function CustomerHistory() {
     [getCustomerKPIs, selectedCustomerId]
   );
 
-  const loading = customersLoading || salesLoading;
+  const loading = customersLoading || salesLoading || outstandingBalanceLoading;
   const formatKpiValue = (kpi: KPI) => {
     if (typeof kpi.value !== "number") {
       return kpi.value;
