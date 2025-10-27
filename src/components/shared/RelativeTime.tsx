@@ -123,7 +123,7 @@ export function RelativeTime({
     
     // Always provide the full date for accessibility
     return safeDateFormat(validation.normalizedDate!, formatDateTime);
-  }, [date, ariaLabel, validation]);
+  }, [ariaLabel, validation]);
 
   return (
     <time 

@@ -14,7 +14,7 @@
  * - List of entries for selected date
  */
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Container } from "@/components/layout/Container";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -126,7 +126,7 @@ export function PreviousEntries() {
   const paginatedSales = filteredSales.slice(startIndex, endIndex);
 
   // Reset to page 1 when filters or date changes
-  useMemo(() => {
+  useEffect(() => {
     setCurrentPage(1);
   }, [selectedDateISO, customerFilter, locationFilter]);
 

@@ -10,7 +10,7 @@
  * - Payment confirmation and validation
  */
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -171,13 +171,16 @@ export function PaymentRecordingModal({
   const balance = outstandingBalance || currentBalance;
 
   // Get unpaid payments for selection
-  const unpaidPayments =
-    payments?.filter(
-      (payment: Payment) =>
-        payment.status === "UNPAID" ||
-        payment.status === "PARTIAL" ||
-        payment.status === "OVERDUE"
-    ) || [];
+  const unpaidPayments = useMemo(
+    () =>
+      payments?.filter(
+        (payment: Payment) =>
+          payment.status === "UNPAID" ||
+          payment.status === "PARTIAL" ||
+          payment.status === "OVERDUE"
+      ) || [],
+    [payments]
+  );
 
   // Calculate payment details
   const paymentAmountNum = parseFloat(paymentAmount) || 0;

@@ -11,10 +11,11 @@
 
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
-import { 
-  formatDateRange, 
+import {
+  formatDate,
+  formatDateRange,
   validateDateRange,
-  safeDateFormat 
+  safeDateFormat,
 } from "@/lib/utils";
 
 // ============================================================================
@@ -47,7 +48,7 @@ export interface DateRangeDisplayProps {
 export function DateRangeDisplay({
   startDate,
   endDate,
-  format = 'short',
+  format: _format = 'short',
   separator = ' - ',
   className,
   fallback = 'Invalid date range',
@@ -76,9 +77,15 @@ export function DateRangeDisplay({
     const { start, end } = validation.normalizedRange!;
     
     // Format the date range using the utility function
-    const formatted = safeDateFormat(start, (startD) => 
-      formatDateRange(startD, end, separator)
-    );
+    const formatted = safeDateFormat(start, (startD) => {
+      if (_format === "long") {
+        const startLong = safeDateFormat(startD, formatDate);
+        const endLong = safeDateFormat(end, formatDate);
+        return `${startLong}${separator}${endLong}`;
+      }
+
+      return formatDateRange(startD, end, separator);
+    });
 
     // Also get individual formatted dates for custom rendering
     const startFmt = safeDateFormat(start, (d) => d);
@@ -90,7 +97,7 @@ export function DateRangeDisplay({
       startFormatted: startFmt,
       endFormatted: endFmt
     };
-  }, [startDate, endDate, separator, fallback, format]);
+  }, [startDate, endDate, separator, fallback, _format]);
 
   // Generate appropriate ARIA label
   const accessibilityLabel = useMemo(() => {

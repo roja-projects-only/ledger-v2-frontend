@@ -1,4 +1,4 @@
-import { useEffect, useState, type RefObject } from 'react';
+import { useEffect, useState, type RefObject } from "react";
 
 /**
  * Hook to match the height of one element to another
@@ -10,7 +10,7 @@ import { useEffect, useState, type RefObject } from 'react';
  */
 export function useMatchHeight(
   targetRef: RefObject<HTMLElement | null>,
-  dependencies: unknown[] = []
+  dependencies: ReadonlyArray<unknown> = []
 ): number | undefined {
   const [height, setHeight] = useState<number | undefined>(undefined);
 
@@ -39,7 +39,7 @@ export function useMatchHeight(
       clearTimeout(timeoutId);
       resizeObserver.disconnect();
     };
-  }, [targetRef, ...dependencies]);
+  }, [targetRef, dependencies]);
 
   return height;
 }

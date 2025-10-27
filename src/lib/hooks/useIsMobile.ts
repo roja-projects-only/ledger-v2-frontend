@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const DEFAULT_BREAKPOINT = 768;
 
@@ -8,8 +8,10 @@ const DEFAULT_BREAKPOINT = 768;
  * as mobile. The hook is safe for SSR and keeps the value in sync on resize.
  */
 export function useIsMobile(breakpoint: number = DEFAULT_BREAKPOINT): boolean {
-  const getIsMobile = () =>
-    typeof window !== "undefined" && window.innerWidth < breakpoint;
+  const getIsMobile = useCallback(
+    () => typeof window !== "undefined" && window.innerWidth < breakpoint,
+    [breakpoint]
+  );
 
   const [isMobile, setIsMobile] = useState<boolean>(() => getIsMobile());
 
@@ -28,7 +30,7 @@ export function useIsMobile(breakpoint: number = DEFAULT_BREAKPOINT): boolean {
     return () => {
       window.removeEventListener("resize", handleResize);
     };
-  }, [breakpoint]);
+  }, [breakpoint, getIsMobile]);
 
   return isMobile;
 }
