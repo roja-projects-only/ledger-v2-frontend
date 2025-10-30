@@ -9,7 +9,7 @@
  * - Total outstanding summary KPI
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, lazy, Suspense } from "react";
 import { Container } from "@/components/layout/Container";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,8 +24,19 @@ import {
 } from "@/components/ui/select";
 import { KPICard } from "@/components/shared/KPICard";
 import { OutstandingBalanceCard } from "@/components/shared/OutstandingBalanceCard";
-import { CustomerDebtHistoryModal } from "@/components/shared/CustomerDebtHistoryModal";
-import { PaymentRecordingModal } from "@/components/shared/PaymentRecordingModal";
+
+// Lazy load modal components for better performance and code splitting
+const CustomerDebtHistoryModal = lazy(() =>
+  import("@/components/shared/CustomerDebtHistoryModal").then(module => ({
+    default: module.CustomerDebtHistoryModal
+  }))
+);
+
+const PaymentRecordingModal = lazy(() =>
+  import("@/components/shared/PaymentRecordingModal").then(module => ({
+    default: module.PaymentRecordingModal
+  }))
+);
 import { PaginationControls } from "@/components/shared/PaginationControls";
 import { usePagination } from "@/lib/hooks/usePagination";
 import { useQuery } from "@tanstack/react-query";
@@ -564,27 +575,31 @@ export function OutstandingBalances() {
       </Container>
 
       {/* Customer Debt History Modal */}
-      <CustomerDebtHistoryModal
-        open={debtHistoryModalOpen}
-        onOpenChange={setDebtHistoryModalOpen}
-        customerId={selectedCustomerId}
-        customerName={selectedCustomerName}
-        outstandingBalance={selectedBalance || undefined}
-        onRecordPayment={handleRecordPayment}
-      />
+      <Suspense fallback={null}>
+        <CustomerDebtHistoryModal
+          open={debtHistoryModalOpen}
+          onOpenChange={setDebtHistoryModalOpen}
+          customerId={selectedCustomerId}
+          customerName={selectedCustomerName}
+          outstandingBalance={selectedBalance || undefined}
+          onRecordPayment={handleRecordPayment}
+        />
+      </Suspense>
 
       {/* Payment Recording Modal */}
-      <PaymentRecordingModal
-        open={paymentModalOpen}
-        onOpenChange={setPaymentModalOpen}
-        customerId={selectedCustomerId}
-        customerName={selectedCustomerName}
-        outstandingBalance={selectedBalance || undefined}
-        onPaymentRecorded={() => {
-          // Refresh the outstanding balances data
-          // The query will automatically refetch due to invalidation in the modal
-        }}
-      />
+      <Suspense fallback={null}>
+        <PaymentRecordingModal
+          open={paymentModalOpen}
+          onOpenChange={setPaymentModalOpen}
+          customerId={selectedCustomerId}
+          customerName={selectedCustomerName}
+          outstandingBalance={selectedBalance || undefined}
+          onPaymentRecorded={() => {
+            // Refresh the outstanding balances data
+            // The query will automatically refetch due to invalidation in the modal
+          }}
+        />
+      </Suspense>
     </div>
   );
 }
