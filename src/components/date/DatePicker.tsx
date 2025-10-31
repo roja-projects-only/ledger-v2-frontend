@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn, safeDateFormat } from "@/lib/utils";
 import { defaultDateConfig } from "@/lib/dateConfig";
 import { Calendar as CalendarIcon } from "lucide-react";
+import type { Matcher } from "react-day-picker";
 
 export interface DatePickerProps {
   value?: Date;
@@ -71,10 +72,12 @@ export function DatePicker({
             onChange(d);
             setOpen(false);
           }}
-          disabled={[
-            minDate ? { before: minDate } : undefined,
-            maxDate ? { after: maxDate } : undefined,
-          ].filter(Boolean) as any}
+          disabled={(() => {
+            const rules: Matcher[] = [];
+            if (minDate) rules.push({ before: minDate });
+            if (maxDate) rules.push({ after: maxDate });
+            return rules;
+          })()}
           initialFocus
           captionLayout="dropdown"
         />

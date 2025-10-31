@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn, formatDateRange, safeDateFormat } from "@/lib/utils";
 import { defaultDateConfig } from "@/lib/dateConfig";
 import { Calendar as CalendarIcon } from "lucide-react";
+import type { DateRange as RDPDateRange, Matcher } from "react-day-picker";
 
 export interface DateRangePickerProps {
   startDate?: Date;
@@ -55,7 +56,7 @@ export function DateRangePicker({
 
   // derive disabled rules
   const disabledRules = useMemo(() => {
-    const rules: any[] = [];
+    const rules: Matcher[] = [];
     if (minDate) rules.push({ before: minDate });
     if (maxDate) rules.push({ after: maxDate });
 
@@ -83,7 +84,9 @@ export function DateRangePicker({
       <PopoverContent align="start" className="p-0" matchTriggerWidth>
         <Calendar
           mode="range"
-          selected={range}
+          selected={(range?.from
+            ? ({ from: range.from, to: range.to } as RDPDateRange)
+            : undefined) as RDPDateRange | undefined}
           onSelect={(r) => {
             setRange(r);
             onStartDateChange(r?.from);
