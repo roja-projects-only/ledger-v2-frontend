@@ -79,7 +79,7 @@ export function useDateRange(options: UseDateRangeOptions = {}): UseDateRangeRes
 
   const apply = useCallback((s?: Date, e?: Date) => {
     // clamp and auto-fix
-    let ns = s ? clamp(s, minDate, maxDate) : undefined;
+    const ns = s ? clamp(s, minDate, maxDate) : undefined;
     let ne = e ? clamp(e, minDate, maxDate) : undefined;
 
     if (ns && ne && ne < ns) ne = ns;
