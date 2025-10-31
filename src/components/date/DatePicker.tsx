@@ -6,6 +6,7 @@ import { cn, safeDateFormat } from "@/lib/utils";
 import { defaultDateConfig } from "@/lib/dateConfig";
 import { Calendar as CalendarIcon } from "lucide-react";
 import type { Matcher } from "react-day-picker";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export interface DatePickerProps {
   value?: Date;
@@ -27,6 +28,10 @@ export function DatePicker({
   className,
 }: DatePickerProps) {
   const [open, setOpen] = useState(false);
+  const [viewMonth, setViewMonth] = useState<Date>(() => {
+    const base = value ?? new Date();
+    return new Date(base.getFullYear(), base.getMonth(), 1);
+  });
 
   const label = useMemo(() => {
     if (!value) return placeholder;
@@ -65,8 +70,53 @@ export function DatePicker({
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="p-0" matchTriggerWidth>
+        {/* Custom month/year selectors for consistency with app dropdowns */}
+        <div className="flex items-center justify-between gap-2 px-3 pt-3">
+          <div className="flex items-center gap-2">
+            <Select
+              value={String(viewMonth.getMonth())}
+              onValueChange={(v) => setViewMonth(new Date(viewMonth.getFullYear(), Number(v), 1))}
+            >
+              <SelectTrigger className="h-8 w-28">
+                <SelectValue aria-label="Month" />
+              </SelectTrigger>
+              <SelectContent className="max-h-64">
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <SelectItem key={i} value={String(i)}>
+                    {new Intl.DateTimeFormat(undefined, { month: "short" }).format(new Date(2000, i, 1))}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {(() => {
+              const year = viewMonth.getFullYear();
+              const minYear = minDate ? minDate.getFullYear() : year - 5;
+              const maxYear = maxDate ? maxDate.getFullYear() : year + 5;
+              const years = Array.from({ length: maxYear - minYear + 1 }, (_, j) => minYear + j);
+              return (
+                <Select
+                  value={String(year)}
+                  onValueChange={(v) => setViewMonth(new Date(Number(v), viewMonth.getMonth(), 1))}
+                >
+                  <SelectTrigger className="h-8 w-24">
+                    <SelectValue aria-label="Year" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-64">
+                    {years.map((y) => (
+                      <SelectItem key={y} value={String(y)}>
+                        {y}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              );
+            })()}
+          </div>
+        </div>
         <Calendar
           mode="single"
+          month={viewMonth}
+          onMonthChange={(m) => setViewMonth(new Date(m.getFullYear(), m.getMonth(), 1))}
           selected={value}
           onSelect={(d) => {
             onChange(d);
@@ -79,7 +129,7 @@ export function DatePicker({
             return rules;
           })()}
           initialFocus
-          captionLayout="dropdown"
+          captionLayout="label"
         />
       </PopoverContent>
     </Popover>
