@@ -45,7 +45,7 @@ export function KPICard({
 }: KPICardProps) {
   const theme = variant ? getKPIVariant(variant) : null;
   const cardClasses = cn(
-    "h-full gap-2",
+    "h-full gap-0 sm:gap-0",
     theme && "border-2",
     theme?.bg,
     theme?.border,
@@ -55,13 +55,13 @@ export function KPICard({
   if (loading) {
     return (
       <Card className={cardClasses}>
-        <CardHeader className="pb-0">
+        <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
             <Skeleton className="h-5 w-5 rounded" />
             <Skeleton className="h-4 w-24" />
           </div>
         </CardHeader>
-        <CardContent className="pt-1">
+        <CardContent className="pt-0">
           <Skeleton className="h-8 w-32 mb-2" />
           {trend && <Skeleton className="h-3 w-16" />}
         </CardContent>
@@ -71,7 +71,7 @@ export function KPICard({
 
   return (
     <Card className={cardClasses}>
-      <CardHeader className="pb-0">
+      <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
           {Icon && (
             <div
@@ -93,7 +93,7 @@ export function KPICard({
           </CardTitle>
         </div>
       </CardHeader>
-      <CardContent className="pt-1">
+      <CardContent className="pt-0">
         <div className="text-2xl font-bold">{value}</div>
         {trend && (
           <p
