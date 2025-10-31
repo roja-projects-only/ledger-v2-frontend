@@ -81,7 +81,7 @@ export function DateRangePicker({
           {label}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="p-0" matchTriggerWidth>
+      <PopoverContent align="start" sideOffset={8} className="w-auto p-3">
         <Calendar
           mode="range"
           selected={(range?.from
