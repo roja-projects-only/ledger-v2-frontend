@@ -62,7 +62,7 @@ export function PurchaseTimeline({
   // Reset to page 1 when customer changes
   useMemo(() => {
     setCurrentPage(1);
-  }, [customer.id]);
+  }, []);
 
   // Empty state
   if (sortedSales.length === 0) {

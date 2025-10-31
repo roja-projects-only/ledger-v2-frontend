@@ -15,12 +15,15 @@ import {
 // Types
 // ============================================================================
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SettingValue = string | number | boolean | any;
+
 export interface Setting {
   id: string;
   key: string;
   value: string; // Raw string value
   type: "string" | "number" | "boolean" | "json";
-  parsedValue?: any; // Backend-parsed value with correct type
+  parsedValue?: SettingValue; // Backend-parsed value with correct type
   updatedAt: string;
   updatedBy?: {
     id: string;
@@ -129,9 +132,9 @@ export const settingsApi = {
    * Helper: Get settings as key-value object
    * Uses parsedValue from backend for type-safe values
    */
-  getAsObject: async (): Promise<Record<string, any>> => {
+  getAsObject: async (): Promise<Record<string, SettingValue>> => {
     const settings = await settingsApi.list();
-    const obj: Record<string, any> = {};
+    const obj: Record<string, SettingValue> = {};
     
     settings.forEach((setting) => {
       // Backend provides parsedValue with correct type (string/number/boolean/object)

@@ -74,7 +74,7 @@ export function useDashboardData() {
   const { sales, loading: salesLoading, error: salesError } = useSales();
   const { customers, loading: customersLoading, error: customersError } = useCustomers();
   const { settings } = useSettings();
-  const { computed: dateFilter, comparisonEnabled } = useDateFilter();
+  const { computed: dateFilter } = useDateFilter();
 
   const loading = salesLoading || customersLoading;
   const error = salesError || customersError;
@@ -200,7 +200,7 @@ export function useDashboardData() {
       allLocations,
       topCustomers,
     };
-  }, [sales, customers, settings.enableCustomPricing, settings.unitPrice, dateFilter, comparisonEnabled, loading]);
+  }, [sales, customers, settings.enableCustomPricing, settings.unitPrice, dateFilter, loading]);
 
   return { data, loading, error };
 }

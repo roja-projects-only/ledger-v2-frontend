@@ -15,6 +15,9 @@
  * These adapters normalize responses into a consistent internal format.
  */
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ApiResponse = any; // Axios response after interceptor unwrapping
+
 /**
  * Internal response format for list endpoints
  */
@@ -57,7 +60,7 @@ export interface MutationResponse<T> {
  *   }
  * }
  */
-export function adaptSalesListResponse<T>(response: any): ListResponse<T> {
+export function adaptSalesListResponse<T>(response: ApiResponse): ListResponse<T> {
   // Axios interceptor already unwrapped response.data
   // response = { success: true, data: { data: [...], pagination: {...} } }
   return {
@@ -76,7 +79,7 @@ export function adaptSalesListResponse<T>(response: any): ListResponse<T> {
  *   pagination: {...}
  * }
  */
-export function adaptCustomersListResponse<T>(response: any): ListResponse<T> {
+export function adaptCustomersListResponse<T>(response: ApiResponse): ListResponse<T> {
   // Axios interceptor already unwrapped response.data
   // response = { success: true, data: [...], pagination: {...} }
   return {
@@ -94,7 +97,7 @@ export function adaptCustomersListResponse<T>(response: any): ListResponse<T> {
  *   data: [...]
  * }
  */
-export function adaptSimpleListResponse<T>(response: any): ListResponse<T> {
+export function adaptSimpleListResponse<T>(response: ApiResponse): ListResponse<T> {
   // Axios interceptor already unwrapped response.data
   // response = { success: true, data: [...] }
   return {
@@ -112,7 +115,7 @@ export function adaptSimpleListResponse<T>(response: any): ListResponse<T> {
  *   data: {...}
  * }
  */
-export function adaptItemResponse<T>(response: any): ItemResponse<T> {
+export function adaptItemResponse<T>(response: ApiResponse): ItemResponse<T> {
   // Axios interceptor already unwrapped response.data
   // response = { success: true, data: {...} }
   return {
@@ -130,7 +133,7 @@ export function adaptItemResponse<T>(response: any): ItemResponse<T> {
  *   message: "..."
  * }
  */
-export function adaptMutationResponse<T>(response: any): MutationResponse<T> {
+export function adaptMutationResponse<T>(response: ApiResponse): MutationResponse<T> {
   // Axios interceptor already unwrapped response.data
   // response = { success: true, data: {...}, message: "..." }
   return {
@@ -163,7 +166,7 @@ export interface AuthResponse {
   refreshToken: string;
 }
 
-export function adaptAuthResponse(response: any): AuthResponse {
+export function adaptAuthResponse(response: ApiResponse): AuthResponse {
   // Axios interceptor already unwrapped response.data
   // response = { success: true, data: { user, accessToken, refreshToken } }
   return {

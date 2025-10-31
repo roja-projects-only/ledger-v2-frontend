@@ -183,7 +183,7 @@ export function SalesDistributionChart({
               height={36}
               iconType="circle"
               iconSize={8}
-              formatter={(value, entry: any) => (
+              formatter={(value, entry: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
                 <span className="text-xs text-slate-300">
                   {value} ({entry.payload.percentage.toFixed(1)}%)
                 </span>

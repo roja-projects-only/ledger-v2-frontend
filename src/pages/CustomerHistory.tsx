@@ -75,9 +75,9 @@ export function CustomerHistory() {
   const selectedCustomer = customers?.find((c) => c.id === selectedCustomerId);
 
   // Get all sales for selected customer
-  const allCustomerSales = selectedCustomerId
-    ? getSalesByCustomer(selectedCustomerId)
-    : [];
+  const allCustomerSales = useMemo(() => {
+    return selectedCustomerId ? getSalesByCustomer(selectedCustomerId) : [];
+  }, [selectedCustomerId, getSalesByCustomer]);
 
   // Filter sales by date range
   const customerSales = useMemo(() => {

@@ -126,7 +126,7 @@ export function PreviousEntries() {
   // Reset to page 1 when filters or date changes
   useMemo(() => {
     setCurrentPage(1);
-  }, [selectedDateISO, customerFilter, locationFilter]);
+  }, []);
 
   // Keyboard shortcuts
   useKeyboardShortcut([

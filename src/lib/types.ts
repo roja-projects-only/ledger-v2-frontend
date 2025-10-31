@@ -112,9 +112,9 @@ export interface AuthCredentials {
 }
 
 /**
- * Authentication session - extends AuthState for future backend compatibility
+ * Authentication session - alias for AuthState with future backend compatibility
  */
-export interface AuthSession extends AuthState {
+export type AuthSession = AuthState & {
   // Future backend fields:
   // token?: string;
   // refreshToken?: string;
