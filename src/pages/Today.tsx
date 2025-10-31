@@ -146,8 +146,8 @@ export function Today() {
 
           {/* Main Content - Two Column Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left Column - Today's Entries */}
-            <Card className="flex flex-col h-[600px] lg:h-[700px]">
+            {/* Left Column - Today's Entries */} 
+            <Card className="flex flex-col h-[600px] lg:h-[720px]">
               <CardHeader className="flex-shrink-0">
                 <CardTitle>Today's Entries</CardTitle>
               </CardHeader>
