@@ -12,7 +12,7 @@ import { useState, useMemo } from "react";
 import { Container } from "@/components/layout/Container";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon } from "lucide-react";
+//
 import { DateRangePicker, DateRangeDisplay } from "@/components/date";
 import { KPICard } from "@/components/shared/KPICard";
 import { DailySalesTrendChart } from "@/components/analysis/DailySalesTrendChart";
@@ -21,8 +21,7 @@ import { useSales } from "@/lib/hooks/useSales";
 import { useCustomers } from "@/lib/hooks/useCustomers";
 import { useKPIs } from "@/lib/hooks/useKPIs";
 import type { KPI } from "@/lib/types";
-import { formatDate, formatCurrency, getTodayISO } from "@/lib/utils";
-import { cn } from "@/lib/utils";
+import { formatCurrency, getTodayISO } from "@/lib/utils";
 
 // ============================================================================
 // Date Range Analysis Page Component
