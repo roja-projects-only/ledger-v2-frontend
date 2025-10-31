@@ -7,6 +7,7 @@ import { defaultDateConfig } from "@/lib/dateConfig";
 import { Calendar as CalendarIcon } from "lucide-react";
 import type { DateRange as RDPDateRange, Matcher } from "react-day-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 export interface DateRangePickerProps {
   startDate?: Date;
@@ -37,6 +38,25 @@ export function DateRangePicker({
     const base = startDate ?? endDate ?? new Date();
     return new Date(base.getFullYear(), base.getMonth(), 1);
   });
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 640px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    if (isMobile && open) {
+      const prev = document.documentElement.style.overflow;
+      document.documentElement.style.overflow = "hidden";
+      return () => {
+        document.documentElement.style.overflow = prev;
+      };
+    }
+  }, [isMobile, open]);
 
   // sync internal range with external props
   useEffect(() => {
@@ -74,7 +94,8 @@ export function DateRangePicker({
   }, [minDate, maxDate, maxRange, range?.from]);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <>
+    <Popover open={!isMobile && open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           type="button"
@@ -86,7 +107,8 @@ export function DateRangePicker({
           {label}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="center" sideOffset={10} className="w-auto p-4">
+      {!isMobile && (
+        <PopoverContent align="center" sideOffset={10} className="w-auto p-4">
         {/* Custom month/year selectors for consistency with app dropdowns */}
         <div className="flex items-center justify-center gap-2 mb-2">
           <div className="flex items-center gap-2">
@@ -130,7 +152,8 @@ export function DateRangePicker({
             })()}
           </div>
         </div>
-        <Calendar
+          <div className="max-h-[min(70vh,560px)] overflow-auto">
+            <Calendar
           mode="range"
           month={viewMonth}
           onMonthChange={(m) => setViewMonth(new Date(m.getFullYear(), m.getMonth(), 1))}
@@ -146,9 +169,79 @@ export function DateRangePicker({
           disabled={disabledRules}
           initialFocus
           captionLayout="label"
-        />
-      </PopoverContent>
+            />
+          </div>
+        </PopoverContent>
+      )}
     </Popover>
+    {isMobile && (
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent side="bottom" className="pb-[env(safe-area-inset-bottom)]">
+          <div className="px-4 pt-2">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <Select
+                value={String(viewMonth.getMonth())}
+                onValueChange={(v) => setViewMonth(new Date(viewMonth.getFullYear(), Number(v), 1))}
+              >
+                <SelectTrigger className="h-9 w-32">
+                  <SelectValue aria-label="Month" />
+                </SelectTrigger>
+                <SelectContent className="max-h-64">
+                  {Array.from({ length: 12 }).map((_, i) => (
+                    <SelectItem key={i} value={String(i)}>
+                      {new Intl.DateTimeFormat(undefined, { month: "short" }).format(new Date(2000, i, 1))}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {(() => {
+                const year = viewMonth.getFullYear();
+                const minYear = minDate ? minDate.getFullYear() : year - 5;
+                const maxYear = maxDate ? maxDate.getFullYear() : year + 5;
+                const years = Array.from({ length: maxYear - minYear + 1 }, (_, j) => minYear + j);
+                return (
+                  <Select
+                    value={String(year)}
+                    onValueChange={(v) => setViewMonth(new Date(Number(v), viewMonth.getMonth(), 1))}
+                  >
+                    <SelectTrigger className="h-9 w-28">
+                      <SelectValue aria-label="Year" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-64">
+                      {years.map((y) => (
+                        <SelectItem key={y} value={String(y)}>
+                          {y}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                );
+              })()}
+            </div>
+            <div className="max-h-[75vh] overflow-auto">
+              <Calendar
+                mode="range"
+                numberOfMonths={1}
+                month={viewMonth}
+                onMonthChange={(m) => setViewMonth(new Date(m.getFullYear(), m.getMonth(), 1))}
+                selected={(range?.from
+                  ? ({ from: range.from, to: range.to } as RDPDateRange)
+                  : undefined) as RDPDateRange | undefined}
+                onSelect={(r) => {
+                  setRange(r);
+                  onStartDateChange(r?.from);
+                  onEndDateChange(r?.to);
+                }}
+                disabled={disabledRules}
+                initialFocus
+                captionLayout="label"
+              />
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+    )}
+    </>
   );
 }
 
