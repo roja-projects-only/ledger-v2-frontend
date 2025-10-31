@@ -52,7 +52,7 @@ import {
 import { useCustomers } from "@/lib/hooks/useCustomers";
 import { useSales } from "@/lib/hooks/useSales";
 import { usePagination } from "@/lib/hooks/usePagination";
-import { useSettings } from "@/lib/contexts/SettingsContext";
+import { useSettings } from "@/lib/hooks/useSettings";
 import { usePricing } from "@/lib/hooks/usePricing";
 import type { Customer, Location } from "@/lib/types";
 import { LOCATIONS } from "@/lib/constants";
@@ -100,6 +100,7 @@ export function Customers() {
   const [customerLocation, setCustomerLocation] = useState<Location | "">("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerCustomPrice, setCustomerCustomPrice] = useState("");
+  const [customerCreditLimit, setCustomerCreditLimit] = useState("");
   const [customerNotes, setCustomerNotes] = useState("");
 
   // Responsive items per page
@@ -180,6 +181,7 @@ export function Customers() {
     setCustomerLocation("");
     setCustomerPhone("");
     setCustomerCustomPrice("");
+    setCustomerCreditLimit("");
     setCustomerNotes("");
     setCustomerDialogOpen(true);
   };
@@ -190,6 +192,7 @@ export function Customers() {
     setCustomerLocation(customer.location);
     setCustomerPhone(customer.phone || "");
     setCustomerCustomPrice(customer.customUnitPrice ? String(customer.customUnitPrice) : "");
+    setCustomerCreditLimit(customer.creditLimit ? String(customer.creditLimit) : "");
     setCustomerNotes(customer.notes || "");
     setCustomerDialogOpen(true);
   };
@@ -229,6 +232,7 @@ export function Customers() {
         location: customerLocation,
         phone: customerPhone.trim() || undefined,
         customUnitPrice: customerCustomPrice ? Number(customerCustomPrice) : undefined,
+        creditLimit: customerCreditLimit ? Number(customerCreditLimit) : undefined,
         notes: customerNotes.trim() || undefined,
       });
     } else {
@@ -238,6 +242,7 @@ export function Customers() {
         location: customerLocation,
         phone: customerPhone.trim() || undefined,
         customUnitPrice: customerCustomPrice ? Number(customerCustomPrice) : undefined,
+        creditLimit: customerCreditLimit ? Number(customerCreditLimit) : undefined,
         notes: customerNotes.trim() || undefined,
       });
     }
@@ -247,6 +252,7 @@ export function Customers() {
     setCustomerLocation("");
     setCustomerPhone("");
     setCustomerCustomPrice("");
+    setCustomerCreditLimit("");
     setCustomerNotes("");
     setEditingCustomer(null);
   };
@@ -405,6 +411,9 @@ export function Customers() {
                           <TableHead className="min-w-[120px]">Location</TableHead>
                           <TableHead className="min-w-[120px]">Phone</TableHead>
                           <TableHead className="min-w-[120px]">Custom Price</TableHead>
+                          {(settings.enableCreditFeature ?? true) && (
+                            <TableHead className="min-w-[140px]">Credit Status</TableHead>
+                          )}
                           <TableHead className="text-right min-w-[80px]">Entries</TableHead>
                           <TableHead className="text-right min-w-[100px]">Total Sales</TableHead>
                           <TableHead className="text-right pr-6 min-w-[80px]">Actions</TableHead>
@@ -455,6 +464,35 @@ export function Customers() {
                                   <span className="text-muted-foreground text-xs">Default</span>
                                 )}
                               </TableCell>
+                              {(settings.enableCreditFeature ?? true) && (
+                                <TableCell>
+                                  {customer.outstandingBalance > 0 ? (
+                                    <div className="space-y-1">
+                                      <div className="flex items-center gap-2">
+                                        <Badge 
+                                          variant={customer.collectionStatus === 'OVERDUE' ? 'destructive' : customer.collectionStatus === 'SUSPENDED' ? 'destructive' : 'secondary'}
+                                          className="shrink-0"
+                                        >
+                                          {customer.collectionStatus === 'ACTIVE' ? 'Owes' : customer.collectionStatus}
+                                        </Badge>
+                                        <span className="text-sm font-medium">
+                                          {formatCurrency(customer.outstandingBalance)}
+                                        </span>
+                                      </div>
+                                      {customer.creditLimit && (
+                                        <div className="text-xs text-muted-foreground">
+                                          {formatCurrency(customer.outstandingBalance)} / {formatCurrency(customer.creditLimit)}
+                                          {' '}({Math.round((customer.outstandingBalance / customer.creditLimit) * 100)}%)
+                                        </div>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <div className="text-xs text-muted-foreground">
+                                      {customer.creditLimit ? `Limit: ${formatCurrency(customer.creditLimit)}` : 'No debt'}
+                                    </div>
+                                  )}
+                                </TableCell>
+                              )}
                               <TableCell className="text-right">{stats.entries}</TableCell>
                               <TableCell className="text-right">
                                 {formatCurrency(stats.totalSales)}
@@ -534,6 +572,26 @@ export function Customers() {
                                   {formatCurrency(customer.customUnitPrice)}/gal
                                 </span>
                               </>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Row 3.5: Credit Status (if credit feature enabled) */}
+                        {(settings.enableCreditFeature ?? true) && customer.outstandingBalance > 0 && (
+                          <div className="flex items-center gap-2 text-sm flex-wrap">
+                            <Badge 
+                              variant={customer.collectionStatus === 'OVERDUE' ? 'destructive' : customer.collectionStatus === 'SUSPENDED' ? 'destructive' : 'secondary'}
+                              className="shrink-0"
+                            >
+                              {customer.collectionStatus === 'ACTIVE' ? 'Owes' : customer.collectionStatus}
+                            </Badge>
+                            <span className="font-medium whitespace-nowrap">
+                              {formatCurrency(customer.outstandingBalance)}
+                            </span>
+                            {customer.creditLimit && (
+                              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                / {formatCurrency(customer.creditLimit)} ({Math.round((customer.outstandingBalance / customer.creditLimit) * 100)}%)
+                              </span>
                             )}
                           </div>
                         )}
@@ -739,6 +797,29 @@ export function Customers() {
                   />
                   <p className="text-xs text-muted-foreground">
                     Leave empty to use default price of {formatCurrency(settings.unitPrice)}
+                  </p>
+                </div>
+              )}
+
+              {/* Credit Limit - Optional, conditionally shown */}
+              {(settings.enableCreditFeature ?? true) && (
+                <div className="space-y-2">
+                  <Label htmlFor="customerCreditLimit" className="flex items-center gap-2">
+                    Credit Limit
+                    <span className="text-xs text-muted-foreground">(Optional)</span>
+                  </Label>
+                  <Input
+                    id="customerCreditLimit"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder={`Default: ${formatCurrency(settings.defaultCreditLimit ?? 1000)}`}
+                    value={customerCreditLimit}
+                    onChange={(e) => setCustomerCreditLimit(e.target.value)}
+                    className="w-full"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Leave empty to use default limit of {formatCurrency(settings.defaultCreditLimit ?? 1000)}
                   </p>
                 </div>
               )}

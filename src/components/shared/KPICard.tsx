@@ -9,7 +9,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getKPIVariant, type KPIVariant } from "@/lib/colors";
+import { getKPIVariant, getSemanticColor, type KPIVariant, type SemanticTone } from "@/lib/colors";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 
@@ -26,6 +26,7 @@ interface KPICardProps {
     value: string;
   };
   variant?: KPIVariant;
+  semanticTone?: SemanticTone;
   loading?: boolean;
   className?: string;
 }
@@ -40,13 +41,27 @@ export function KPICard({
   icon: Icon,
   trend,
   variant,
+  semanticTone,
   loading = false,
   className,
 }: KPICardProps) {
-  const theme = variant ? getKPIVariant(variant) : null;
+  // Use semantic color if provided, otherwise fall back to KPI variant
+  let theme: ReturnType<typeof getSemanticColor> | ReturnType<typeof getKPIVariant> | null = null;
+  
+  if (semanticTone) {
+    theme = getSemanticColor(semanticTone);
+  } else if (variant) {
+    theme = getKPIVariant(variant);
+  }
+
+  const hasIconBackground = (
+    value: ReturnType<typeof getSemanticColor> | ReturnType<typeof getKPIVariant> | null
+  ): value is ReturnType<typeof getKPIVariant> => {
+    return Boolean(value && "iconBg" in value);
+  };
+  
   const cardClasses = cn(
-    "h-full gap-0 sm:gap-0",
-    theme && "border-2",
+    "h-full gap-0 sm:gap-0 border-2",
     theme?.bg,
     theme?.border,
     className,
@@ -55,13 +70,13 @@ export function KPICard({
   if (loading) {
     return (
       <Card className={cardClasses}>
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-0">
           <div className="flex items-center gap-2">
             <Skeleton className="h-5 w-5 rounded" />
             <Skeleton className="h-4 w-24" />
           </div>
         </CardHeader>
-        <CardContent className="pt-0">
+        <CardContent className="pt-1">
           <Skeleton className="h-8 w-32 mb-2" />
           {trend && <Skeleton className="h-3 w-16" />}
         </CardContent>
@@ -71,13 +86,15 @@ export function KPICard({
 
   return (
     <Card className={cardClasses}>
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-0">
         <div className="flex items-center gap-2">
           {Icon && (
             <div
               className={cn(
                 "p-1.5 rounded-md",
-                theme?.iconBg ?? "bg-primary/10",
+                hasIconBackground(theme)
+                  ? theme.iconBg
+                  : "bg-primary/10",
               )}
             >
               <Icon
@@ -93,7 +110,7 @@ export function KPICard({
           </CardTitle>
         </div>
       </CardHeader>
-      <CardContent className="pt-0">
+      <CardContent className="pt-1">
         <div className="text-2xl font-bold">{value}</div>
         {trend && (
           <p

@@ -5,10 +5,16 @@
  */
 
 import { apiClient } from "./client";
-import { 
-  adaptSimpleListResponse, 
-  adaptItemResponse, 
-  adaptMutationResponse 
+import {
+  adaptSimpleListResponse,
+  adaptItemResponse,
+  adaptMutationResponse,
+  asEnvelope,
+} from "./adapters";
+import type {
+  ItemApiEnvelope,
+  MutationApiEnvelope,
+  SimpleListApiEnvelope,
 } from "./adapters";
 
 // ============================================================================
@@ -30,6 +36,8 @@ export interface Setting {
     username: string;
   };
 }
+
+export type SettingValue = string | number | boolean | Record<string, unknown> | unknown[] | null;
 
 export interface CreateSettingRequest {
   key: string;
@@ -65,24 +73,26 @@ export const settingsApi = {
    * List all settings
    */
   list: async (): Promise<Setting[]> => {
-    const response = await apiClient.get("/settings");
-    return adaptSimpleListResponse<Setting>(response).data;
+    const response = await apiClient.get<SimpleListApiEnvelope<Setting>>("/settings");
+    return adaptSimpleListResponse<Setting>(
+      asEnvelope<SimpleListApiEnvelope<Setting>>(response)
+    ).data;
   },
 
   /**
    * Get setting by key
    */
   get: async (key: string): Promise<Setting> => {
-    const response = await apiClient.get(`/settings/${key}`);
-    return adaptItemResponse<Setting>(response).data;
+    const response = await apiClient.get<ItemApiEnvelope<Setting>>(`/settings/${key}`);
+    return adaptItemResponse<Setting>(asEnvelope<ItemApiEnvelope<Setting>>(response)).data;
   },
 
   /**
    * Create new setting (admin only)
    */
   create: async (data: CreateSettingRequest): Promise<Setting> => {
-    const response = await apiClient.post("/settings", data);
-    return adaptItemResponse<Setting>(response).data;
+    const response = await apiClient.post<ItemApiEnvelope<Setting>>("/settings", data);
+    return adaptItemResponse<Setting>(asEnvelope<ItemApiEnvelope<Setting>>(response)).data;
   },
 
   /**
@@ -90,8 +100,8 @@ export const settingsApi = {
    * Note: Backend PATCH /settings/:key only updates existing settings
    */
   update: async (key: string, data: UpdateSettingRequest): Promise<Setting> => {
-    const response = await apiClient.patch(`/settings/${key}`, data);
-    return adaptItemResponse<Setting>(response).data;
+    const response = await apiClient.patch<ItemApiEnvelope<Setting>>(`/settings/${key}`, data);
+    return adaptItemResponse<Setting>(asEnvelope<ItemApiEnvelope<Setting>>(response)).data;
   },
 
   /**
@@ -100,32 +110,37 @@ export const settingsApi = {
    */
   upsert: async (data: UpsertSettingRequest): Promise<Setting> => {
     const { key, ...body } = data;
-    const response = await apiClient.put(`/settings/${key}`, body);
-    return adaptItemResponse<Setting>(response).data;
+    const response = await apiClient.put<ItemApiEnvelope<Setting>>(`/settings/${key}`, body);
+    return adaptItemResponse<Setting>(asEnvelope<ItemApiEnvelope<Setting>>(response)).data;
   },
 
   /**
    * Delete setting (admin only)
    */
   delete: async (key: string): Promise<void> => {
-    const response = await apiClient.delete(`/settings/${key}`);
-    adaptMutationResponse<null>(response);
+    const response = await apiClient.delete<MutationApiEnvelope<null>>(`/settings/${key}`);
+    adaptMutationResponse<null>(asEnvelope<MutationApiEnvelope<null>>(response));
   },
 
   /**
    * Bulk update settings (admin only)
    */
   bulkUpdate: async (data: BulkUpdateRequest): Promise<Setting[]> => {
-    const response = await apiClient.post("/settings/bulk", data);
-    return adaptSimpleListResponse<Setting>(response).data;
+    const response = await apiClient.post<SimpleListApiEnvelope<Setting>>(
+      "/settings/bulk",
+      data
+    );
+    return adaptSimpleListResponse<Setting>(
+      asEnvelope<SimpleListApiEnvelope<Setting>>(response)
+    ).data;
   },
 
   /**
    * Get settings count
    */
   count: async (): Promise<number> => {
-    const response = await apiClient.get("/settings/count");
-    return adaptItemResponse<number>(response).data;
+    const response = await apiClient.get<ItemApiEnvelope<number>>("/settings/count");
+    return adaptItemResponse<number>(asEnvelope<ItemApiEnvelope<number>>(response)).data;
   },
 
   /**

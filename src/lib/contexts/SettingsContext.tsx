@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 /**
  * SettingsContext - Global settings state management
  * 
@@ -6,43 +5,31 @@
  * Replaces per-component useSettings() calls with shared context.
  */
 
-import { createContext, useContext, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { settingsApi, handleApiError } from "@/lib/api";
 import { DEFAULT_SETTINGS } from "@/lib/constants";
+import type { SettingValue } from "@/lib/api/settings.api";
+import {
+  SettingsContext,
+  type SettingsContextType,
+  type SettingsDictionary,
+} from "./SettingsContextBase";
 
-// ============================================================================
-// Types
-// ============================================================================
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type SettingValue = string | number | boolean | any;
-
-interface SettingsContextType {
-  settings: Record<string, SettingValue>;
-  loading: boolean;
-  error: string | null;
-  updateSettings: (updates: Record<string, SettingValue>) => Promise<boolean>;
-  updateEnableCustomPricing: (enableCustomPricing: boolean) => Promise<boolean>;
-  resetToDefaults: () => Promise<boolean>;
-  refreshSettings: () => Promise<void>;
-}
-
-// ============================================================================
-// Context
-// ============================================================================
-
-const SettingsContext = createContext<SettingsContextType | null>(null);
+const buildSettingsState = (
+  incoming?: Record<string, SettingValue>
+): SettingsDictionary => ({
+  ...DEFAULT_SETTINGS,
+  ...(incoming ?? {}),
+}) as SettingsDictionary;
 
 // ============================================================================
 // Provider Component
 // ============================================================================
 
-export function SettingsProvider({ children }: { children: React.ReactNode }) {
-  const [settings, setSettings] = useState<Record<string, SettingValue>>({
-    unitPrice: DEFAULT_SETTINGS.unitPrice,
-    currency: DEFAULT_SETTINGS.currency,
-    businessName: DEFAULT_SETTINGS.businessName,
-  });
+export function SettingsProvider({ children }: { children: ReactNode }) {
+  const [settings, setSettings] = useState<SettingsDictionary>(() =>
+    buildSettingsState()
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,17 +41,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       setError(null);
       const settingsObj = await settingsApi.getAsObject();
-      setSettings(settingsObj);
+      setSettings(buildSettingsState(settingsObj));
     } catch (err) {
       const apiError = handleApiError(err);
       setError(apiError.message);
       console.error("Failed to fetch settings:", apiError);
       // Use default settings on error
-      setSettings({
-        unitPrice: DEFAULT_SETTINGS.unitPrice,
-        currency: DEFAULT_SETTINGS.currency,
-        businessName: DEFAULT_SETTINGS.businessName,
-      });
+      setSettings(buildSettingsState());
     } finally {
       setLoading(false);
     }
@@ -78,7 +61,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   /**
    * Update multiple settings
    */
-  const updateSettings = useCallback(async (updates: Record<string, SettingValue>): Promise<boolean> => {
+  const updateSettings = useCallback(async (
+    updates: Partial<SettingsDictionary>
+  ): Promise<boolean> => {
     try {
       setLoading(true);
       setError(null);
@@ -86,6 +71,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       // Update each setting via API
       await Promise.all(
         Object.entries(updates).map(([key, value]) => {
+          if (value === undefined) {
+            return Promise.resolve();
+          }
+
           // Detect the type before converting to string
           let type: "string" | "number" | "boolean" | "json";
           if (typeof value === "number") {
@@ -98,9 +87,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
             type = "string";
           }
 
+          const serializedValue =
+            type === "json" ? JSON.stringify(value) : String(value);
+
           return settingsApi.upsert({
             key,
-            value: String(value),
+            value: serializedValue,
             type,
           });
         })
@@ -121,7 +113,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   /**
    * Update only the custom pricing toggle
    */
-  const updateEnableCustomPricing = useCallback(async (enableCustomPricing: boolean): Promise<boolean> => {
+  const updateEnableCustomPricing = useCallback(async (
+    enableCustomPricing: boolean
+  ): Promise<boolean> => {
     try {
       setError(null);
       // Don't set loading state for this quick toggle operation
@@ -134,7 +128,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       });
 
       // Update local state immediately for responsive UI
-      setSettings(prev => ({
+      setSettings((prev) => ({
         ...prev,
         enableCustomPricing,
       }));
@@ -156,6 +150,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       unitPrice: DEFAULT_SETTINGS.unitPrice,
       currency: DEFAULT_SETTINGS.currency,
       businessName: DEFAULT_SETTINGS.businessName,
+      enableCreditFeature: DEFAULT_SETTINGS.enableCreditFeature,
+      defaultCreditLimit: DEFAULT_SETTINGS.defaultCreditLimit,
+      daysBeforeOverdue: DEFAULT_SETTINGS.daysBeforeOverdue,
     });
   }, [updateSettings]);
 
@@ -183,14 +180,4 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// ============================================================================
-// Hook
-// ============================================================================
-
-export function useSettings() {
-  const context = useContext(SettingsContext);
-  if (!context) {
-    throw new Error("useSettings must be used within SettingsProvider");
-  }
-  return context;
-}
+// Hook lives in useSettings.ts to satisfy react-refresh lint constraints.

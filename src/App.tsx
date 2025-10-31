@@ -2,7 +2,7 @@
  * App - Main application component with routing
  */
 
-import { useState, useCallback, lazy, Suspense } from "react";
+import { useState, useCallback } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
@@ -11,22 +11,23 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { MobileHeader } from "@/components/layout/MobileHeader";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { Navbar } from "@/components/layout/Navbar";
+import { Login } from "@/pages/Login";
+import { Dashboard } from "@/pages/Dashboard";
+import { Today } from "@/pages/Today";
+import { PreviousEntries } from "@/pages/PreviousEntries";
+import { DateRangeAnalysis } from "@/pages/DateRangeAnalysis";
+import { CustomerHistory } from "@/pages/CustomerHistory";
+import { Settings } from "@/pages/Settings";
+import { Customers } from "@/pages/Customers";
+import { OutstandingBalances } from "@/pages/OutstandingBalances";
+
+import { Reports } from "@/pages/Reports";
+import { NotFound } from "@/pages/NotFound";
 import { Toaster } from "@/components/ui/sonner";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { SettingsProvider } from "@/lib/contexts/SettingsContext";
 import { queryClient } from "@/lib/queryClient";
 import { useSwipeGesture } from "@/lib/hooks/useSwipeGesture";
-
-// Lazy load page components for code-splitting (named exports)
-const Login = lazy(() => import("@/pages/Login").then(m => ({ default: m.Login })));
-const Dashboard = lazy(() => import("@/pages/Dashboard").then(m => ({ default: m.Dashboard })));
-const Today = lazy(() => import("@/pages/Today").then(m => ({ default: m.Today })));
-const PreviousEntries = lazy(() => import("@/pages/PreviousEntries").then(m => ({ default: m.PreviousEntries })));
-const DateRangeAnalysis = lazy(() => import("@/pages/DateRangeAnalysis").then(m => ({ default: m.DateRangeAnalysis })));
-const CustomerHistory = lazy(() => import("@/pages/CustomerHistory").then(m => ({ default: m.CustomerHistory })));
-const Settings = lazy(() => import("@/pages/Settings").then(m => ({ default: m.Settings })));
-const Customers = lazy(() => import("@/pages/Customers").then(m => ({ default: m.Customers })));
-const NotFound = lazy(() => import("@/pages/NotFound").then(m => ({ default: m.NotFound })));
 
 /**
  * LoginRedirect - Redirect authenticated users away from login page
@@ -85,44 +86,46 @@ function AppLayout() {
         </div>
 
         <main className="flex-1 overflow-x-hidden overflow-y-auto min-w-0">
-          <Suspense fallback={
-            <div className="flex items-center justify-center h-screen">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-            </div>
-          }>
-            <Routes>
-              {/* Dashboard Page - Home/Analytics */}
-              <Route path="/" element={<Dashboard />} />
-              
-              {/* Today Page - Primary data entry */}
-              <Route path="/today" element={<Today />} />
-              
-              {/* Settings Page - Admin Only */}
-              <Route 
-                path="/settings" 
-                element={
-                  <AdminRoute>
-                    <Settings />
-                  </AdminRoute>
-                } 
-              />
-              
-              {/* Customers Page */}
-              <Route path="/customers" element={<Customers />} />
-              
-              {/* Previous Entries Page */}
-              <Route path="/previous" element={<PreviousEntries />} />
-              
-              {/* Date Range Analysis Page */}
-              <Route path="/analysis" element={<DateRangeAnalysis />} />
-              
-              {/* Customer History Page */}
-              <Route path="/history" element={<CustomerHistory />} />
-              
-              {/* 404 Page - Catch-all for unknown routes */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
+          <Routes>
+            {/* Dashboard Page - Home/Analytics */}
+            <Route path="/" element={<Dashboard />} />
+            
+            {/* Today Page - Primary data entry */}
+            <Route path="/today" element={<Today />} />
+            
+            {/* Settings Page - Admin Only */}
+            <Route 
+              path="/settings" 
+              element={
+                <AdminRoute>
+                  <Settings />
+                </AdminRoute>
+              } 
+            />
+            
+            {/* Customers Page */}
+            <Route path="/customers" element={<Customers />} />
+            
+            {/* Previous Entries Page */}
+            <Route path="/previous" element={<PreviousEntries />} />
+            
+            {/* Date Range Analysis Page */}
+            <Route path="/analysis" element={<DateRangeAnalysis />} />
+            
+            {/* Customer History Page */}
+            <Route path="/history" element={<CustomerHistory />} />
+            
+            {/* Outstanding Balances Page */}
+            <Route path="/outstanding" element={<OutstandingBalances />} />
+            
+
+            
+            {/* Reports Page */}
+            <Route path="/reports" element={<Reports />} />
+            
+            {/* 404 Page - Catch-all for unknown routes */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </main>
       </div>
     </div>
@@ -134,14 +137,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <SettingsProvider>
-          <Suspense fallback={
-            <div className="flex items-center justify-center h-screen">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-            </div>
-          }>
-            <Routes>
-              {/* Public Route - Login Page */}
-              <Route path="/login" element={<LoginRedirect />} />
+          <Routes>
+            {/* Public Route - Login Page */}
+            <Route path="/login" element={<LoginRedirect />} />
             
             {/* Protected Routes - Require Authentication */}
             <Route
@@ -152,13 +150,14 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            </Routes>
-          </Suspense>
+          </Routes>
 
           {/* Toast notifications - Global */}
           <Toaster />
         </SettingsProvider>
-      </BrowserRouter>      {/* React Query DevTools - Only shows in development */}
+      </BrowserRouter>
+      
+      {/* React Query DevTools - Only shows in development */}
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );

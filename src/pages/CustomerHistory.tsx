@@ -13,7 +13,7 @@
  * - Most recent purchases first
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, memo, lazy, Suspense } from "react";
 import { Container } from "@/components/layout/Container";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,25 +28,57 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Check, ChevronsUpDown, User, CalendarIcon } from "lucide-react";
 import { KPICard } from "@/components/shared/KPICard";
+
+// Lazy load modal components for better performance
+const CustomerDebtHistoryModal = lazy(() => 
+  import("@/components/shared/CustomerDebtHistoryModal").then(module => ({
+    default: module.CustomerDebtHistoryModal
+  }))
+);
+
+const PaymentRecordingModal = lazy(() => 
+  import("@/components/shared/PaymentRecordingModal").then(module => ({
+    default: module.PaymentRecordingModal
+  }))
+);
 import { PurchaseTimeline } from "@/components/customer-history/PurchaseTimeline";
 import { useSales } from "@/lib/hooks/useSales";
 import { useCustomers } from "@/lib/hooks/useCustomers";
 import { useKPIs } from "@/lib/hooks/useKPIs";
 import { usePricing } from "@/lib/hooks/usePricing";
-import type { KPI } from "@/lib/types";
-import { formatCurrency, cn } from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
+import { notify } from "@/lib/notifications";
+import { useDebtData } from "@/lib/hooks/useDebtData";
+import { useDebounce } from "@/lib/hooks/useDebounce";
+import { DebtErrorBoundary } from "@/components/shared/DebtErrorBoundary";
+import { DebtKPICard } from "@/components/shared/DebtKPICard";
+import { DebtManagementSection } from "@/components/shared/DebtManagementSection";
+import { useRenderTracker } from "@/lib/utils/performance";
+import { formatKpiValue } from "@/lib/utils/kpiFormatters";
+import { formatCurrency, formatDate, cn } from "@/lib/utils";
 
 // ============================================================================
 // Customer History Page Component
 // ============================================================================
 
-export function CustomerHistory() {
+function CustomerHistoryComponent() {
+  // Performance monitoring in development
+  useRenderTracker('CustomerHistory');
+  
+  const queryClient = useQueryClient();
   const { customers, loading: customersLoading } = useCustomers();
   const { 
     getSalesByCustomer, 
@@ -59,8 +91,32 @@ export function CustomerHistory() {
   const { getEffectivePrice } = usePricing();
 
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
+  
+  // Debounce customer selection to prevent excessive API calls
+  const debouncedCustomerId = useDebounce(selectedCustomerId, 300);
+  
+  // Fetch customer debt data with error handling
+  const {
+    outstandingBalance,
+    isLoading: outstandingBalanceLoading,
+    isError: debtError,
+    error: debtErrorDetails,
+    isDebtServiceAvailable,
+    retry: retryDebtData,
+    refetch: refetchOutstandingBalance,
+  } = useDebtData({
+    customerId: debouncedCustomerId,
+    enabled: !!debouncedCustomerId,
+  });
+
+
   const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
   const [dateRangeOpen, setDateRangeOpen] = useState(false);
+  const [datePickerStep, setDatePickerStep] = useState<"from" | "to">("from");
+  
+  // Debt management modal states
+  const [debtModalOpen, setDebtModalOpen] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
 
   // Date range state (default: last 30 days)
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>(() => {
@@ -71,56 +127,61 @@ export function CustomerHistory() {
   });
   const [showAllTime, setShowAllTime] = useState(false);
 
-  // Get selected customer
-  const selectedCustomer = customers?.find((c) => c.id === selectedCustomerId);
+  // Get selected customer (memoized to prevent unnecessary re-renders)
+  const selectedCustomer = useMemo(() => 
+    customers?.find((c) => c.id === selectedCustomerId), 
+    [customers, selectedCustomerId]
+  );
 
-  // Get all sales for selected customer
-  const allCustomerSales = useMemo(() => {
-    return selectedCustomerId ? getSalesByCustomer(selectedCustomerId) : [];
-  }, [selectedCustomerId, getSalesByCustomer]);
+  // Get all sales for selected customer (memoized)
+  const allCustomerSales = useMemo(() => 
+    selectedCustomerId ? getSalesByCustomer(selectedCustomerId) : [],
+    [selectedCustomerId, getSalesByCustomer]
+  );
 
-  // Filter sales by date range
+  // Filter sales by date range (optimized with proper memoization)
   const customerSales = useMemo(() => {
     if (showAllTime) return allCustomerSales;
 
-    return allCustomerSales.filter((sale) => {
-      const saleDate = new Date(sale.date);
-      return saleDate >= dateRange.from && saleDate <= dateRange.to;
-    });
-  }, [allCustomerSales, dateRange, showAllTime]);
+    const fromTime = dateRange.from.getTime();
+    const toTime = dateRange.to.getTime();
 
-  // Date range presets
-  const setDateRangePreset = (days: number) => {
+    return allCustomerSales.filter((sale) => {
+      const saleTime = new Date(sale.date).getTime();
+      return saleTime >= fromTime && saleTime <= toTime;
+    });
+  }, [allCustomerSales, dateRange.from, dateRange.to, showAllTime]);
+
+  // Date range presets (memoized to prevent unnecessary re-renders)
+  const setDateRangePreset = useCallback((days: number) => {
     const today = new Date();
     const pastDate = new Date();
     pastDate.setDate(today.getDate() - days);
     setDateRange({ from: pastDate, to: today });
     setShowAllTime(false);
-  };
+  }, []);
 
-  const handleAllTime = () => {
+  const handleAllTime = useCallback(() => {
     setShowAllTime(true);
-  };
+  }, []);
 
-  // Calculate customer KPIs based on filtered sales
+  // Calculate customer KPIs based on filtered sales (optimized)
   const { getCustomerKPIs } = useKPIs(customerSales, customers || []);
-  const customerKPIs = useMemo(
+  const baseCustomerKPIs = useMemo(
     () => (selectedCustomerId ? getCustomerKPIs(selectedCustomerId) : []),
     [getCustomerKPIs, selectedCustomerId]
   );
 
-  const loading = customersLoading || salesLoading;
-  const formatKpiValue = (kpi: KPI) => {
-    if (typeof kpi.value !== "number") {
-      return kpi.value;
-    }
+  // Enhanced customer KPIs including debt information (simplified)
+  const customerKPIs = baseCustomerKPIs;
 
-    if (kpi.variant === "revenue" || kpi.variant === "average") {
-      return formatCurrency(kpi.value);
-    }
+  // Memoize loading state calculation
+  const loading = useMemo(() => 
+    customersLoading || salesLoading || outstandingBalanceLoading,
+    [customersLoading, salesLoading, outstandingBalanceLoading]
+  );
 
-    return kpi.value.toLocaleString();
-  };
+  // Use optimized KPI formatter (already memoized with caching)
 
   return (
     <div className="py-6">
@@ -205,19 +266,19 @@ export function CustomerHistory() {
 
           {/* Date Range Filter */}
           {selectedCustomer && (
-            <Card className="overflow-hidden">
+            <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Date Range</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {/* Quick Presets */}
-                  <div className="flex flex-wrap gap-2">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
                     <Button
                       variant={!showAllTime && dateRange.from.getTime() === new Date(new Date().setDate(new Date().getDate() - 7)).setHours(0, 0, 0, 0) ? "default" : "outline"}
                       size="sm"
                       onClick={() => setDateRangePreset(7)}
-                      className="flex-1 min-w-[80px]"
+                      className="h-9"
                     >
                       Last 7 days
                     </Button>
@@ -225,7 +286,7 @@ export function CustomerHistory() {
                       variant={!showAllTime && dateRange.from.getTime() === new Date(new Date().setDate(new Date().getDate() - 30)).setHours(0, 0, 0, 0) ? "default" : "outline"}
                       size="sm"
                       onClick={() => setDateRangePreset(30)}
-                      className="flex-1 min-w-[80px]"
+                      className="h-9"
                     >
                       Last 30 days
                     </Button>
@@ -233,7 +294,7 @@ export function CustomerHistory() {
                       variant={!showAllTime && dateRange.from.getTime() === new Date(new Date().setDate(new Date().getDate() - 90)).setHours(0, 0, 0, 0) ? "default" : "outline"}
                       size="sm"
                       onClick={() => setDateRangePreset(90)}
-                      className="flex-1 min-w-[80px]"
+                      className="h-9"
                     >
                       Last 90 days
                     </Button>
@@ -241,7 +302,7 @@ export function CustomerHistory() {
                       variant={showAllTime ? "default" : "outline"}
                       size="sm"
                       onClick={handleAllTime}
-                      className="flex-1 min-w-[80px]"
+                      className="h-9"
                     >
                       All Time
                     </Button>
@@ -249,54 +310,102 @@ export function CustomerHistory() {
 
                   {/* Custom Date Range Picker */}
                   {!showAllTime && (
-                    <Popover open={dateRangeOpen} onOpenChange={setDateRangeOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start text-left font-normal"
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {dateRange.from.toLocaleDateString()} - {dateRange.to.toLocaleDateString()}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <div className="flex flex-col sm:flex-row gap-2 p-3">
-                          <div className="space-y-2">
-                            <p className="text-sm font-medium">From</p>
-                            <Calendar
-                              mode="single"
-                              selected={dateRange.from}
-                              onSelect={(date) => date && setDateRange({ ...dateRange, from: date })}
-                              disabled={(date) => date > dateRange.to || date > new Date()}
-                            />
+                    <>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal"
+                        onClick={() => setDateRangeOpen(true)}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {formatDate(dateRange.from.toISOString())} - {formatDate(dateRange.to.toISOString())}
+                      </Button>
+
+                      {/* Date Range Modal */}
+                      <Dialog open={dateRangeOpen} onOpenChange={(open) => {
+                        setDateRangeOpen(open);
+                        if (open) {
+                          setDatePickerStep("from");
+                        }
+                      }}>
+                        <DialogContent className="w-[min(90vw,340px)] p-3 gap-3 overflow-hidden">
+                          <DialogHeader className="space-y-2">
+                            <DialogTitle className="text-base">
+                              Select {datePickerStep === "from" ? "Start" : "End"} Date
+                            </DialogTitle>
+                            <DialogDescription className="text-xs">
+                              {datePickerStep === "from" 
+                                ? "Choose the first date of your range"
+                                : `End date must be after ${formatDate(dateRange.from.toISOString())}`
+                              }
+                            </DialogDescription>
+                          </DialogHeader>
+
+                          {/* Calendar */}
+                          <div className="flex justify-center py-1">
+                            <div className="scale-90 origin-top">
+                              <Calendar
+                                mode="single"
+                                selected={datePickerStep === "from" ? dateRange.from : dateRange.to}
+                                onSelect={(date) => {
+                                  if (!date) return;
+                                  
+                                  if (datePickerStep === "from") {
+                                    setDateRange({ ...dateRange, from: date });
+                                  } else {
+                                    setDateRange({ ...dateRange, to: date });
+                                    setDateRangeOpen(false);
+                                  }
+                                }}
+                                disabled={(date) => {
+                                  if (datePickerStep === "from") {
+                                    return date > new Date() || date > dateRange.to;
+                                  } else {
+                                    return date > new Date() || date < dateRange.from;
+                                  }
+                                }}
+                              />
+                            </div>
                           </div>
-                          <div className="space-y-2">
-                            <p className="text-sm font-medium">To</p>
-                            <Calendar
-                              mode="single"
-                              selected={dateRange.to}
-                              onSelect={(date) => date && setDateRange({ ...dateRange, to: date })}
-                              disabled={(date) => date < dateRange.from || date > new Date()}
-                            />
+
+                          {/* Action Buttons */}
+                          <div className="flex gap-2 justify-end pt-1 border-t">
+                            {datePickerStep === "from" ? (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setDateRangeOpen(false)}
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  onClick={() => setDatePickerStep("to")}
+                                >
+                                  Next →
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setDatePickerStep("from")}
+                                >
+                                  ← Back
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  onClick={() => setDateRangeOpen(false)}
+                                >
+                                  Done
+                                </Button>
+                              </>
+                            )}
                           </div>
-                        </div>
-                        <div className="border-t p-3 flex justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setDateRangeOpen(false)}
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => setDateRangeOpen(false)}
-                          >
-                            Apply
-                          </Button>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                        </DialogContent>
+                      </Dialog>
+                    </>
                   )}
 
                   {/* Stats */}
@@ -317,8 +426,8 @@ export function CustomerHistory() {
           {/* Customer Summary (only show if customer selected) */}
           {selectedCustomer && (
             <>
-              {/* KPI Row - Smart 2x2 grid on mobile, 4 columns on desktop */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* KPI Row */}
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                 {customerKPIs.map((kpi, index) => (
                   <KPICard
                     key={index}
@@ -326,10 +435,45 @@ export function CustomerHistory() {
                     value={formatKpiValue(kpi)}
                     icon={kpi.icon}
                     variant={kpi.variant}
+                    semanticTone={kpi.semanticTone}
                     loading={loading}
                   />
                 ))}
+                
+                {/* Debt KPI with error handling */}
+                <DebtErrorBoundary
+                  fallbackTitle="Debt KPI Unavailable"
+                  fallbackMessage="Unable to load outstanding balance information."
+                  onRetry={retryDebtData}
+                >
+                  <DebtKPICard
+                    outstandingBalance={outstandingBalance}
+                    isLoading={outstandingBalanceLoading}
+                    isError={debtError}
+                    isDebtServiceAvailable={isDebtServiceAvailable}
+                    onRetry={retryDebtData}
+                    className={customerKPIs.length === 4 ? "col-span-2 lg:col-span-1" : ""}
+                  />
+                </DebtErrorBoundary>
               </div>
+
+              {/* Debt Management Actions with Error Handling */}
+              <DebtErrorBoundary
+                fallbackTitle="Debt Management Unavailable"
+                fallbackMessage="Unable to load debt management features. You can still view purchase history."
+                onRetry={retryDebtData}
+              >
+                <DebtManagementSection
+                  outstandingBalance={outstandingBalance}
+                  isLoading={outstandingBalanceLoading}
+                  isError={debtError}
+                  error={debtErrorDetails}
+                  isDebtServiceAvailable={isDebtServiceAvailable}
+                  onViewDebtHistory={() => setDebtModalOpen(true)}
+                  onRecordPayment={() => setPaymentModalOpen(true)}
+                  onRetry={retryDebtData}
+                />
+              </DebtErrorBoundary>
 
               {/* Purchase Timeline */}
               <div>
@@ -344,7 +488,7 @@ export function CustomerHistory() {
                       sale.id,
                       selectedCustomer?.name || 'Unknown',
                       `₱${recalculatedTotal.toFixed(2)}`,
-                      new Date(sale.date).toLocaleDateString()
+                      formatDate(sale.date)
                     );
                   }}
                 />
@@ -383,7 +527,67 @@ export function CustomerHistory() {
           onConfirm={confirmDeleteSale}
           variant="destructive"
         />
+
+        {/* Customer Debt History Modal with Error Boundary and Lazy Loading */}
+        <DebtErrorBoundary
+          fallbackTitle="Debt History Unavailable"
+          fallbackMessage="Unable to load debt history modal. Please try again later."
+          onRetry={retryDebtData}
+        >
+          <Suspense fallback={null}>
+            <CustomerDebtHistoryModal
+              open={debtModalOpen}
+              onOpenChange={setDebtModalOpen}
+              customerId={selectedCustomerId}
+              customerName={selectedCustomer?.name}
+              outstandingBalance={outstandingBalance || undefined}
+              onRecordPayment={() => {
+                // Close debt modal and open payment modal
+                setDebtModalOpen(false);
+                setPaymentModalOpen(true);
+              }}
+            />
+          </Suspense>
+        </DebtErrorBoundary>
+
+        {/* Payment Recording Modal with Error Boundary and Lazy Loading */}
+        <DebtErrorBoundary
+          fallbackTitle="Payment Recording Unavailable"
+          fallbackMessage="Unable to load payment recording modal. Please try again later."
+          onRetry={retryDebtData}
+        >
+          <Suspense fallback={null}>
+            <PaymentRecordingModal
+              open={paymentModalOpen}
+              onOpenChange={setPaymentModalOpen}
+              customerId={selectedCustomerId}
+              customerName={selectedCustomer?.name}
+              outstandingBalance={outstandingBalance || undefined}
+              onPaymentRecorded={useCallback((customerId: string, amount: number) => {
+                // Refresh outstanding balance data
+                refetchOutstandingBalance();
+                
+                // Batch invalidate related queries for better performance
+                queryClient.invalidateQueries({
+                  predicate: (query) => {
+                    const key = query.queryKey;
+                    return (
+                      key.includes('payments') && 
+                      key.includes(customerId)
+                    );
+                  },
+                });
+                
+                // Show success notification
+                notify.success(`Payment of ${formatCurrency(amount)} recorded successfully`);
+              }, [refetchOutstandingBalance, queryClient])}
+            />
+          </Suspense>
+        </DebtErrorBoundary>
       </Container>
     </div>
   );
 }
+
+// Export memoized version for better performance
+export const CustomerHistory = memo(CustomerHistoryComponent);

@@ -13,6 +13,7 @@
  * - Responsive design (stacks on mobile)
  */
 
+import { useMemo, useRef, useState, useEffect } from "react";
 import { Container } from "@/components/layout/Container";
 import { KPICard } from "@/components/shared/KPICard";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -29,6 +30,9 @@ import { usePricing } from "@/lib/hooks/usePricing";
 import { getSemanticColor } from "@/lib/colors";
 import { cn, formatCurrency, formatDate, getTodayISO } from "@/lib/utils";
 import type { KPI } from "@/lib/types";
+import { useQuery } from "@tanstack/react-query";
+import { paymentsApi } from "@/lib/api/payments.api";
+import { queryKeys } from "@/lib/queryKeys";
 
 // ============================================================================
 // Today Page Component
@@ -53,11 +57,58 @@ export function Today() {
   } = useSales();
   const { getEffectivePrice } = usePricing();
 
+  // Refs for syncing heights
+  const formRef = useRef<HTMLDivElement>(null);
+  const entriesCardRef = useRef<HTMLDivElement>(null);
+  const [entriesHeight, setEntriesHeight] = useState<number | null>(null);
+
   // Get today's sales
   const todaySales = getTodaySales();
 
+  // Sync Today's Entries card height with QuickAddForm
+  useEffect(() => {
+    if (!formRef.current || !entriesCardRef.current) return;
+
+    const observer = new ResizeObserver(() => {
+      const formHeight = formRef.current?.offsetHeight;
+      if (formHeight) {
+        setEntriesHeight(formHeight);
+      }
+    });
+
+    observer.observe(formRef.current);
+    
+    // Initial measurement
+    const initialHeight = formRef.current.offsetHeight;
+    if (initialHeight) {
+      setEntriesHeight(initialHeight);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   // Calculate KPIs
   const { todayKPIs } = useKPIs(todaySales, customers);
+
+  // Fetch payment summary for outstanding balance KPI
+  const { data: paymentSummary } = useQuery({
+    queryKey: queryKeys.payments.summary(),
+    queryFn: paymentsApi.getPaymentSummary,
+  });
+
+  // Calculate credit vs cash sales ratio for today
+  const creditVsCashRatio = useMemo(() => {
+    const creditSales = todaySales.filter(s => s.paymentType === 'CREDIT').length;
+    const cashSales = todaySales.filter(s => s.paymentType === 'CASH').length;
+    const total = creditSales + cashSales;
+    
+    return {
+      creditCount: creditSales,
+      cashCount: cashSales,
+      creditPercentage: total > 0 ? (creditSales / total) * 100 : 0,
+      cashPercentage: total > 0 ? (cashSales / total) * 100 : 0,
+    };
+  }, [todaySales]);
 
   const loading = customersLoading || salesLoading;
   const apiError = customersError || salesError;
@@ -130,7 +181,7 @@ export function Today() {
             </div>
           )}
 
-          {/* KPI Row - Smart 2x2 grid on mobile, 4 columns on desktop */}
+          {/* KPI Row */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {todayKPIs.map((kpi, index) => (
               <KPICard
@@ -144,14 +195,89 @@ export function Today() {
             ))}
           </div>
 
+          {/* Payment Analytics Row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Outstanding Balance Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base font-medium">Outstanding Balance</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Total Outstanding</span>
+                    <span className="text-lg font-bold">
+                      {paymentSummary ? formatCurrency(paymentSummary.totalOutstanding) : "—"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Customers with Debt</span>
+                    <span className="text-sm font-medium">
+                      {paymentSummary ? paymentSummary.customersWithDebt : "—"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Payments Today</span>
+                    <span className="text-sm font-medium">
+                      {paymentSummary ? formatCurrency(paymentSummary.totalPaymentsToday) : "—"}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Credit vs Cash Sales Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base font-medium">Today's Sales Breakdown</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Cash Sales</span>
+                      <span className="font-medium">
+                        {creditVsCashRatio.cashCount} ({creditVsCashRatio.cashPercentage.toFixed(0)}%)
+                      </span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-green-500 transition-all"
+                        style={{ width: `${creditVsCashRatio.cashPercentage}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Credit Sales</span>
+                      <span className="font-medium">
+                        {creditVsCashRatio.creditCount} ({creditVsCashRatio.creditPercentage.toFixed(0)}%)
+                      </span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-orange-500 transition-all"
+                        style={{ width: `${creditVsCashRatio.creditPercentage}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Main Content - Two Column Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left Column - Today's Entries */} 
-            <Card className="flex flex-col h-[600px] lg:h-[720px]">
+            {/* Left Column - Today's Entries with dynamic height */}
+            <Card 
+              ref={entriesCardRef}
+              className="flex flex-col"
+              style={{ height: entriesHeight ? `${entriesHeight}px` : 'auto' }}
+            >
               <CardHeader className="flex-shrink-0">
                 <CardTitle>Today's Entries</CardTitle>
               </CardHeader>
-              <CardContent className="flex-1 overflow-hidden p-6">
+              <CardContent className="flex-1 min-h-0 px-4 pb-4 lg:px-6 lg:pb-0">
                 <TodayEntriesList
                   sales={todaySales}
                   customers={customers || []}
@@ -171,15 +297,17 @@ export function Today() {
               </CardContent>
             </Card>
 
-            {/* Right Column - Quick Add Entry */}
-            <QuickAddForm
-              customers={customers || []}
-              userId={user?.id || ""}
-              onSave={(saleData) => {
-                addSale(saleData);
-              }}
-              loading={loading}
-            />
+            {/* Right Column - Quick Add Entry (reference element) */}
+            <div ref={formRef}>
+              <QuickAddForm
+                customers={customers || []}
+                userId={user?.id || ""}
+                onSave={(saleData) => {
+                  addSale(saleData);
+                }}
+                loading={loading}
+              />
+            </div>
           </div>
 
           {/* Sales by Location Chart */}

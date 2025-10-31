@@ -1,11 +1,11 @@
 ﻿/**
  * Previous Entries Page - View and add entries for past dates
- * 
+ *
  * ⚠️ PRICING: Uses usePricing() hook for custom pricing support
  * - Respects enableCustomPricing toggle from settings
  * - Card displays and delete confirmations use getEffectivePrice()
  * - See: src/lib/hooks/usePricing.ts and docs/PRICING_GUIDE.md
- * 
+ *
  * Features:
  * - Calendar date selector
  * - Summary card for selected date
@@ -14,12 +14,12 @@
  * - List of entries for selected date
  */
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Container } from "@/components/layout/Container";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DatePicker } from "@/components/date";
+import { PastDatePicker } from "@/components/shared/DatePicker";
 import {
   Pagination,
   PaginationContent,
@@ -35,7 +35,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Plus, CalendarIcon } from "lucide-react";
+import { Plus, CalendarIcon, CreditCard, Banknote } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { DateSummaryCard } from "@/components/previous/DateSummaryCard";
 import { AddEntryModal } from "@/components/previous/AddEntryModal";
 import { useSales } from "@/lib/hooks/useSales";
@@ -46,7 +47,13 @@ import { usePricing } from "@/lib/hooks/usePricing";
 import type { Location } from "@/lib/types";
 import { LOCATIONS } from "@/lib/constants";
 import { getLocationColor, getSemanticColor } from "@/lib/colors";
-import { cn, formatDate, formatLocation, formatCurrency, getTodayISO } from "@/lib/utils";
+import {
+  cn,
+  formatDate,
+  formatLocation,
+  formatCurrency,
+  getTodayISO,
+} from "@/lib/utils";
 
 // ============================================================================
 // Previous Entries Page Component
@@ -119,39 +126,40 @@ export function PreviousEntries() {
   const paginatedSales = filteredSales.slice(startIndex, endIndex);
 
   // Reset to page 1 when filters or date changes
-  useMemo(() => {
+  useEffect(() => {
     setCurrentPage(1);
-  }, []);
+  }, [selectedDateISO, customerFilter, locationFilter]);
 
   // Keyboard shortcuts
   useKeyboardShortcut([
     {
-      key: 'n',
+      key: "n",
       ctrl: true,
       shift: true,
       alt: true,
       handler: () => {
         setAddModalOpen(true);
       },
-      description: 'New entry (Ctrl+Shift+Alt+N)',
+      description: "New entry (Ctrl+Shift+Alt+N)",
     },
     {
-      key: 'Escape',
+      key: "Escape",
       handler: () => {
         if (addModalOpen) {
           setAddModalOpen(false);
         }
       },
-      description: 'Close modal (Esc)',
+      description: "Close modal (Esc)",
     },
     {
-      key: '/',
+      key: "/",
       handler: () => {
         // Focus customer filter dropdown
-        const filterSelect = document.querySelector<HTMLButtonElement>('[role="combobox"]');
+        const filterSelect =
+          document.querySelector<HTMLButtonElement>('[role="combobox"]');
         filterSelect?.click();
       },
-      description: 'Focus search (/)',
+      description: "Focus search (/)",
     },
   ]);
 
@@ -166,7 +174,9 @@ export function PreviousEntries() {
         <div className="py-6 space-y-6">
           {/* Page Header */}
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Previous Entries</h1>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Previous Entries
+            </h1>
             <p className="text-muted-foreground mt-1">
               View and manage entries from past dates
             </p>
@@ -180,7 +190,7 @@ export function PreviousEntries() {
                 "rounded-lg border px-4 py-3 text-sm",
                 errorTone.bg,
                 errorTone.border,
-                errorTone.text,
+                errorTone.text
               )}
             >
               <p className="font-medium">Unable to load data from server.</p>
@@ -207,10 +217,11 @@ export function PreviousEntries() {
                     {formatDate(selectedDateISO)}
                   </p>
                 </div>
-                <DatePicker
+                <PastDatePicker
                   value={selectedDate}
                   onChange={(date) => date && setSelectedDate(date)}
-                  maxDate={new Date()}
+                  placeholder="Change Date"
+                  ariaLabel="Select date to view entries"
                   className="w-full"
                 />
                 <p className="text-xs text-muted-foreground">
@@ -258,24 +269,24 @@ export function PreviousEntries() {
                   >
                     <SelectTrigger id="customer-filter" className="w-full">
                       <SelectValue
-                        placeholder={loading ? "Loading customers..." : "All Customers"}
+                        placeholder={
+                          loading ? "Loading customers..." : "All Customers"
+                        }
                       />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Customers</SelectItem>
-                      {hasCustomers ? (
-                        customers?.map((customer) => (
-                          <SelectItem key={customer.id} value={customer.id}>
-                            {customer.name}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        !loading && (
-                          <SelectItem value="__no-customers" disabled>
-                            No customers available
-                          </SelectItem>
-                        )
-                      )}
+                      {hasCustomers
+                        ? customers?.map((customer) => (
+                            <SelectItem key={customer.id} value={customer.id}>
+                              {customer.name}
+                            </SelectItem>
+                          ))
+                        : !loading && (
+                            <SelectItem value="__no-customers" disabled>
+                              No customers available
+                            </SelectItem>
+                          )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -285,12 +296,16 @@ export function PreviousEntries() {
                   <Label htmlFor="location-filter">Location</Label>
                   <Select
                     value={locationFilter}
-                    onValueChange={(value) => setLocationFilter(value as Location | "all")}
+                    onValueChange={(value) =>
+                      setLocationFilter(value as Location | "all")
+                    }
                     disabled={loading}
                   >
                     <SelectTrigger id="location-filter" className="w-full">
                       <SelectValue
-                        placeholder={loading ? "Loading locations..." : "All Locations"}
+                        placeholder={
+                          loading ? "Loading locations..." : "All Locations"
+                        }
                       />
                     </SelectTrigger>
                     <SelectContent>
@@ -304,10 +319,12 @@ export function PreviousEntries() {
                                 className={cn(
                                   "h-2.5 w-2.5 rounded-full border shrink-0",
                                   colors.bg,
-                                  colors.border,
+                                  colors.border
                                 )}
                               />
-                              <span className="capitalize truncate">{formatLocation(location).toLowerCase()}</span>
+                              <span className="capitalize truncate">
+                                {formatLocation(location).toLowerCase()}
+                              </span>
                             </div>
                           </SelectItem>
                         );
@@ -350,7 +367,9 @@ export function PreviousEntries() {
                   // Empty state
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <Plus className="h-12 w-12 text-muted-foreground mb-3" />
-                    <h3 className="text-lg font-semibold">No entries for this date</h3>
+                    <h3 className="text-lg font-semibold">
+                      No entries for this date
+                    </h3>
                     <p className="text-sm text-muted-foreground mt-1">
                       Click "Add Entry" above to record a sale
                     </p>
@@ -359,7 +378,9 @@ export function PreviousEntries() {
                   // Entries list - no fixed height, flows with page scroll
                   <>
                     {paginatedSales.map((sale) => {
-                      const customer = customers?.find((c) => c.id === sale.customerId);
+                      const customer = customers?.find(
+                        (c) => c.id === sale.customerId
+                      );
                       return (
                         <div key={sale.id}>
                           <div className="rounded-lg border bg-card p-4 space-y-3">
@@ -375,8 +396,9 @@ export function PreviousEntries() {
                                       className={cn(
                                         "h-2 w-2 rounded-full shrink-0",
                                         getLocationColor(customer.location).bg,
-                                        getLocationColor(customer.location).border,
-                                        "border",
+                                        getLocationColor(customer.location)
+                                          .border,
+                                        "border"
                                       )}
                                     />
                                     <span className="text-sm text-muted-foreground truncate">
@@ -387,12 +409,17 @@ export function PreviousEntries() {
                               </div>
                               <button
                                 onClick={() => {
-                                  const customer = customers?.find(c => c.id === sale.customerId);
-                                  const effectivePrice = customer ? getEffectivePrice(customer) : sale.unitPrice;
-                                  const recalculatedTotal = sale.quantity * effectivePrice;
+                                  const customer = customers?.find(
+                                    (c) => c.id === sale.customerId
+                                  );
+                                  const effectivePrice = customer
+                                    ? getEffectivePrice(customer)
+                                    : sale.unitPrice;
+                                  const recalculatedTotal =
+                                    sale.quantity * effectivePrice;
                                   requestDeleteSale(
                                     sale.id,
-                                    customer?.name || 'Unknown',
+                                    customer?.name || "Unknown",
                                     `₱${recalculatedTotal.toFixed(2)}`,
                                     formatDate(sale.date)
                                   );
@@ -405,23 +432,54 @@ export function PreviousEntries() {
                             </div>
 
                             {/* Sale details */}
-                            <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div className="grid grid-cols-3 gap-3 text-sm">
                               <div>
-                                <p className="text-muted-foreground">Quantity</p>
-                                <p className="font-medium">{sale.quantity} gallons</p>
+                                <p className="text-muted-foreground">
+                                  Quantity
+                                </p>
+                                <p className="font-medium">
+                                  {sale.quantity} gallons
+                                </p>
                               </div>
                               <div>
                                 <p className="text-muted-foreground">Total</p>
                                 <p className="font-semibold text-lg">
-                                  {formatCurrency(customer ? sale.quantity * getEffectivePrice(customer) : sale.total)}
+                                  {formatCurrency(
+                                    customer
+                                      ? sale.quantity *
+                                          getEffectivePrice(customer)
+                                      : sale.total
+                                  )}
                                 </p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Payment</p>
+                                {sale.paymentType === "CREDIT" ? (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-orange-600 border-orange-300 bg-orange-50"
+                                  >
+                                    <CreditCard className="h-3 w-3 mr-1" />
+                                    Credit
+                                  </Badge>
+                                ) : (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-green-600 border-green-300 bg-green-50"
+                                  >
+                                    <Banknote className="h-3 w-3 mr-1" />
+                                    Cash
+                                  </Badge>
+                                )}
                               </div>
                             </div>
 
                             {/* Notes if present */}
                             {sale.notes && (
                               <div className="pt-2 border-t">
-                                <p className="text-xs text-muted-foreground">Note:</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Note:
+                                </p>
                                 <p className="text-sm mt-1">{sale.notes}</p>
                               </div>
                             )}
@@ -429,7 +487,7 @@ export function PreviousEntries() {
                         </div>
                       );
                     })}
-                    
+
                     {/* Pagination */}
                     {totalPages > 1 && (
                       <div className="pt-4">
@@ -437,21 +495,36 @@ export function PreviousEntries() {
                           <PaginationContent>
                             <PaginationItem>
                               <PaginationPrevious
-                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                onClick={() =>
+                                  setCurrentPage((p) => Math.max(1, p - 1))
+                                }
+                                className={
+                                  currentPage === 1
+                                    ? "pointer-events-none opacity-50"
+                                    : "cursor-pointer"
+                                }
                               />
                             </PaginationItem>
-                            
+
                             <PaginationItem>
                               <span className="text-sm text-muted-foreground px-4">
-                                Page {currentPage} of {totalPages} ({filteredSales.length} total)
+                                Page {currentPage} of {totalPages} (
+                                {filteredSales.length} total)
                               </span>
                             </PaginationItem>
-                            
+
                             <PaginationItem>
                               <PaginationNext
-                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                onClick={() =>
+                                  setCurrentPage((p) =>
+                                    Math.min(totalPages, p + 1)
+                                  )
+                                }
+                                className={
+                                  currentPage === totalPages
+                                    ? "pointer-events-none opacity-50"
+                                    : "cursor-pointer"
+                                }
                               />
                             </PaginationItem>
                           </PaginationContent>
@@ -484,7 +557,7 @@ export function PreviousEntries() {
         description={
           deleteConfirmation.saleDetails
             ? `Are you sure you want to delete this sale?\n\nCustomer: ${deleteConfirmation.saleDetails.customer}\nAmount: ${deleteConfirmation.saleDetails.amount}\nDate: ${deleteConfirmation.saleDetails.date}`
-            : 'Are you sure you want to delete this sale?'
+            : "Are you sure you want to delete this sale?"
         }
         confirmText="Delete"
         cancelText="Cancel"
@@ -494,4 +567,3 @@ export function PreviousEntries() {
     </>
   );
 }
-

@@ -14,41 +14,41 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          // React core + routing
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          
-          // TanStack Query
-          'query-vendor': ['@tanstack/react-query', '@tanstack/react-query-devtools'],
-          
-          // Radix UI components (large bundle)
-          'ui-vendor': [
-            '@radix-ui/react-alert-dialog',
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-label',
-            '@radix-ui/react-popover',
-            '@radix-ui/react-select',
-            '@radix-ui/react-separator',
-            '@radix-ui/react-slot',
-            '@radix-ui/react-switch',
-            '@radix-ui/react-visually-hidden',
-          ],
-          
-          // Charts library (heavy)
-          'chart-vendor': ['recharts'],
-          
-          // Utilities and icons
-          'utils-vendor': [
-            'axios',
-            'date-fns',
-            'lucide-react',
-            'clsx',
-            'tailwind-merge',
-            'class-variance-authority',
-          ],
+        manualChunks: (id) => {
+          // Split heavy vendor libraries
+          if (id.includes("node_modules/recharts")) {
+            return "charts";
+          }
+          if (id.includes("node_modules/react-router-dom")) {
+            return "router";
+          }
+          if (id.includes("node_modules/date-fns")) {
+            return "date-utils";
+          }
+          if (
+            id.includes("node_modules/@tanstack/react-query") ||
+            id.includes("node_modules/@tanstack/react-virtual")
+          ) {
+            return "react-query";
+          }
+          if (
+            id.includes("node_modules/@radix-ui/") ||
+            id.includes("node_modules/lucide-react")
+          ) {
+            return "ui-vendor";
+          }
+          if (
+            id.includes("components/shared/PaymentRecordingModal") ||
+            id.includes("components/shared/CustomerDebtHistoryModal")
+          ) {
+            return "payment-modals";
+          }
+          if (id.includes("node_modules/next-themes")) {
+            return "themes";
+          }
         },
       },
     },
+    chunkSizeWarningLimit: 600, // Increase warning threshold to 600 kB
   },
 })

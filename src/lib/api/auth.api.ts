@@ -5,7 +5,8 @@
  */
 
 import { apiClient, tokenManager } from "./client";
-import { adaptAuthResponse, adaptItemResponse } from "./adapters";
+import { adaptAuthResponse, adaptItemResponse, asEnvelope } from "./adapters";
+import type { AuthApiEnvelope, ItemApiEnvelope } from "./adapters";
 
 // ============================================================================
 // Types
@@ -51,8 +52,8 @@ export const authApi = {
    * Login with username and password
    */
   login: async (data: LoginRequest): Promise<LoginResponse> => {
-    const response = await apiClient.post("/auth/login", data);
-    const authData = adaptAuthResponse(response);
+    const response = await apiClient.post<AuthApiEnvelope>("/auth/login", data);
+    const authData = adaptAuthResponse(asEnvelope<AuthApiEnvelope>(response));
     
     // Store tokens
     tokenManager.setTokens(authData.accessToken, authData.refreshToken);
@@ -80,8 +81,8 @@ export const authApi = {
    * Refresh access token
    */
   refresh: async (data: RefreshTokenRequest): Promise<LoginResponse> => {
-    const response = await apiClient.post("/auth/refresh", data);
-    const authData = adaptAuthResponse(response);
+    const response = await apiClient.post<AuthApiEnvelope>("/auth/refresh", data);
+    const authData = adaptAuthResponse(asEnvelope<AuthApiEnvelope>(response));
     
     // Update tokens
     tokenManager.setTokens(authData.accessToken, authData.refreshToken);
@@ -97,8 +98,8 @@ export const authApi = {
    * Register new user (admin only, max 3 users)
    */
   register: async (data: RegisterRequest): Promise<LoginResponse> => {
-    const response = await apiClient.post("/auth/register", data);
-    const authData = adaptAuthResponse(response);
+    const response = await apiClient.post<AuthApiEnvelope>("/auth/register", data);
+    const authData = adaptAuthResponse(asEnvelope<AuthApiEnvelope>(response));
     
     return {
       accessToken: authData.accessToken,
@@ -118,8 +119,10 @@ export const authApi = {
    * Get current user info
    */
   me: async (): Promise<LoginResponse["user"]> => {
-    const response = await apiClient.get("/auth/me");
-    return adaptItemResponse<LoginResponse["user"]>(response).data;
+    const response = await apiClient.get<ItemApiEnvelope<LoginResponse["user"]>>("/auth/me");
+    return adaptItemResponse<LoginResponse["user"]>(
+      asEnvelope<ItemApiEnvelope<LoginResponse["user"]>>(response)
+    ).data;
   },
 
   /**

@@ -5,10 +5,16 @@
  */
 
 import { apiClient } from "./client";
-import { 
-  adaptSimpleListResponse, 
-  adaptItemResponse, 
-  adaptMutationResponse 
+import {
+  adaptSimpleListResponse,
+  adaptItemResponse,
+  adaptMutationResponse,
+  asEnvelope,
+} from "./adapters";
+import type {
+  ItemApiEnvelope,
+  MutationApiEnvelope,
+  SimpleListApiEnvelope,
 } from "./adapters";
 
 // ============================================================================
@@ -58,55 +64,62 @@ export const usersApi = {
    * List all users (admin only)
    */
   list: async (): Promise<User[]> => {
-    const response = await apiClient.get("/users");
-    return adaptSimpleListResponse<User>(response).data;
+    const response = await apiClient.get<SimpleListApiEnvelope<User>>("/users");
+    return adaptSimpleListResponse<User>(
+      asEnvelope<SimpleListApiEnvelope<User>>(response)
+    ).data;
   },
 
   /**
    * Get user by ID (admin only)
    */
   get: async (id: string): Promise<User> => {
-    const response = await apiClient.get(`/users/${id}`);
-    return adaptItemResponse<User>(response).data;
+    const response = await apiClient.get<ItemApiEnvelope<User>>(`/users/${id}`);
+    return adaptItemResponse<User>(asEnvelope<ItemApiEnvelope<User>>(response)).data;
   },
 
   /**
    * Create new user (admin only, max 3 users)
    */
   create: async (data: CreateUserRequest): Promise<User> => {
-    const response = await apiClient.post("/users", data);
-    return adaptItemResponse<User>(response).data;
+    const response = await apiClient.post<ItemApiEnvelope<User>>("/users", data);
+    return adaptItemResponse<User>(asEnvelope<ItemApiEnvelope<User>>(response)).data;
   },
 
   /**
    * Update user (admin only)
    */
   update: async (id: string, data: UpdateUserRequest): Promise<User> => {
-    const response = await apiClient.patch(`/users/${id}`, data);
-    return adaptItemResponse<User>(response).data;
+    const response = await apiClient.patch<ItemApiEnvelope<User>>(`/users/${id}`, data);
+    return adaptItemResponse<User>(asEnvelope<ItemApiEnvelope<User>>(response)).data;
   },
 
   /**
    * Delete user (admin only, cannot delete self)
    */
   delete: async (id: string): Promise<void> => {
-    const response = await apiClient.delete(`/users/${id}`);
-    adaptMutationResponse<null>(response);
+    const response = await apiClient.delete<MutationApiEnvelope<null>>(`/users/${id}`);
+    adaptMutationResponse<null>(asEnvelope<MutationApiEnvelope<null>>(response));
   },
 
   /**
    * Change user password (admin only)
    */
   changePassword: async (id: string, data: ChangeUserPasswordRequest): Promise<void> => {
-    const response = await apiClient.post(`/users/${id}/change-password`, data);
-    adaptMutationResponse<null>(response);
+    const response = await apiClient.post<MutationApiEnvelope<null>>(
+      `/users/${id}/change-password`,
+      data
+    );
+    adaptMutationResponse<null>(asEnvelope<MutationApiEnvelope<null>>(response));
   },
 
   /**
    * Get user statistics (admin only)
    */
   stats: async (): Promise<UserStats> => {
-    const response = await apiClient.get("/users/stats");
-    return adaptItemResponse<UserStats>(response).data;
+    const response = await apiClient.get<ItemApiEnvelope<UserStats>>("/users/stats");
+    return adaptItemResponse<UserStats>(
+      asEnvelope<ItemApiEnvelope<UserStats>>(response)
+    ).data;
   },
 };

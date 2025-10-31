@@ -1,7 +1,8 @@
 # Pricing Implementation Guide
 
-**Version**: 1.0  
-**Last Updated**: October 17, 2025
+**Version**: 2.0  
+**Last Updated**: January 15, 2025  
+**Related**: [Date Handling Guide](./DATE_HANDLING_GUIDE.md) | [Quick Reference](./PRICING_QUICK_REFERENCE.md)
 
 ## Overview
 
@@ -290,6 +291,81 @@ When modifying pricing-related code:
 
 ---
 
+## Integration with Date Handling System
+
+The pricing system works seamlessly with the standardized date handling system. Here are common integration patterns:
+
+### Date-Filtered Revenue Calculations
+
+```typescript
+import { useDateRange } from '@/lib/hooks/date';
+import { usePricing } from '@/lib/hooks/usePricing';
+
+function RevenueAnalysis({ sales, customers }: Props) {
+  const { getEffectivePrice } = usePricing();
+  const { startDate, endDate, isValid } = useDateRange({
+    maxRange: 90
+  });
+
+  const filteredRevenue = useMemo(() => {
+    if (!isValid || !startDate || !endDate) return 0;
+    
+    const startISO = toLocalISODate(startDate);
+    const endISO = toLocalISODate(endDate);
+    
+    return sales
+      .filter(sale => isWithinPeriod(sale.date, startISO, endISO))
+      .reduce((sum, sale) => {
+        const customer = customers.find(c => c.id === sale.customerId);
+        return sum + (sale.quantity * getEffectivePrice(customer));
+      }, 0);
+  }, [sales, customers, startDate, endDate, isValid, getEffectivePrice]);
+
+  return <div>Revenue: {formatCurrency(filteredRevenue)}</div>;
+}
+```
+
+### Date Display with Pricing
+
+```typescript
+import { DateDisplay } from '@/components/shared/DateDisplay';
+import { usePricing } from '@/lib/hooks/usePricing';
+
+function SaleCard({ sale, customer }: Props) {
+  const { getEffectivePrice } = usePricing();
+  const effectiveTotal = sale.quantity * getEffectivePrice(customer);
+
+  return (
+    <Card>
+      <DateDisplay date={sale.date} format="short" />
+      <p>Quantity: {sale.quantity}</p>
+      <p>Total: {formatCurrency(effectiveTotal)}</p>
+    </Card>
+  );
+}
+```
+
+### Delete Confirmations with Both Systems
+
+```typescript
+import { formatDate } from '@/lib/utils';
+import { usePricing } from '@/lib/hooks/usePricing';
+
+function handleDelete(sale: Sale, customer: Customer) {
+  const { getEffectivePrice } = usePricing();
+  const recalculatedTotal = sale.quantity * getEffectivePrice(customer);
+  
+  requestDeleteSale(
+    sale.id,
+    customer?.name || 'Unknown',
+    formatCurrency(recalculatedTotal), // Pricing system
+    formatDate(sale.date) // Date system
+  );
+}
+```
+
+---
+
 ## Questions?
 
 If you're unsure whether your component needs pricing support, ask:
@@ -298,3 +374,5 @@ If you're unsure whether your component needs pricing support, ask:
 3. Does it aggregate revenue across sales?
 
 If **yes** to any → implement pricing support using this guide.
+
+For date-related functionality, see the [Date Handling Guide](./DATE_HANDLING_GUIDE.md).

@@ -34,6 +34,178 @@ export type Location = (typeof Location)[keyof typeof Location];
 export type KPIVariant = "revenue" | "quantity" | "average" | "customers";
 
 // ============================================================================
+// Payment & Credit Types
+// ============================================================================
+
+/**
+ * Payment status for credit transactions
+ */
+export const PaymentStatus = {
+  UNPAID: "UNPAID",
+  PARTIAL: "PARTIAL", 
+  PAID: "PAID",
+  OVERDUE: "OVERDUE",
+  COLLECTION: "COLLECTION",
+} as const;
+
+export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus];
+
+/**
+ * Payment method types
+ */
+export const PaymentMethod = {
+  CASH: "CASH",
+} as const;
+
+export type PaymentMethod = (typeof PaymentMethod)[keyof typeof PaymentMethod];
+
+/**
+ * Payment type for sales
+ */
+export const PaymentType = {
+  CASH: "CASH",
+  CREDIT: "CREDIT",
+} as const;
+
+export type PaymentType = (typeof PaymentType)[keyof typeof PaymentType];
+
+/**
+ * Collection status for customers
+ */
+export const CollectionStatus = {
+  ACTIVE: "ACTIVE",
+  OVERDUE: "OVERDUE", 
+  SUSPENDED: "SUSPENDED",
+} as const;
+
+export type CollectionStatus = (typeof CollectionStatus)[keyof typeof CollectionStatus];
+
+/**
+ * Payment entity - represents a payment record for credit sales
+ */
+export interface Payment {
+  id: string;
+  amount: number;
+  status: PaymentStatus;
+  paymentMethod?: PaymentMethod;
+  paidAmount: number;
+  paidAt?: string; // ISO 8601 date string
+  dueDate?: string; // ISO 8601 date string
+  notes?: string;
+  saleId: string;
+  customerId: string;
+  recordedById: string;
+  createdAt: string; // ISO 8601 date string
+  updatedAt: string; // ISO 8601 date string
+  
+  // Relations
+  sale?: Sale;
+  customer?: Customer;
+  recordedBy?: User;
+  transactions?: PaymentTransaction[]; // Payment transaction history
+}
+
+/**
+ * Payment transaction entity - represents individual partial payment transactions
+ */
+export interface PaymentTransaction {
+  id: string;
+  amount: number; // Amount paid in this transaction
+  paymentMethod: PaymentMethod;
+  notes?: string; // Optional note for this specific transaction
+  paymentId: string;
+  recordedById: string;
+  createdAt: string; // ISO 8601 date string
+  
+  // Relations
+  payment?: Payment;
+  recordedBy?: User;
+}
+
+/**
+ * Payment transaction with running balance - includes calculated balance after transaction
+ */
+export interface PaymentTransactionWithBalance extends PaymentTransaction {
+  runningBalance: number; // Remaining balance after this transaction
+}
+
+
+
+/**
+ * Outstanding balance summary for customers with debt
+ */
+export interface OutstandingBalance {
+  customerId: string;
+  customerName: string;
+  location: Location;
+  totalOwed: number;
+  oldestDebtDate: string; // ISO 8601 date string
+  daysPastDue: number;
+  creditLimit: number;
+  collectionStatus: CollectionStatus;
+  lastPaymentDate?: string; // ISO 8601 date string
+}
+
+/**
+ * Aging report data for a customer
+ */
+export interface AgingReportCustomer {
+  customerId: string;
+  customerName: string;
+  location: Location;
+  current: number; // 0-30 days
+  days31to60: number; // 31-60 days
+  days61to90: number; // 61-90 days
+  over90Days: number; // 90+ days
+  totalOwed: number;
+  collectionStatus: CollectionStatus;
+}
+
+/**
+ * Complete aging report data
+ */
+export interface AgingReportData {
+  summary: {
+    totalCustomers: number;
+    totalOutstanding: number;
+    current: number;
+    days31to60: number;
+    days61to90: number;
+    over90Days: number;
+  };
+  customers: AgingReportCustomer[];
+  generatedAt: string; // ISO 8601 date string
+}
+
+/**
+ * Daily payments report
+ */
+export interface DailyPaymentsReport {
+  summary: {
+    date: string; // ISO 8601 date string
+    totalPayments: number;
+    totalAmount: number;
+    paymentMethods: Record<string, number>;
+  };
+  payments: Payment[];
+  transactions: PaymentTransaction[];
+  generatedAt: string; // ISO 8601 date string
+}
+
+/**
+ * Payment summary/KPIs
+ */
+export interface PaymentSummary {
+  totalOutstanding: number;
+  totalOverdue: number;
+  customersWithDebt: number;
+  overdueCustomers: number;
+  averageDebtAge: number;
+  totalPaymentsToday: number;
+  paymentsReceivedToday: number;
+}
+
+// ============================================================================
 // Core Entities
 // ============================================================================
 
@@ -47,8 +219,15 @@ export interface Customer {
   phone?: string; // Optional phone number for contact
   customUnitPrice?: number; // Optional custom price per gallon (overrides global)
   notes?: string; // Optional additional notes about customer
+  creditLimit?: number; // Maximum amount customer can owe before credit is suspended
+  outstandingBalance: number; // Current amount owed by customer
+  lastPaymentDate?: string; // ISO 8601 date string of last payment
+  collectionStatus: CollectionStatus; // Current collection status
   createdAt: string; // ISO 8601 date string
   updatedAt?: string; // ISO 8601 date string
+  
+  // Relations
+  payments?: Payment[];
 }
 
 /**
@@ -62,10 +241,14 @@ export interface Sale {
   quantity: number; // Number of containers (gallons)
   unitPrice: number; // Price per container at time of sale
   total: number; // Total amount (quantity × unitPrice)
+  paymentType: PaymentType; // Whether sale was cash or credit
   notes?: string; // Optional notes about the sale
   createdAt: string; // ISO 8601 date string (when entry was created)
   updatedAt?: string; // ISO 8601 date string (when entry was last updated)
   wasUpdated?: boolean; // Indicates if this was an update operation (upsert)
+  
+  // Relations
+  payment?: Payment; // One-to-one relationship for credit sales
 }
 
 /**
@@ -89,6 +272,9 @@ export interface Settings {
   currency: string; // Currency code (default: "PHP")
   businessName?: string; // Optional business name
   enableCustomPricing: boolean; // Global toggle for custom pricing feature
+  enableCreditFeature: boolean; // Global toggle for credit/debt tracking feature
+  defaultCreditLimit: number; // Default credit limit for new customers (in PHP)
+  daysBeforeOverdue: number; // Number of days before debt is considered overdue
 }
 
 // ============================================================================
@@ -112,14 +298,13 @@ export interface AuthCredentials {
 }
 
 /**
- * Authentication session - alias for AuthState with future backend compatibility
+ * Authentication session - alias for AuthState until backend adds tokens
  */
-export type AuthSession = AuthState & {
-  // Future backend fields:
-  // token?: string;
-  // refreshToken?: string;
-  // expiresAt?: number;
-}
+export type AuthSession = AuthState;
+// Future backend fields:
+// token?: string;
+// refreshToken?: string;
+// expiresAt?: number;
 
 /**
  * Authentication result - success or error response
@@ -154,6 +339,7 @@ export interface KPI {
   icon?: LucideIcon; // Optional Lucide icon component
   trend?: "up" | "down" | "neutral"; // Optional trend indicator
   variant?: KPIVariant; // Optional visual variant for colored cards
+  semanticTone?: "success" | "warning" | "error" | "info"; // Optional semantic tone for colored cards
 }
 
 /**
@@ -203,6 +389,7 @@ export interface CustomerFormData {
   location: Location;
   phone?: string; // Optional phone number
   customUnitPrice?: number; // Optional custom price per gallon
+  creditLimit?: number; // Optional credit limit
   notes?: string; // Optional notes
 }
 
@@ -213,8 +400,21 @@ export interface SaleFormData {
   customerId: string;
   date: string; // ISO 8601 date string
   quantity: number;
+  paymentType: PaymentType; // Cash or credit payment
   notes?: string;
 }
+
+/**
+ * Form data for recording a payment
+ */
+export interface PaymentFormData {
+  paymentId: string;
+  amount: number;
+  paymentMethod: PaymentMethod;
+  notes?: string;
+}
+
+
 
 /**
  * Form data for settings
@@ -251,4 +451,75 @@ export interface PaginationParams {
 export interface SortParams {
   field: string;
   direction: "asc" | "desc";
+}
+
+// ============================================================================
+// Date Configuration Types
+// ============================================================================
+
+/**
+ * Date configuration for the application
+ */
+export interface DateConfig {
+  timezone: string; // Target timezone (e.g., "Asia/Manila")
+  locale: string; // Locale for formatting (e.g., "en-US")
+  dateFormat: string; // Date format string for date-fns
+  dateTimeFormat: string; // DateTime format string for date-fns
+  relativeThreshold: number; // Days threshold for relative formatting
+  businessDays: number[]; // Array of business days (0-6, Sunday=0)
+  holidays: string[]; // Array of holiday dates in ISO format
+}
+
+/**
+ * Date period types for filtering and analysis
+ */
+export type DatePeriod = '7D' | '30D' | '90D' | '1Y' | 'custom';
+
+/**
+ * Date range with period information
+ */
+export interface DateRangeWithPeriod {
+  start: Date;
+  end: Date;
+  period: DatePeriod;
+  label: string;
+}
+
+/**
+ * Options for relative date formatting
+ */
+export interface RelativeDateOptions {
+  maxDays?: number; // Maximum days to show relative format
+  includeTime?: boolean; // Include time in relative format
+}
+
+/**
+ * Options for date formatting
+ */
+export interface DateFormatOptions {
+  includeTime?: boolean; // Include time in format
+  includeYear?: boolean; // Include year in format
+  relative?: boolean; // Use relative formatting if applicable
+  timezone?: string; // Override default timezone
+}
+
+/**
+ * Date validation result
+ */
+export interface DateValidationResult {
+  isValid: boolean;
+  error?: string;
+  normalizedDate?: string; // ISO format if valid
+}
+
+/**
+ * Date range validation result
+ */
+export interface DateRangeValidationResult {
+  isValid: boolean;
+  error?: string;
+  normalizedRange?: {
+    start: string;
+    end: string;
+  };
 }
