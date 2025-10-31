@@ -150,8 +150,6 @@ export function StatCard({
           <MiniSparkline
             data={sparklineData}
             color={sparklineColor}
-            width={120}
-            height={24}
             className="w-full"
           />
         </div>
