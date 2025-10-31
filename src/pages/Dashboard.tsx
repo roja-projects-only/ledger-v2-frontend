@@ -109,7 +109,7 @@ function DashboardContent() {
             <div className="space-y-6" role="status" aria-label="Loading dashboard data" aria-live="polite">
               <span className="sr-only">Loading dashboard data, please wait...</span>
               {/* Summary Stats Skeleton */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[1, 2, 3, 4].map((i) => (
                   <StatCard
                     key={i}
@@ -154,11 +154,12 @@ function DashboardContent() {
               id="main-content" 
               className="space-y-6 animate-in fade-in duration-300"
             >
-              {/* Summary Stats */}
-              <section aria-labelledby="kpi-heading" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Summary Stats - Smart 2x2 grid on mobile, 4 columns on desktop */}
+              <section aria-labelledby="kpi-heading">
                 <h2 id="kpi-heading" className="sr-only">Key Performance Indicators</h2>
-                {/* Total Revenue */}
-                <StatCard
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Total Revenue */}
+                  <StatCard
                   label="Total Revenue"
                   value={formatCurrency(data.thisMonth.revenue)}
                   icon={DollarSign}
@@ -212,6 +213,7 @@ function DashboardContent() {
                   }}
                   sparklineData={data.sparklineData}
                 />
+                </div>
               </section>
 
               {/* Revenue Overview Chart */}

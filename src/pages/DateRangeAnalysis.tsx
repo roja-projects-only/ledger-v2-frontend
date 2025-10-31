@@ -205,8 +205,8 @@ export function DateRangeAnalysis() {
             </CardContent>
           </Card>
 
-          {/* KPI Row */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          {/* KPI Row - Smart 2x2 grid on mobile (odd items span full width), 3 columns on desktop */}
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
             {dateRangeKPIs.map((kpi, index) => (
               <KPICard
                 key={index}
@@ -215,9 +215,6 @@ export function DateRangeAnalysis() {
                 icon={kpi.icon}
                 variant={kpi.variant}
                 loading={loading}
-                className={cn(
-                  dateRangeKPIs.length === 3 && index === 2 && "col-span-2 sm:col-span-1"
-                )}
               />
             ))}
           </div>

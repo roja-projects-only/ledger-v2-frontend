@@ -130,7 +130,7 @@ export function Today() {
             </div>
           )}
 
-          {/* KPI Row */}
+          {/* KPI Row - Smart 2x2 grid on mobile, 4 columns on desktop */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {todayKPIs.map((kpi, index) => (
               <KPICard
