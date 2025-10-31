@@ -69,9 +69,9 @@ export function DatePicker({
           {label}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="p-0" matchTriggerWidth>
+      <PopoverContent align="center" sideOffset={8} className="w-auto p-4">
         {/* Custom month/year selectors for consistency with app dropdowns */}
-        <div className="flex items-center justify-between gap-2 px-3 pt-3">
+        <div className="flex items-center justify-center gap-2 mb-2">
           <div className="flex items-center gap-2">
             <Select
               value={String(viewMonth.getMonth())}

@@ -86,9 +86,9 @@ export function DateRangePicker({
           {label}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" sideOffset={8} className="w-auto p-3">
+      <PopoverContent align="center" sideOffset={10} className="w-auto p-4">
         {/* Custom month/year selectors for consistency with app dropdowns */}
-        <div className="flex items-center justify-between gap-2 px-1 pb-2">
+        <div className="flex items-center justify-center gap-2 mb-2">
           <div className="flex items-center gap-2">
             <Select
               value={String(viewMonth.getMonth())}
