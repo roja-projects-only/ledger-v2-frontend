@@ -1,12 +1,4 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "git": {
-    "deploymentEnabled": {
-      "main": true,
-      "*": false
-    }
-  },
-  "ignoreCommand": "if [ \"$VERCEL_COMMIT_REF\" != \"main\" ]; then echo 'Skipping non-main branch'; exit 0; else exit 1; fi",
   "rewrites": [
     {
       "source": "/(.*)",
