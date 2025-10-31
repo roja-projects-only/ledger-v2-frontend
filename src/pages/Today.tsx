@@ -163,7 +163,7 @@ export function Today() {
                       sale.id,
                       customer?.name || 'Unknown',
                       `₱${recalculatedTotal.toFixed(2)}`,
-                      new Date(sale.date).toLocaleDateString()
+                      formatDate(sale.date)
                     );
                   }}
                   loading={loading}

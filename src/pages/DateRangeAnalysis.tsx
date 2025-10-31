@@ -12,13 +12,8 @@ import { useState, useMemo } from "react";
 import { Container } from "@/components/layout/Container";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+//
+import { DateRangePicker, DateRangeDisplay } from "@/components/date";
 import { KPICard } from "@/components/shared/KPICard";
 import { DailySalesTrendChart } from "@/components/analysis/DailySalesTrendChart";
 import { CustomerPerformanceChart } from "@/components/analysis/CustomerPerformanceChart";
@@ -26,8 +21,7 @@ import { useSales } from "@/lib/hooks/useSales";
 import { useCustomers } from "@/lib/hooks/useCustomers";
 import { useKPIs } from "@/lib/hooks/useKPIs";
 import type { KPI } from "@/lib/types";
-import { formatDate, formatCurrency, getTodayISO } from "@/lib/utils";
-import { cn } from "@/lib/utils";
+import { formatCurrency, getTodayISO } from "@/lib/utils";
 
 // ============================================================================
 // Date Range Analysis Page Component
@@ -47,16 +41,9 @@ export function DateRangeAnalysis() {
   const [startDate, setStartDate] = useState<Date>(sevenDaysAgo);
   const [endDate, setEndDate] = useState<Date>(today);
 
-  // Get ISO date strings (use local date, not UTC)
-  const getLocalISO = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
-
-  const startDateISO = getLocalISO(startDate);
-  const endDateISO = getLocalISO(endDate);
+  // Get ISO date strings (use local date parts)
+  const startDateISO = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, "0")}-${String(startDate.getDate()).padStart(2, "0")}`;
+  const endDateISO = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, "0")}-${String(endDate.getDate()).padStart(2, "0")}`;
 
   // Get sales for date range
   const rangeSales = getSalesByDateRange(startDateISO, endDateISO);
@@ -148,57 +135,18 @@ export function DateRangeAnalysis() {
                 </div>
 
                 {/* Custom Date Range */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="w-full">
-                    <label className="text-sm font-medium mb-2 block">Start Date</label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !startDate && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {startDate ? formatDate(startDateISO) : "Pick a date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="p-0" align="start" matchTriggerWidth>
-                        <Calendar
-                          mode="single"
-                          selected={startDate}
-                          onSelect={(date) => date && setStartDate(date)}
-                          disabled={(date) => date > new Date() || date > endDate}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  <div className="w-full">
-                    <label className="text-sm font-medium mb-2 block">End Date</label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !endDate && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {endDate ? formatDate(endDateISO) : "Pick a date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="p-0" align="start" matchTriggerWidth>
-                        <Calendar
-                          mode="single"
-                          selected={endDate}
-                          onSelect={(date) => date && setEndDate(date)}
-                          disabled={(date) => date > new Date() || date < startDate}
-                        />
-                      </PopoverContent>
-                    </Popover>
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium">Custom Range</label>
+                  <DateRangePicker
+                    startDate={startDate}
+                    endDate={endDate}
+                    onStartDateChange={(d) => d && setStartDate(d)}
+                    onEndDateChange={(d) => d && setEndDate(d)}
+                    maxRange={365}
+                    maxDate={new Date()}
+                  />
+                  <div className="text-sm text-muted-foreground">
+                    <DateRangeDisplay startDate={startDateISO} endDate={endDateISO} />
                   </div>
                 </div>
               </div>

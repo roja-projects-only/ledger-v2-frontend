@@ -250,3 +250,9 @@ export function groupBy<T>(array: T[], key: keyof T): Record<string, T[]> {
 export function formatLocation(location: string): string {
   return location.replace(/_/g, ' ');
 }
+
+// ============================================================================
+// Enhanced Date Utilities (re-exports)
+// ============================================================================
+
+export * from "./utils/dateUtils";

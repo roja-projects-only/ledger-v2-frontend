@@ -19,12 +19,7 @@ import { Container } from "@/components/layout/Container";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { DatePicker } from "@/components/date";
 import {
   Pagination,
   PaginationContent,
@@ -212,32 +207,12 @@ export function PreviousEntries() {
                     {formatDate(selectedDateISO)}
                   </p>
                 </div>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-between min-w-0"
-                      aria-label="Change selected date"
-                    >
-                      <span className="flex items-center gap-2 min-w-0 flex-1">
-                        <CalendarIcon className="h-4 w-4 shrink-0" />
-                        <span className="font-medium truncate">Change Date</span>
-                      </span>
-                      <span className="text-sm text-muted-foreground shrink-0 ml-2 hidden sm:inline">
-                        {formatDate(selectedDateISO)}
-                      </span>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={(date) => date && setSelectedDate(date)}
-                      disabled={(date) => date > new Date()}
-                      className="rounded-md border"
-                    />
-                  </PopoverContent>
-                </Popover>
+                <DatePicker
+                  value={selectedDate}
+                  onChange={(date) => date && setSelectedDate(date)}
+                  maxDate={new Date()}
+                  className="w-full"
+                />
                 <p className="text-xs text-muted-foreground">
                   Dates in the future are disabled.
                 </p>
@@ -419,7 +394,7 @@ export function PreviousEntries() {
                                     sale.id,
                                     customer?.name || 'Unknown',
                                     `₱${recalculatedTotal.toFixed(2)}`,
-                                    new Date(sale.date).toLocaleDateString()
+                                    formatDate(sale.date)
                                   );
                                 }}
                                 className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
