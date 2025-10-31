@@ -92,16 +92,25 @@ export function StatCard({
     }
   })();
 
+  // Apply KPI color theme to card
+  const cardClasses = cn(
+    "h-full gap-0 sm:gap-0",
+    "border-2",
+    theme.bg,
+    theme.border,
+    className,
+  );
+
   if (loading) {
     return (
-      <Card className={cn("h-full gap-0", className)}>
-        <CardHeader className="pb-0">
+      <Card className={cardClasses}>
+        <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
             <Skeleton className="h-8 w-8 rounded-md" />
             <Skeleton className="h-4 w-28" />
           </div>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="pt-0 space-y-2">
           <Skeleton className="h-9 w-32" />
           <Skeleton className="h-4 w-36" />
           <Skeleton className="h-6 w-full" />
@@ -111,8 +120,8 @@ export function StatCard({
   }
 
   return (
-    <Card className={cn("h-full gap-0", className)}>
-      <CardHeader className="pb-0">
+    <Card className={cardClasses}>
+      <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
           {/* Icon Badge */}
           <div
@@ -131,7 +140,7 @@ export function StatCard({
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-2">
+      <CardContent className="pt-0 space-y-2">
         {/* Large Value */}
         <p className="text-3xl font-bold">
           {value}
