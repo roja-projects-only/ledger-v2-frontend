@@ -6,7 +6,8 @@
  * - Data calculated via analytics utilities with getEffectivePriceFromData()
  * - See: src/lib/hooks/useDashboardData.ts and docs/PRICING_GUIDE.md
  * 
- * Responsive SVG line chart showing 7-day trend data.
+ * Responsive SVG line chart showing last 7 days of selected date range.
+ * Automatically follows Dashboard date filter (7D, 30D, 90D, 1Y).
  * Features smooth curves with gradient fill for better visual appeal.
  * Memoized for performance optimization.
  */
