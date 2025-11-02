@@ -21,7 +21,8 @@ import type {
 // Types
 // ============================================================================
 
-// Using exported SettingValue below
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SettingValue = string | number | boolean | any;
 
 export interface Setting {
   id: string;
