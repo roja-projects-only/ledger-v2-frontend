@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePaymentHistory } from "@/lib/queries/debtsQueries";
 import { formatRelativeDate } from "@/lib/utils/dateUtils";
+import { useMemo } from "react";
 
 function formatCurrencyPhp(n: number): string {
   return new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 2 }).format(n ?? 0);
@@ -14,7 +15,9 @@ function getFromISO(daysBack: number): string {
 }
 
 export function RecentActivity() {
-  const { data, isLoading, isError } = usePaymentHistory({ from: getFromISO(14) });
+  // IMPORTANT: memoize the filter so the queryKey stays stable and doesn't refetch repeatedly
+  const fromISO = useMemo(() => getFromISO(14), []);
+  const { data, isLoading, isError } = usePaymentHistory({ from: fromISO });
   const items = data?.data?.slice(0, 10) ?? [];
 
   return (
