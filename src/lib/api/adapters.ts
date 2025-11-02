@@ -143,6 +143,34 @@ export function adaptMutationResponse<T>(response: ApiResponse): MutationRespons
 }
 
 /**
+ * Adapter for Debts list endpoints (backend returns { items, total })
+ *
+ * Backend response (after Axios unwraps):
+ * response = { success: true, data: { items: [...], total: number }, message? }
+ */
+export function adaptDebtsListResponse<T>(
+  response: ApiResponse,
+  opts?: { page?: number; limit?: number }
+): ListResponse<T> {
+  const items = Array.isArray(response.data?.items) ? response.data.items : [];
+  const total = Number(response.data?.total ?? items.length);
+  const page = Number(opts?.page ?? 1);
+  const limit = Number(opts?.limit ?? (items.length || 50));
+  const totalPages = Math.max(1, Math.ceil(total / (limit || 1)));
+  return {
+    data: items,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages,
+      hasNext: page < totalPages,
+      hasPrev: page > 1,
+    },
+  };
+}
+
+/**
  * Adapter for auth login/refresh responses
  * 
  * Backend response (after Axios unwraps):
