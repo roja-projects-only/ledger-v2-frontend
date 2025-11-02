@@ -34,6 +34,7 @@ import {
   ChevronRight,
   BarChart3,
   Keyboard,
+  ChevronLeft,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -60,6 +61,17 @@ const NAV_LINKS: NavLink[] = [
   { label: "Customers", path: "/customers", icon: Users },
   { label: "History", path: "/history", icon: History },
   { label: "Settings", path: "/settings", icon: Settings, adminOnly: true },
+  // Entry point to Debt Management (switches to contextual nav)
+  { label: "Debt Management", path: "/debts", icon: History },
+];
+
+// Contextual Debt Management links
+const DEBT_LINKS: NavLink[] = [
+  { label: "Overview", path: "/debts", icon: BarChart3 },
+  { label: "Customer Debts", path: "/debts/customers", icon: Users },
+  { label: "Payment History", path: "/debts/payments", icon: History },
+  { label: "Analytics", path: "/debts/analytics", icon: TrendingUp },
+  { label: "Back to Main", path: "/", icon: ChevronLeft },
 ];
 
 // ============================================================================
@@ -72,8 +84,11 @@ export function Sidebar() {
   const { user, logout } = useAuth();
   const [showShortcuts, setShowShortcuts] = useState(false);
 
+  // Detect debt management section by route prefix
+  const isDebtRoute = location.pathname.startsWith("/debts");
+
   // Filter navigation links based on user role
-  const visibleLinks = NAV_LINKS.filter(
+  const visibleLinks = (isDebtRoute ? DEBT_LINKS : NAV_LINKS).filter(
     (link) => !link.adminOnly || user?.role === "ADMIN"
   );
 

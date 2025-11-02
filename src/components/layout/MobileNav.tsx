@@ -28,6 +28,7 @@ import {
   LogOut,
   ChevronRight,
   BarChart3,
+  ChevronLeft,
 } from "lucide-react";
 
 // ============================================================================
@@ -58,6 +59,15 @@ const NAV_LINKS: NavLink[] = [
   { label: "Customers", path: "/customers", icon: Users },
   { label: "History", path: "/history", icon: History },
   { label: "Settings", path: "/settings", icon: Settings, adminOnly: true },
+  { label: "Debt Management", path: "/debts", icon: History },
+];
+
+const DEBT_LINKS: NavLink[] = [
+  { label: "Overview", path: "/debts", icon: BarChart3 },
+  { label: "Customer Debts", path: "/debts/customers", icon: Users },
+  { label: "Payment History", path: "/debts/payments", icon: History },
+  { label: "Analytics", path: "/debts/analytics", icon: TrendingUp },
+  { label: "Back to Main", path: "/", icon: ChevronLeft },
 ];
 
 // ============================================================================
@@ -69,10 +79,11 @@ export const MobileNav = memo(function MobileNav({ open, onOpenChange }: MobileN
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
+  const isDebtRoute = location.pathname.startsWith('/debts');
   // Filter navigation links based on user role (memoized)
   const visibleLinks = useMemo(
-    () => NAV_LINKS.filter((link) => !link.adminOnly || user?.role === "ADMIN"),
-    [user?.role]
+    () => (isDebtRoute ? DEBT_LINKS : NAV_LINKS).filter((link) => !link.adminOnly || user?.role === "ADMIN"),
+    [user?.role, isDebtRoute]
   );
 
   // Close drawer immediately on navigation

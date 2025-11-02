@@ -27,6 +27,10 @@ const CustomerHistory = lazy(() => import("@/pages/CustomerHistory").then(m => (
 const Settings = lazy(() => import("@/pages/Settings").then(m => ({ default: m.Settings })));
 const Customers = lazy(() => import("@/pages/Customers").then(m => ({ default: m.Customers })));
 const NotFound = lazy(() => import("@/pages/NotFound").then(m => ({ default: m.NotFound })));
+const DebtsOverview = lazy(() => import("@/pages/DebtsOverview").then(m => ({ default: m.DebtsOverview })));
+const DebtsCustomers = lazy(() => import("@/pages/DebtsCustomers").then(m => ({ default: m.DebtsCustomers })));
+const DebtsPayments = lazy(() => import("@/pages/DebtsPayments").then(m => ({ default: m.DebtsPayments })));
+const DebtsAnalytics = lazy(() => import("@/pages/DebtsAnalytics").then(m => ({ default: m.DebtsAnalytics })));
 
 /**
  * LoginRedirect - Redirect authenticated users away from login page
@@ -118,6 +122,12 @@ function AppLayout() {
               
               {/* Customer History Page */}
               <Route path="/history" element={<CustomerHistory />} />
+
+              {/* Debt Management - Contextual section */}
+              <Route path="/debts" element={<DebtsOverview />} />
+              <Route path="/debts/customers" element={<DebtsCustomers />} />
+              <Route path="/debts/payments" element={<DebtsPayments />} />
+              <Route path="/debts/analytics" element={<DebtsAnalytics />} />
               
               {/* 404 Page - Catch-all for unknown routes */}
               <Route path="*" element={<NotFound />} />
