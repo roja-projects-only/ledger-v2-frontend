@@ -103,8 +103,6 @@ export function useAddSaleMutation() {
           updatedAt: new Date().toISOString(),
           customer: undefined, // Will be populated by backend
           user: undefined,
-          // Payment tracking fields
-          paymentType: 'CASH' as const, // Default to cash payment
         } as Sale,
         ...old,
       ]);

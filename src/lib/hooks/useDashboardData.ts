@@ -8,7 +8,7 @@
 import { useMemo } from "react";
 import { useSales } from "./useSales";
 import { useCustomers } from "./useCustomers";
-import { useSettings } from "@/lib/hooks/useSettings";
+import { useSettings } from "@/lib/contexts/SettingsContext";
 import { useDateFilter } from "./useDateFilter";
 import {
   calculatePeriodMetrics,
@@ -105,53 +105,38 @@ export function useDashboardData() {
     );
 
     // Calculate comparison period metrics
-    const comparisonPeriod = comparisonEnabled
-      ? calculatePeriodMetrics(
-          sales,
-          customers,
-          comparisonStartDate,
-          comparisonEndDate,
-          customPricingEnabled,
-          globalUnitPrice
-        )
-      : thisPeriod;
+    const comparisonPeriod = calculatePeriodMetrics(
+      sales,
+      customers,
+      comparisonStartDate,
+      comparisonEndDate,
+      customPricingEnabled,
+      globalUnitPrice
+    );
 
     // Calculate growth percentages
-    const revenueGrowth = comparisonEnabled
-      ? calculateGrowthPercentage(thisPeriod.revenue, comparisonPeriod.revenue)
-      : 0;
-    const quantityGrowth = comparisonEnabled
-      ? calculateGrowthPercentage(
-          thisPeriod.quantity,
-          comparisonPeriod.quantity
-        )
-      : 0;
-    const averageSaleGrowth = comparisonEnabled
-      ? calculateGrowthPercentage(
-          thisPeriod.averageSale,
-          comparisonPeriod.averageSale
-        )
-      : 0;
-    const activeCustomersGrowth = comparisonEnabled
-      ? calculateGrowthPercentage(
-          thisPeriod.activeCustomers,
-          comparisonPeriod.activeCustomers
-        )
-      : 0;
+    const revenueGrowth = calculateGrowthPercentage(
+      thisPeriod.revenue,
+      comparisonPeriod.revenue
+    );
+    const quantityGrowth = calculateGrowthPercentage(
+      thisPeriod.quantity,
+      comparisonPeriod.quantity
+    );
+    const averageSaleGrowth = calculateGrowthPercentage(
+      thisPeriod.averageSale,
+      comparisonPeriod.averageSale
+    );
+    const activeCustomersGrowth = calculateGrowthPercentage(
+      thisPeriod.activeCustomers,
+      comparisonPeriod.activeCustomers
+    );
 
     // Get trend directions
-    const revenueTrend = comparisonEnabled
-      ? getTrendDirection(revenueGrowth)
-      : "neutral";
-    const quantityTrend = comparisonEnabled
-      ? getTrendDirection(quantityGrowth)
-      : "neutral";
-    const averageSaleTrend = comparisonEnabled
-      ? getTrendDirection(averageSaleGrowth)
-      : "neutral";
-    const activeCustomersTrend = comparisonEnabled
-      ? getTrendDirection(activeCustomersGrowth)
-      : "neutral";
+    const revenueTrend = getTrendDirection(revenueGrowth);
+    const quantityTrend = getTrendDirection(quantityGrowth);
+    const averageSaleTrend = getTrendDirection(averageSaleGrowth);
+    const activeCustomersTrend = getTrendDirection(activeCustomersGrowth);
 
     // Get time series data for selected range
     // For sparkline, use last 7 days of the selected range

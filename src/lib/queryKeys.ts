@@ -34,22 +34,4 @@ export const queryKeys = {
     all: ['users'] as const,
     lists: () => [...queryKeys.users.all, 'list'] as const,
   },
-  
-  // Payments query keys
-  payments: {
-    all: ['payments'] as const,
-    lists: () => [...queryKeys.payments.all, 'list'] as const,
-    list: (filters?: Record<string, unknown>) => [...queryKeys.payments.lists(), filters] as const,
-    details: () => [...queryKeys.payments.all, 'detail'] as const,
-    detail: (id: string) => [...queryKeys.payments.details(), id] as const,
-    outstanding: () => [...queryKeys.payments.all, 'outstanding'] as const,
-    customerPayments: (customerId: string) => [...queryKeys.payments.all, 'customer', customerId] as const,
-    customerOutstanding: (customerId: string) => [...queryKeys.payments.all, 'customer', customerId, 'outstanding'] as const,
-    agingReport: (date?: string) => [...queryKeys.payments.all, 'aging', date ?? 'current'] as const,
-    dailyReport: (date: string) => [...queryKeys.payments.all, 'daily', date] as const,
-    summary: () => [...queryKeys.payments.all, 'summary'] as const,
-    transactions: (paymentId: string) => [...queryKeys.payments.all, 'transactions', paymentId] as const,
-  },
-  
-
 } as const;

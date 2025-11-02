@@ -1,26 +1,22 @@
 /**
- * usePagination - Adaptive page-based pagination hook
+ * usePagination - Page-based pagination hook
  * 
  * Features:
  * - Classic page-based pagination (1, 2, 3...)
  * - Page navigation (next, prev, go to page)
- * - Adaptive items per page based on screen size
+ * - Configurable items per page
  * - Total pages calculation
  * - Reset when data changes
- * - Auto-scroll to top on page change
  * 
  * @param items - Full array of items to paginate
- * @param options - Configuration with adaptive breakpoints
+ * @param itemsPerPage - Number of items per page (default: 10)
  * @returns Current page data and navigation functions
  */
 
 import { useState, useEffect, useMemo } from "react";
 
 interface UsePaginationOptions {
-  itemsPerPage?: number; // Fallback for fixed pagination
-  mobile?: number; // Items per page on mobile (< 768px)
-  tablet?: number; // Items per page on tablet (768px - 1024px)
-  desktop?: number; // Items per page on desktop (> 1024px)
+  itemsPerPage?: number;
 }
 
 interface UsePaginationReturn<T> {
@@ -35,35 +31,15 @@ interface UsePaginationReturn<T> {
   startIndex: number;
   endIndex: number;
   totalItems: number;
-  itemsPerPage: number;
 }
 
 export function usePagination<T>(
   items: T[],
   options: UsePaginationOptions = {}
 ): UsePaginationReturn<T> {
-  const { itemsPerPage: fixedItemsPerPage = 10, mobile = 5, tablet = 8, desktop = 15 } = options;
+  const { itemsPerPage = 10 } = options;
   
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(fixedItemsPerPage);
-
-  // Update items per page based on screen size
-  useEffect(() => {
-    const updateItemsPerPage = () => {
-      if (window.innerWidth < 768) {
-        setItemsPerPage(mobile);
-      } else if (window.innerWidth < 1024) {
-        setItemsPerPage(tablet);
-      } else {
-        setItemsPerPage(desktop);
-      }
-      setCurrentPage(1); // Reset to first page on resize
-    };
-
-    updateItemsPerPage();
-    window.addEventListener("resize", updateItemsPerPage);
-    return () => window.removeEventListener("resize", updateItemsPerPage);
-  }, [mobile, tablet, desktop]);
 
   // Calculate total pages
   const totalPages = Math.max(1, Math.ceil(items.length / itemsPerPage));
@@ -116,6 +92,5 @@ export function usePagination<T>(
     startIndex,
     endIndex,
     totalItems: items.length,
-    itemsPerPage,
   };
 }

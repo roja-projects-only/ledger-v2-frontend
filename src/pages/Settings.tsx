@@ -85,7 +85,7 @@ import {
 
 } from "@/components/ui/select";
 
-import { useSettings } from "@/lib/hooks/useSettings";
+import { useSettings } from "@/lib/contexts/SettingsContext";
 import { useUsers } from "@/lib/hooks/useUsers";
 import { useCustomers } from "@/lib/hooks/useCustomers";
 import type { User } from "@/lib/api/users.api";
@@ -138,11 +138,6 @@ export function Settings() {
   const [unitPrice, setUnitPrice] = useState(formatCurrency(settings.unitPrice));
   const [enableCustomPricing, setEnableCustomPricing] = useState(settings.enableCustomPricing);
 
-  // Form state for credit settings
-  const [enableCreditFeature, setEnableCreditFeature] = useState(settings.enableCreditFeature ?? true);
-  const [defaultCreditLimit, setDefaultCreditLimit] = useState(formatCurrency(settings.defaultCreditLimit ?? 1000));
-  const [daysBeforeOverdue, setDaysBeforeOverdue] = useState(String(settings.daysBeforeOverdue ?? 30));
-
 
 
   // User management state
@@ -178,10 +173,7 @@ export function Settings() {
   const hasUnsavedChanges = 
     businessName !== (settings.businessName || "") ||
     unitPrice !== formatCurrency(settings.unitPrice) ||
-    enableCustomPricing !== settings.enableCustomPricing ||
-    enableCreditFeature !== (settings.enableCreditFeature ?? true) ||
-    defaultCreditLimit !== formatCurrency(settings.defaultCreditLimit ?? 1000) ||
-    daysBeforeOverdue !== String(settings.daysBeforeOverdue ?? 30);
+    enableCustomPricing !== settings.enableCustomPricing;
 
   // Update form when settings load
 
@@ -191,9 +183,6 @@ export function Settings() {
 
     setUnitPrice(formatCurrency(settings.unitPrice));
     setEnableCustomPricing(settings.enableCustomPricing);
-    setEnableCreditFeature(settings.enableCreditFeature ?? true);
-    setDefaultCreditLimit(formatCurrency(settings.defaultCreditLimit ?? 1000));
-    setDaysBeforeOverdue(String(settings.daysBeforeOverdue ?? 30));
 
   }, [settings]);
 
@@ -213,8 +202,6 @@ export function Settings() {
     }
 
     const parsedPrice = parseCurrency(unitPrice);
-    const parsedCreditLimit = parseCurrency(defaultCreditLimit);
-    const parsedDaysOverdue = parseInt(daysBeforeOverdue, 10);
 
 
 
@@ -226,16 +213,6 @@ export function Settings() {
 
     }
 
-    if (parsedCreditLimit <= 0) {
-      notify.error("Default credit limit must be greater than 0");
-      return;
-    }
-
-    if (isNaN(parsedDaysOverdue) || parsedDaysOverdue < 1) {
-      notify.error("Days before overdue must be at least 1");
-      return;
-    }
-
     // Save all settings together
     const success = await updateSettings({
 
@@ -243,9 +220,6 @@ export function Settings() {
 
       unitPrice: parsedPrice,
       enableCustomPricing: enableCustomPricing,
-      enableCreditFeature: enableCreditFeature,
-      defaultCreditLimit: parsedCreditLimit,
-      daysBeforeOverdue: parsedDaysOverdue,
     });
 
     if (success) {
@@ -794,87 +768,7 @@ export function Settings() {
 
           </Card>
 
-          {/* Credit Management Settings Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Credit Management Settings</CardTitle>
-              <CardDescription>Configure credit and debt tracking features</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {loading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-9 w-full" />
-                  <Skeleton className="h-4 w-48" />
-                  <Skeleton className="h-4 w-36" />
-                </div>
-              ) : (
-                <>
-                  {/* Enable Credit Feature Toggle */}
-                  <div className="flex items-start justify-between gap-4 p-4 border rounded-lg">
-                    <div className="space-y-1 flex-1 min-w-0">
-                      <Label htmlFor="enableCreditFeature" className="cursor-pointer">
-                        Enable Credit Feature
-                      </Label>
-                      <p className="text-sm text-muted-foreground">
-                        Allow customers to purchase on credit and track outstanding balances.
-                      </p>
-                      {!enableCreditFeature && (
-                        <p className="text-sm text-amber-600 dark:text-amber-500 mt-2">
-                          ⚠️ Disabling will hide credit options in sales forms and reports.
-                        </p>
-                      )}
-                    </div>
-                    <Switch
-                      id="enableCreditFeature"
-                      checked={enableCreditFeature}
-                      onCheckedChange={setEnableCreditFeature}
-                      disabled={!!apiError}
-                      className="shrink-0 mt-1"
-                    />
-                  </div>
 
-                  {/* Divider */}
-                  <Separator />
-
-                  {/* Default Credit Limit */}
-                  <div className="space-y-2">
-                    <Label htmlFor="defaultCreditLimit">Default Credit Limit</Label>
-                    <Input
-                      id="defaultCreditLimit"
-                      placeholder="1000.00"
-                      value={defaultCreditLimit}
-                      onChange={(e) => setDefaultCreditLimit(e.target.value)}
-                      disabled={!!apiError || !enableCreditFeature}
-                      inputMode="decimal"
-                      className="w-full"
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      Maximum amount a customer can owe before credit is suspended. Applied to new customers.
-                    </p>
-                  </div>
-
-                  {/* Days Before Overdue */}
-                  <div className="space-y-2">
-                    <Label htmlFor="daysBeforeOverdue">Days Before Overdue</Label>
-                    <Input
-                      id="daysBeforeOverdue"
-                      type="number"
-                      min="1"
-                      placeholder="30"
-                      value={daysBeforeOverdue}
-                      onChange={(e) => setDaysBeforeOverdue(e.target.value)}
-                      disabled={!!apiError || !enableCreditFeature}
-                      inputMode="numeric"
-                      className="w-full"
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      Number of days before an unpaid debt is marked as overdue.
-                    </p>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
 
           {/* User Management Card */}
 
@@ -1178,7 +1072,7 @@ export function Settings() {
 
               Are you sure you want to reset all settings to defaults? Your business name will be
 
-              cleared, unit price will be reset to {formatCurrency(DEFAULT_SETTINGS.unitPrice)}, and credit settings will be restored to defaults.
+              cleared and unit price will be reset to {formatCurrency(DEFAULT_SETTINGS.unitPrice)}.
 
             </AlertDialogDescription>
 

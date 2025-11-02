@@ -7,10 +7,8 @@
  * - Empty state message
  * - Edit/delete actions
  * - Infinite scroll pagination
- * - Responsive height matching
  */
 
-import { useMemo } from "react";
 import { EntryCard } from "@/components/shared/EntryCard";
 import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
 import type { Sale, Customer } from "@/lib/types";
@@ -41,18 +39,6 @@ export function TodayEntriesList({
   loading = false,
   itemsPerPage = 10,
 }: TodayEntriesListProps) {
-  const orderedSales = useMemo(() => {
-    if (!sales.length) {
-      return [] as Sale[];
-    }
-
-    return [...sales].sort((a, b) => {
-      const aTime = new Date(a.date).getTime();
-      const bTime = new Date(b.date).getTime();
-      return bTime - aTime;
-    });
-  }, [sales]);
-
   // Infinite scroll pagination
   const {
     displayedItems,
@@ -60,19 +46,22 @@ export function TodayEntriesList({
     observerRef,
     totalItems,
     displayedCount,
-  } = useInfiniteScroll(orderedSales, { itemsPerPage, autoLoad: true });
+  } = useInfiniteScroll(sales, { itemsPerPage, autoLoad: true });
 
   if (loading) {
     return (
-      <div className="flex h-full flex-col gap-3" aria-live="polite">
-        {[...Array(4)].map((_, index) => (
-          <div key={index} className="h-24 rounded-lg bg-muted animate-pulse" />
+      <div className="space-y-3">
+        {[...Array(3)].map((_, i) => (
+          <div
+            key={i}
+            className="h-24 rounded-lg bg-muted animate-pulse"
+          />
         ))}
       </div>
     );
   }
 
-  if (orderedSales.length === 0) {
+  if (sales.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <Package className="h-12 w-12 text-muted-foreground mb-3" />
@@ -85,36 +74,28 @@ export function TodayEntriesList({
   }
 
   return (
-    <section className="flex h-full flex-col" aria-label="Today's entries">
-      <div className="flex-1 min-h-0">
-        <div className="relative h-full">
-          <div className="h-full overflow-y-auto pr-0" role="presentation">
-            <ul className="flex flex-col gap-3" role="list">
-              {displayedItems.map((sale) => {
-                const customer = customers.find((c) => c.id === sale.customerId);
-                return (
-                  <li key={sale.id}>
-                    <EntryCard
-                      sale={sale}
-                      customer={customer}
-                      onEdit={onEdit ? () => onEdit(sale) : undefined}
-                      onDelete={onDelete ? () => onDelete(sale) : undefined}
-                    />
-                  </li>
-                );
-              })}
-
-              {hasMore && (
-                <li>
-                  <div ref={observerRef} className="h-4" aria-hidden="true" />
-                </li>
-              )}
-            </ul>
-          </div>
-        </div>
+    <div className="flex flex-col h-full gap-3">
+      {/* Scrollable container - grows to fill available space */}
+      <div className="overflow-y-auto pr-2 space-y-3 flex-1 min-h-0">
+        {displayedItems.map((sale) => {
+          const customer = customers.find((c) => c.id === sale.customerId);
+          return (
+            <EntryCard
+              key={sale.id}
+              sale={sale}
+              customer={customer}
+              onEdit={onEdit ? () => onEdit(sale) : undefined}
+              onDelete={onDelete ? () => onDelete(sale) : undefined}
+            />
+          );
+        })}
+        
+        {/* Intersection observer trigger at the bottom */}
+        {hasMore && <div ref={observerRef} className="h-4" />}
       </div>
 
-      <footer className="border-t border-border/50 pt-3 mt-3 flex-shrink-0 px-0" aria-live="polite">
+      {/* Status footer - always at bottom */}
+      <div className="pt-3 border-t border-border/50 mt-auto">
         {hasMore ? (
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-3 w-3 animate-spin" />
@@ -125,7 +106,7 @@ export function TodayEntriesList({
             {totalItems} {totalItems === 1 ? "entry" : "entries"} total
           </p>
         )}
-      </footer>
-    </section>
+      </div>
+    </div>
   );
 }

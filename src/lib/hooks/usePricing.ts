@@ -6,7 +6,7 @@
  * - When enableCustomPricing is OFF: Always use global price (ignore custom prices)
  */
 
-import { useSettings } from "@/lib/hooks/useSettings";
+import { useSettings } from "@/lib/contexts/SettingsContext";
 import type { Customer } from "@/lib/types";
 
 // ============================================================================

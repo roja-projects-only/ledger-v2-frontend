@@ -1,206 +1,103 @@
-/**
- * useDateSelection - Custom hook for managing single date selection state
- * 
- * Features:
- * - Date validation and boundary checking
- * - Support for default dates and reset functionality
- * - Timezone-aware date handling (Asia/Manila)
- * - Error state management
- * - Validation callbacks
- */
-
-import { useState, useCallback, useMemo } from "react";
-import { 
-  createManilaDate, 
-  toLocalISODate,
-  getTodayISO 
-} from "@/lib/utils";
-
-// ============================================================================
-// Types
-// ============================================================================
+import { useCallback, useMemo, useState } from "react";
+import { defaultDateConfig } from "@/lib/dateConfig";
+import { toISODateInTZ } from "@/lib/utils";
 
 export interface UseDateSelectionOptions {
-  /** Initial date value */
   defaultDate?: Date;
-  /** Minimum selectable date */
   minDate?: Date;
-  /** Maximum selectable date */
   maxDate?: Date;
-  /** Custom validation function */
-  validate?: (date: Date | undefined) => string | null;
-  /** Whether to auto-reset to default on invalid selection */
-  autoReset?: boolean;
+  timezone?: string; // IANA TZ
 }
 
-export interface UseDateSelectionReturn {
-  /** Currently selected date */
-  selectedDate: Date | undefined;
-  /** ISO string of selected date */
-  selectedDateISO: string | undefined;
-  /** Whether the current selection is valid */
-  isValid: boolean;
-  /** Current error message if any */
-  error: string | null;
-  /** Whether the date is at minimum boundary */
-  isAtMin: boolean;
-  /** Whether the date is at maximum boundary */
-  isAtMax: boolean;
-  /** Select a new date */
-  selectDate: (date: Date | undefined) => void;
-  /** Reset to default date */
+export interface UseDateSelectionResult {
+  date: Date | undefined;
+  dateISO: string | undefined; // YYYY-MM-DD normalized to timezone
+  setDate: (d: Date | undefined) => void;
+  setFromISO: (iso: string | undefined) => void;
+  setToToday: () => void;
   reset: () => void;
-  /** Clear the selection */
-  clear: () => void;
-  /** Check if a date is selectable */
-  isDateSelectable: (date: Date) => boolean;
+  isValid: boolean;
+  errors: string[];
+  bounds: { min?: Date; max?: Date };
 }
 
-// ============================================================================
-// Hook
-// ============================================================================
+function clampToBounds(d: Date, min?: Date, max?: Date): Date {
+  if (min && d < min) return min;
+  if (max && d > max) return max;
+  return d;
+}
 
-export function useDateSelection(options: UseDateSelectionOptions = {}): UseDateSelectionReturn {
-  const {
-    defaultDate,
-    minDate,
-    maxDate,
-    validate,
-    autoReset = false,
-  } = options;
+export function useDateSelection(options: UseDateSelectionOptions = {}): UseDateSelectionResult {
+  const { defaultDate, minDate, maxDate, timezone = defaultDateConfig.timezone } = options;
 
-  // State
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(defaultDate);
-  const [error, setError] = useState<string | null>(null);
+  const initial = useMemo(() => {
+    if (!defaultDate) return undefined as Date | undefined;
+    return clampToBounds(defaultDate, minDate, maxDate);
+  }, [defaultDate, minDate, maxDate]);
 
-  // Computed values
-  const selectedDateISO = useMemo(() => {
-    return selectedDate ? toLocalISODate(selectedDate) : undefined;
-  }, [selectedDate]);
+  const [date, setDateState] = useState<Date | undefined>(initial);
+  const [errors, setErrors] = useState<string[]>([]);
 
-  const isValid = useMemo(() => {
-    return error === null;
-  }, [error]);
+  const validate = useCallback((d: Date | undefined): string[] => {
+    const errs: string[] = [];
+    if (!d) return errs;
+    if (minDate && d < minDate) errs.push("Date is before minimum allowed.");
+    if (maxDate && d > maxDate) errs.push("Date is after maximum allowed.");
+    return errs;
+  }, [minDate, maxDate]);
 
-  const isAtMin = useMemo(() => {
-    if (!selectedDate || !minDate) return false;
-    return selectedDate.getTime() === minDate.getTime();
-  }, [selectedDate, minDate]);
-
-  const isAtMax = useMemo(() => {
-    if (!selectedDate || !maxDate) return false;
-    return selectedDate.getTime() === maxDate.getTime();
-  }, [selectedDate, maxDate]);
-
-  // Validation function
-  const validateSelection = useCallback((date: Date | undefined): string | null => {
-    if (!date) return null;
-
-    // Check boundaries
-    if (minDate && date < minDate) {
-      return `Date cannot be before ${toLocalISODate(minDate)}`;
-    }
-    if (maxDate && date > maxDate) {
-      return `Date cannot be after ${toLocalISODate(maxDate)}`;
-    }
-
-    // Custom validation
-    if (validate) {
-      return validate(date);
-    }
-
-    return null;
-  }, [minDate, maxDate, validate]);
-
-  // Check if a date is selectable
-  const isDateSelectable = useCallback((date: Date): boolean => {
-    return validateSelection(date) === null;
-  }, [validateSelection]);
-
-  // Select date function
-  const selectDate = useCallback((date: Date | undefined) => {
-    if (!date) {
-      setSelectedDate(undefined);
-      setError(null);
+  const setDate = useCallback((d: Date | undefined) => {
+    if (!d) {
+      setDateState(undefined);
+      setErrors([]);
       return;
     }
+    const clamped = clampToBounds(d, minDate, maxDate);
+    const errs = validate(clamped);
+    setErrors(errs);
+    setDateState(clamped);
+  }, [minDate, maxDate, validate]);
 
-    // Ensure date is in Manila timezone
-    const manilaDate = createManilaDate(toLocalISODate(date));
-    const validationError = validateSelection(manilaDate);
-
-    if (validationError) {
-      setError(validationError);
-      if (autoReset && defaultDate) {
-        setSelectedDate(defaultDate);
-      } else {
-        setSelectedDate(manilaDate);
-      }
-    } else {
-      setSelectedDate(manilaDate);
-      setError(null);
+  const setFromISO = useCallback((iso?: string) => {
+    if (!iso) {
+      setDate(undefined);
+      return;
     }
-  }, [validateSelection, autoReset, defaultDate]);
+    const [y, m, d] = iso.split("-").map(Number);
+    if (!y || !m || !d) {
+      setErrors(["Invalid ISO date string."]);
+      return;
+    }
+    setDate(new Date(y, m - 1, d));
+  }, [setDate]);
 
-  // Reset function
+  const setToToday = useCallback(() => {
+    const now = new Date();
+    // Preserve day in configured timezone using toISODateInTZ -> construct local Date
+    const iso = toISODateInTZ(now, timezone);
+    const [y, m, d] = iso.split("-").map(Number);
+    setDate(new Date(y, m - 1, d));
+  }, [setDate, timezone]);
+
   const reset = useCallback(() => {
-    setSelectedDate(defaultDate);
-    setError(null);
-  }, [defaultDate]);
+    setDateState(initial);
+    setErrors([]);
+  }, [initial]);
 
-  // Clear function
-  const clear = useCallback(() => {
-    setSelectedDate(undefined);
-    setError(null);
-  }, []);
+  const dateISO = useMemo(() => (date ? toISODateInTZ(date, timezone) : undefined), [date, timezone]);
+  const isValid = errors.length === 0;
 
   return {
-    selectedDate,
-    selectedDateISO,
-    isValid,
-    error,
-    isAtMin,
-    isAtMax,
-    selectDate,
+    date,
+    dateISO,
+    setDate,
+    setFromISO,
+    setToToday,
     reset,
-    clear,
-    isDateSelectable,
+    isValid,
+    errors,
+    bounds: { min: minDate, max: maxDate },
   };
 }
 
-// ============================================================================
-// Convenience Hooks
-// ============================================================================
-
-/**
- * Hook for selecting dates in the past (no future dates)
- */
-export function usePastDateSelection(options: Omit<UseDateSelectionOptions, 'maxDate'> = {}) {
-  return useDateSelection({
-    ...options,
-    maxDate: new Date(), // Today is the maximum
-  });
-}
-
-/**
- * Hook for selecting dates in the future (no past dates)
- */
-export function useFutureDateSelection(options: Omit<UseDateSelectionOptions, 'minDate'> = {}) {
-  return useDateSelection({
-    ...options,
-    minDate: new Date(), // Today is the minimum
-  });
-}
-
-/**
- * Hook for selecting today's date with reset functionality
- */
-export function useTodayDateSelection() {
-  const today = useMemo(() => createManilaDate(getTodayISO()), []);
-  
-  return useDateSelection({
-    defaultDate: today,
-    minDate: today,
-    maxDate: today,
-  });
-}
+export default useDateSelection;

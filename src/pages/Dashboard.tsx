@@ -20,15 +20,11 @@ import { DateFilterControls } from "@/components/dashboard/DateFilterControls";
 import { useDashboardData } from "@/lib/hooks/useDashboardData";
 import { useDateFilter } from "@/lib/hooks/useDateFilter";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSemanticColor } from "@/lib/colors";
 import { cn, formatCurrency } from "@/lib/utils";
-import { DollarSign, Droplet, TrendingUp, Users, AlertCircle } from "lucide-react";
+import { DollarSign, Droplet, TrendingUp, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { DateFilterProvider } from "@/lib/contexts/DateFilterContext";
-import { useQuery } from "@tanstack/react-query";
-import { paymentsApi } from "@/lib/api/payments.api";
-import { queryKeys } from "@/lib/queryKeys";
 
 // ============================================================================
 // Dashboard Page Component
@@ -38,12 +34,6 @@ function DashboardContent() {
   const { data, loading, error } = useDashboardData();
   const { computed, preset } = useDateFilter();
   const navigate = useNavigate();
-
-  // Fetch payment summary for collection trends
-  const { data: paymentSummary } = useQuery({
-    queryKey: queryKeys.payments.summary(),
-    queryFn: paymentsApi.getPaymentSummary,
-  });
 
   // Memoize navigation callbacks for performance
   const handleViewAllLocations = useCallback(() => {
@@ -225,74 +215,6 @@ function DashboardContent() {
                 />
                 </div>
               </section>
-
-              {/* Payment Collection Trends */}
-              {paymentSummary && (
-                <section aria-labelledby="payment-trends-heading">
-                  <h2 id="payment-trends-heading" className="sr-only">Payment Collection Trends</h2>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <DollarSign className="h-5 w-5" />
-                        Payment Collection Overview
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="space-y-1">
-                          <p className="text-sm text-muted-foreground">Total Outstanding</p>
-                          <p className="text-2xl font-bold">
-                            {formatCurrency(paymentSummary.totalOutstanding)}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {paymentSummary.customersWithDebt} customers
-                          </p>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-sm text-muted-foreground">Overdue Amount</p>
-                          <p className="text-2xl font-bold text-orange-600">
-                            {formatCurrency(paymentSummary.totalOverdue)}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {paymentSummary.overdueCustomers} customers
-                          </p>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-sm text-muted-foreground">Collected Today</p>
-                          <p className="text-2xl font-bold text-green-600">
-                            {formatCurrency(paymentSummary.totalPaymentsToday)}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {paymentSummary.paymentsReceivedToday} payments
-                          </p>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-sm text-muted-foreground">Avg Debt Age</p>
-                          <p className="text-2xl font-bold">
-                            {paymentSummary.averageDebtAge} days
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Average across all debt
-                          </p>
-                        </div>
-                      </div>
-                      {paymentSummary.overdueCustomers > 0 && (
-                        <div className="mt-4 p-3 bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900 rounded-lg flex items-start gap-2">
-                          <AlertCircle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-orange-900 dark:text-orange-100">
-                              {paymentSummary.overdueCustomers} customer{paymentSummary.overdueCustomers > 1 ? 's have' : ' has'} overdue payments
-                            </p>
-                            <p className="text-xs text-orange-700 dark:text-orange-300 mt-1">
-                              Consider sending payment reminders to improve collection rates
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </section>
-              )}
 
               {/* Revenue Overview Chart */}
               <section aria-labelledby="revenue-chart-heading">

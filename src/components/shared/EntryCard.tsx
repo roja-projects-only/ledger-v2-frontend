@@ -20,8 +20,7 @@ import { SaleAmount } from "@/components/shared/SaleAmount";
 import type { Sale, Customer } from "@/lib/types";
 import { getLocationColor, getSemanticColor } from "@/lib/colors";
 import { cn, formatDateTime } from "@/lib/utils";
-import { MoreVertical, Pencil, Trash2, CreditCard, Banknote } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 
 // ============================================================================
 // Types
@@ -80,18 +79,6 @@ export function EntryCard({
                   </h3>
                   {customer && (
                     <LocationBadge location={customer.location} size="sm" />
-                  )}
-                  {/* Payment Type Badge */}
-                  {sale.paymentType === "CREDIT" ? (
-                    <Badge variant="outline" className="text-orange-600 border-orange-300 bg-orange-50">
-                      <CreditCard className="h-3 w-3 mr-1" />
-                      Credit
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="text-green-600 border-green-300 bg-green-50">
-                      <Banknote className="h-3 w-3 mr-1" />
-                      Cash
-                    </Badge>
                   )}
                 </div>
                 <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] uppercase tracking-wide">

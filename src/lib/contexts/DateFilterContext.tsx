@@ -6,9 +6,32 @@
  * Supports preset periods (7D, 30D, 90D, 1Y) and custom date ranges.
  */
 
-import { useState, useMemo, type ReactNode } from "react";
-import type { DateFilterPreset, CustomDateRange, ComputedDateRange, DateFilterState } from "@/lib/types/dateFilter";
-import { DateFilterContext, type DateFilterContextValue } from "./dateFilterContextBase";
+import { createContext, useContext, useState, useMemo, type ReactNode } from "react";
+import type {
+  DateFilterState,
+  DateFilterPreset,
+  CustomDateRange,
+  ComputedDateRange,
+} from "@/lib/types/dateFilter";
+
+// ============================================================================
+// Types
+// ============================================================================
+
+interface DateFilterContextValue {
+  state: DateFilterState;
+  computed: ComputedDateRange;
+  setPreset: (preset: DateFilterPreset) => void;
+  setCustomRange: (range: CustomDateRange) => void;
+  toggleComparison: () => void;
+  reset: () => void;
+}
+
+// ============================================================================
+// Context
+// ============================================================================
+
+const DateFilterContext = createContext<DateFilterContextValue | undefined>(undefined);
 
 // ============================================================================
 // Helper Functions
@@ -197,4 +220,16 @@ export function DateFilterProvider({ children }: DateFilterProviderProps) {
   );
 }
 
-// Hook lives in useDateFilterContext.ts to keep react-refresh happy.
+// ============================================================================
+// Hook (exported from useDateFilter.ts, but defined here for convenience)
+// ============================================================================
+
+export function useDateFilterContext() {
+  const context = useContext(DateFilterContext);
+  
+  if (context === undefined) {
+    throw new Error('useDateFilterContext must be used within DateFilterProvider');
+  }
+  
+  return context;
+}

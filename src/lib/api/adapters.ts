@@ -15,6 +15,9 @@
  * These adapters normalize responses into a consistent internal format.
  */
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ApiResponse = any; // Axios response after interceptor unwrapping
+
 /**
  * Internal response format for list endpoints
  */
@@ -45,59 +48,6 @@ export interface MutationResponse<T> {
   message?: string;
 }
 
-export interface ApiListPagination {
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-  hasNext?: boolean;
-  hasPrev?: boolean;
-}
-
-export interface SalesListApiEnvelope<T> {
-  success: boolean;
-  data: {
-    data: T[];
-    pagination?: ApiListPagination;
-  };
-  message?: string;
-}
-
-export interface CustomersListApiEnvelope<T> {
-  success: boolean;
-  data: T[];
-  pagination?: ApiListPagination;
-  message?: string;
-}
-
-export interface SimpleListApiEnvelope<T> {
-  success: boolean;
-  data: T[];
-  message?: string;
-}
-
-export interface ItemApiEnvelope<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-}
-
-export interface MutationApiEnvelope<T> {
-  success: boolean;
-  data: T | null;
-  message?: string;
-}
-
-export interface AuthApiEnvelope {
-  success: boolean;
-  data: AuthResponse;
-  message?: string;
-}
-
-export const asEnvelope = <T>(response: unknown): T => {
-  return response as T;
-};
-
 /**
  * Adapter for Sales API (double nested structure)
  * 
@@ -110,10 +60,12 @@ export const asEnvelope = <T>(response: unknown): T => {
  *   }
  * }
  */
-export function adaptSalesListResponse<T>(response: SalesListApiEnvelope<T>): ListResponse<T> {
+export function adaptSalesListResponse<T>(response: ApiResponse): ListResponse<T> {
+  // Axios interceptor already unwrapped response.data
+  // response = { success: true, data: { data: [...], pagination: {...} } }
   return {
-    data: response.data?.data ?? [],
-    pagination: response.data?.pagination,
+    data: response.data.data,
+    pagination: response.data.pagination,
   };
 }
 
@@ -127,9 +79,11 @@ export function adaptSalesListResponse<T>(response: SalesListApiEnvelope<T>): Li
  *   pagination: {...}
  * }
  */
-export function adaptCustomersListResponse<T>(response: CustomersListApiEnvelope<T>): ListResponse<T> {
+export function adaptCustomersListResponse<T>(response: ApiResponse): ListResponse<T> {
+  // Axios interceptor already unwrapped response.data
+  // response = { success: true, data: [...], pagination: {...} }
   return {
-    data: response.data ?? [],
+    data: response.data,
     pagination: response.pagination,
   };
 }
@@ -143,9 +97,11 @@ export function adaptCustomersListResponse<T>(response: CustomersListApiEnvelope
  *   data: [...]
  * }
  */
-export function adaptSimpleListResponse<T>(response: SimpleListApiEnvelope<T>): ListResponse<T> {
+export function adaptSimpleListResponse<T>(response: ApiResponse): ListResponse<T> {
+  // Axios interceptor already unwrapped response.data
+  // response = { success: true, data: [...] }
   return {
-    data: response.data ?? [],
+    data: response.data,
     pagination: undefined,
   };
 }
@@ -159,7 +115,9 @@ export function adaptSimpleListResponse<T>(response: SimpleListApiEnvelope<T>): 
  *   data: {...}
  * }
  */
-export function adaptItemResponse<T>(response: ItemApiEnvelope<T>): ItemResponse<T> {
+export function adaptItemResponse<T>(response: ApiResponse): ItemResponse<T> {
+  // Axios interceptor already unwrapped response.data
+  // response = { success: true, data: {...} }
   return {
     data: response.data,
   };
@@ -175,7 +133,9 @@ export function adaptItemResponse<T>(response: ItemApiEnvelope<T>): ItemResponse
  *   message: "..."
  * }
  */
-export function adaptMutationResponse<T>(response: MutationApiEnvelope<T>): MutationResponse<T> {
+export function adaptMutationResponse<T>(response: ApiResponse): MutationResponse<T> {
+  // Axios interceptor already unwrapped response.data
+  // response = { success: true, data: {...}, message: "..." }
   return {
     data: response.data,
     message: response.message,
@@ -206,7 +166,9 @@ export interface AuthResponse {
   refreshToken: string;
 }
 
-export function adaptAuthResponse(response: AuthApiEnvelope): AuthResponse {
+export function adaptAuthResponse(response: ApiResponse): AuthResponse {
+  // Axios interceptor already unwrapped response.data
+  // response = { success: true, data: { user, accessToken, refreshToken } }
   return {
     user: response.data.user,
     accessToken: response.data.accessToken,

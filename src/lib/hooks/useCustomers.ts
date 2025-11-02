@@ -70,7 +70,6 @@ export function useCustomers() {
       location: Location;
       phone?: string;
       customUnitPrice?: number;
-      creditLimit?: number;
       notes?: string;
     }): Promise<Customer | null> => {
       try {
@@ -96,7 +95,6 @@ export function useCustomers() {
         location?: Location;
         phone?: string;
         customUnitPrice?: number;
-        creditLimit?: number;
         notes?: string;
       }
     ): Promise<Customer | null> => {

@@ -9,7 +9,7 @@
  * - Pagination for smaller lists
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Pagination,
@@ -60,7 +60,7 @@ export function PurchaseTimeline({
   const paginatedSales = sortedSales.slice(startIndex, endIndex);
 
   // Reset to page 1 when customer changes
-  useEffect(() => {
+  useMemo(() => {
     setCurrentPage(1);
   }, []);
 

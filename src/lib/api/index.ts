@@ -10,7 +10,6 @@ export { customersApi } from "./customers.api";
 export { salesApi } from "./sales.api";
 export { settingsApi } from "./settings.api";
 export { usersApi } from "./users.api";
-export { paymentsApi } from "./payments.api";
 
 // Re-export common types
 export type { LoginRequest, LoginResponse, RegisterRequest } from "./auth.api";
@@ -19,12 +18,3 @@ export type { CreateSaleRequest, UpdateSaleRequest, SaleFilters, DailySalesTrend
 export type { Setting, CreateSettingRequest, UpdateSettingRequest } from "./settings.api";
 export type { User, CreateUserRequest, UpdateUserRequest, UserStats } from "./users.api";
 export type { PaginatedResponse } from "./customers.api";
-export type { 
-  CreatePaymentRequest, 
-  RecordPaymentRequest, 
-  UpdatePaymentRequest, 
-  PaymentFilters, 
-  CreatePaymentTransactionRequest,
-  UpdatePaymentTransactionRequest
-} from "./payments.api";
-export type { AgingReportData, DailyPaymentsReport, PaymentSummary } from "@/lib/types";

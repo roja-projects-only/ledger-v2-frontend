@@ -3,7 +3,7 @@
  */
 
 import { useLocation } from "react-router-dom";
-import { useSettings } from "@/lib/hooks/useSettings";
+import { useSettings } from "@/lib/contexts/SettingsContext";
 import { ChevronRight } from "lucide-react";
 
 interface PageInfo {

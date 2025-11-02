@@ -1,370 +1,167 @@
-/**
- * useDateRange - Custom hook for managing date range selection with validation
- * 
- * Features:
- * - Date range validation with start/end date checking
- * - Automatic end date adjustment when start date changes
- * - Maximum range validation
- * - Timezone-aware date handling (Asia/Manila)
- * - Error state management
- * - Preset range functionality
- */
-
-import { useState, useCallback, useMemo } from "react";
-import { 
-  validateDateRange, 
-  createManilaDate, 
-  toLocalISODate,
-  getTodayISO,
-  formatDateRange 
-} from "@/lib/utils";
-import { DATE_RANGE_PRESETS } from "@/lib/constants";
-
-// ============================================================================
-// Types
-// ============================================================================
+import { useCallback, useMemo, useRef, useState } from "react";
+import { defaultDateConfig } from "@/lib/dateConfig";
+import { toISODateInTZ } from "@/lib/utils";
 
 export interface UseDateRangeOptions {
-  /** Initial start date */
-  defaultStartDate?: Date;
-  /** Initial end date */
-  defaultEndDate?: Date;
-  /** Minimum selectable date */
+  defaultStart?: Date;
+  defaultEnd?: Date;
   minDate?: Date;
-  /** Maximum selectable date */
   maxDate?: Date;
-  /** Maximum range in days */
-  maxRange?: number;
-  /** Custom validation function */
-  validate?: (startDate: Date | undefined, endDate: Date | undefined) => string | null;
-  /** Whether to auto-adjust end date when start date changes */
-  autoAdjustEnd?: boolean;
-  /** Whether to auto-reset to default on invalid selection */
-  autoReset?: boolean;
+  maxRangeDays?: number; // inclusive
+  timezone?: string;
 }
 
-export interface UseDateRangeReturn {
-  /** Currently selected start date */
-  startDate: Date | undefined;
-  /** Currently selected end date */
-  endDate: Date | undefined;
-  /** ISO string of start date */
-  startDateISO: string | undefined;
-  /** ISO string of end date */
-  endDateISO: string | undefined;
-  /** Formatted date range string */
-  formattedRange: string | undefined;
-  /** Whether the current range is valid */
-  isValid: boolean;
-  /** Current error message if any */
-  error: string | null;
-  /** Whether a complete range is selected */
-  hasCompleteRange: boolean;
-  /** Number of days in the current range */
-  rangeDays: number;
-  /** Select start date */
-  selectStartDate: (date: Date | undefined) => void;
-  /** Select end date */
-  selectEndDate: (date: Date | undefined) => void;
-  /** Select both dates at once */
-  selectRange: (startDate: Date | undefined, endDate: Date | undefined) => void;
-  /** Reset to default dates */
+export interface UseDateRangeResult {
+  startDate?: Date;
+  endDate?: Date;
+  startISO?: string;
+  endISO?: string;
+  setStartDate: (d: Date | undefined) => void;
+  setEndDate: (d: Date | undefined) => void;
+  setFromISO: (startISO?: string, endISO?: string) => void;
+  setPresetLastNDays: (days: number) => void; // last N days including today
   reset: () => void;
-  /** Clear the selection */
-  clear: () => void;
-  /** Set a preset range */
-  setPresetRange: (preset: keyof typeof DATE_RANGE_PRESETS) => void;
-  /** Check if a date is selectable for start */
-  isStartDateSelectable: (date: Date) => boolean;
-  /** Check if a date is selectable for end */
-  isEndDateSelectable: (date: Date) => boolean;
+  isValid: boolean;
+  errors: string[];
+  bounds: { min?: Date; max?: Date; maxRangeDays?: number };
 }
 
-// ============================================================================
-// Hook
-// ============================================================================
+function clamp(d: Date, min?: Date, max?: Date) {
+  if (min && d < min) return min;
+  if (max && d > max) return max;
+  return d;
+}
 
-export function useDateRange(options: UseDateRangeOptions = {}): UseDateRangeReturn {
+export function useDateRange(options: UseDateRangeOptions = {}): UseDateRangeResult {
   const {
-    defaultStartDate,
-    defaultEndDate,
+    defaultStart,
+    defaultEnd,
     minDate,
     maxDate,
-    maxRange,
-    validate,
-    autoAdjustEnd = false,
-    autoReset = false,
+    maxRangeDays,
+    timezone = defaultDateConfig.timezone,
   } = options;
 
-  // State
-  const [startDate, setStartDate] = useState<Date | undefined>(defaultStartDate);
-  const [endDate, setEndDate] = useState<Date | undefined>(defaultEndDate);
-  const [error, setError] = useState<string | null>(null);
+  const initialRange = useMemo(() => {
+    let s = defaultStart;
+    let e = defaultEnd;
+    if (s) s = clamp(s, minDate, maxDate);
+    if (e) e = clamp(e, minDate, maxDate);
+    if (s && e && e < s) e = s; // auto-fix
+    if (s && e && maxRangeDays) {
+      const limit = new Date(s);
+      limit.setDate(limit.getDate() + maxRangeDays);
+      if (e > limit) e = limit;
+    }
+    return { s, e } as { s?: Date; e?: Date };
+  }, [defaultStart, defaultEnd, minDate, maxDate, maxRangeDays]);
 
-  // Computed values
-  const startDateISO = useMemo(() => {
-    return startDate ? toLocalISODate(startDate) : undefined;
-  }, [startDate]);
+  const [startDate, setStartDateState] = useState<Date | undefined>(initialRange.s);
+  const [endDate, setEndDateState] = useState<Date | undefined>(initialRange.e);
+  const [errors, setErrors] = useState<string[]>([]);
 
-  const endDateISO = useMemo(() => {
-    return endDate ? toLocalISODate(endDate) : undefined;
-  }, [endDate]);
+  const prevDurationRef = useRef<number | undefined>(
+    startDate && endDate ? Math.ceil((endDate.getTime() - startDate.getTime()) / 86400000) : undefined
+  );
 
-  const formattedRange = useMemo(() => {
-    if (!startDateISO || !endDateISO) return undefined;
-    return formatDateRange(startDateISO, endDateISO);
-  }, [startDateISO, endDateISO]);
+  const validate = useCallback((s?: Date, e?: Date): string[] => {
+    const errs: string[] = [];
+    if (s && minDate && s < minDate) errs.push("Start date is before minimum allowed.");
+    if (e && maxDate && e > maxDate) errs.push("End date is after maximum allowed.");
+    if (s && e && e < s) errs.push("End date cannot be before start date.");
+    if (s && e && maxRangeDays) {
+      const limit = new Date(s);
+      limit.setDate(limit.getDate() + maxRangeDays);
+      if (e > limit) errs.push(`Range exceeds maximum of ${maxRangeDays} days.`);
+    }
+    return errs;
+  }, [minDate, maxDate, maxRangeDays]);
 
-  const isValid = useMemo(() => {
-    return error === null;
-  }, [error]);
+  const apply = useCallback((s?: Date, e?: Date) => {
+    // clamp and auto-fix
+    const ns = s ? clamp(s, minDate, maxDate) : undefined;
+    let ne = e ? clamp(e, minDate, maxDate) : undefined;
 
-  const hasCompleteRange = useMemo(() => {
-    return startDate !== undefined && endDate !== undefined;
-  }, [startDate, endDate]);
-
-  const rangeDays = useMemo(() => {
-    if (!startDate || !endDate) return 0;
-    const diffTime = endDate.getTime() - startDate.getTime();
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include both start and end days
-  }, [startDate, endDate]);
-
-  // Validation function
-  const validateRange = useCallback((start: Date | undefined, end: Date | undefined): string | null => {
-    if (!start && !end) return null;
-
-    // Check individual date boundaries
-    if (start) {
-      if (minDate && start < minDate) {
-        return `Start date cannot be before ${toLocalISODate(minDate)}`;
-      }
-      if (maxDate && start > maxDate) {
-        return `Start date cannot be after ${toLocalISODate(maxDate)}`;
-      }
+    if (ns && ne && ne < ns) ne = ns;
+    if (ns && ne && maxRangeDays) {
+      const limit = new Date(ns);
+      limit.setDate(limit.getDate() + maxRangeDays);
+      if (ne > limit) ne = limit;
     }
 
-    if (end) {
-      if (minDate && end < minDate) {
-        return `End date cannot be before ${toLocalISODate(minDate)}`;
-      }
-      if (maxDate && end > maxDate) {
-        return `End date cannot be after ${toLocalISODate(maxDate)}`;
-      }
+    setStartDateState(ns);
+    setEndDateState(ne);
+    setErrors(validate(ns, ne));
+
+    // remember duration when both set
+    if (ns && ne) {
+      prevDurationRef.current = Math.ceil((ne.getTime() - ns.getTime()) / 86400000);
     }
+  }, [minDate, maxDate, maxRangeDays, validate]);
 
-    // Check range validity
-    if (start && end) {
-      const startISO = toLocalISODate(start);
-      const endISO = toLocalISODate(end);
-      
-      const rangeValidation = validateDateRange(startISO, endISO);
-      if (!rangeValidation.isValid) {
-        return rangeValidation.error || 'Invalid date range';
-      }
-
-      // Check maximum range
-      if (maxRange) {
-        const diffTime = end.getTime() - start.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-        if (diffDays > maxRange) {
-          return `Date range cannot exceed ${maxRange} days`;
-        }
-      }
-    }
-
-    // Custom validation
-    if (validate) {
-      return validate(start, end);
-    }
-
-    return null;
-  }, [minDate, maxDate, maxRange, validate]);
-
-  // Check if a date is selectable for start
-  const isStartDateSelectable = useCallback((date: Date): boolean => {
-    const testError = validateRange(date, endDate);
-    return testError === null;
-  }, [validateRange, endDate]);
-
-  // Check if a date is selectable for end
-  const isEndDateSelectable = useCallback((date: Date): boolean => {
-    const testError = validateRange(startDate, date);
-    return testError === null;
-  }, [validateRange, startDate]);
-
-  // Select start date function
-  const selectStartDate = useCallback((date: Date | undefined) => {
-    if (!date) {
-      setStartDate(undefined);
-      setError(null);
+  const setStartDate = useCallback((d?: Date) => {
+    if (!d) {
+      apply(undefined, endDate);
       return;
     }
-
-    const manilaDate = createManilaDate(toLocalISODate(date));
-    let newEndDate = endDate;
-
-    // Auto-adjust end date if needed
-    if (autoAdjustEnd && endDate && manilaDate > endDate) {
-      newEndDate = manilaDate;
-      setEndDate(newEndDate);
+    // auto adjust end to preserve previous duration if present
+    let newEnd = endDate;
+    if (prevDurationRef.current !== undefined) {
+      const dur = prevDurationRef.current;
+      newEnd = new Date(d);
+      newEnd.setDate(newEnd.getDate() + dur);
     }
+    apply(d, newEnd);
+  }, [apply, endDate]);
 
-    const validationError = validateRange(manilaDate, newEndDate);
+  const setEndDate = useCallback((d?: Date) => {
+    apply(startDate, d);
+  }, [apply, startDate]);
 
-    if (validationError) {
-      setError(validationError);
-      if (autoReset && defaultStartDate) {
-        setStartDate(defaultStartDate);
-      } else {
-        setStartDate(manilaDate);
-      }
-    } else {
-      setStartDate(manilaDate);
-      setError(null);
-    }
-  }, [endDate, autoAdjustEnd, validateRange, autoReset, defaultStartDate]);
+  const setFromISO = useCallback((sISO?: string, eISO?: string) => {
+    const parse = (iso?: string) => {
+      if (!iso) return undefined;
+      const [y, m, d] = iso.split("-").map(Number);
+      if (!y || !m || !d) return undefined;
+      return new Date(y, m - 1, d);
+    };
+    apply(parse(sISO), parse(eISO));
+  }, [apply]);
 
-  // Select end date function
-  const selectEndDate = useCallback((date: Date | undefined) => {
-    if (!date) {
-      setEndDate(undefined);
-      setError(null);
-      return;
-    }
+  const setPresetLastNDays = useCallback((days: number) => {
+    const today = new Date();
+    const iso = toISODateInTZ(today, timezone);
+    const [y, m, d] = iso.split("-").map(Number);
+    const end = new Date(y, m - 1, d);
+    const start = new Date(end);
+    start.setDate(end.getDate() - Math.max(0, days - 1));
+    apply(start, end);
+  }, [apply, timezone]);
 
-    const manilaDate = createManilaDate(toLocalISODate(date));
-    const validationError = validateRange(startDate, manilaDate);
-
-    if (validationError) {
-      setError(validationError);
-      if (autoReset && defaultEndDate) {
-        setEndDate(defaultEndDate);
-      } else {
-        setEndDate(manilaDate);
-      }
-    } else {
-      setEndDate(manilaDate);
-      setError(null);
-    }
-  }, [startDate, validateRange, autoReset, defaultEndDate]);
-
-  // Select range function
-  const selectRange = useCallback((start: Date | undefined, end: Date | undefined) => {
-    const manilaStart = start ? createManilaDate(toLocalISODate(start)) : undefined;
-    const manilaEnd = end ? createManilaDate(toLocalISODate(end)) : undefined;
-    
-    const validationError = validateRange(manilaStart, manilaEnd);
-
-    if (validationError) {
-      setError(validationError);
-      if (autoReset) {
-        setStartDate(defaultStartDate);
-        setEndDate(defaultEndDate);
-      } else {
-        setStartDate(manilaStart);
-        setEndDate(manilaEnd);
-      }
-    } else {
-      setStartDate(manilaStart);
-      setEndDate(manilaEnd);
-      setError(null);
-    }
-  }, [validateRange, autoReset, defaultStartDate, defaultEndDate]);
-
-  // Reset function
   const reset = useCallback(() => {
-    setStartDate(defaultStartDate);
-    setEndDate(defaultEndDate);
-    setError(null);
-  }, [defaultStartDate, defaultEndDate]);
+    setStartDateState(initialRange.s);
+    setEndDateState(initialRange.e);
+    setErrors([]);
+  }, [initialRange]);
 
-  // Clear function
-  const clear = useCallback(() => {
-    setStartDate(undefined);
-    setEndDate(undefined);
-    setError(null);
-  }, []);
-
-  // Set preset range function
-  const setPresetRange = useCallback((preset: keyof typeof DATE_RANGE_PRESETS) => {
-    const days = DATE_RANGE_PRESETS[preset];
-    const today = createManilaDate(getTodayISO());
-    const pastDate = new Date(today);
-    pastDate.setDate(today.getDate() - days + 1); // +1 to include today
-
-    selectRange(pastDate, today);
-  }, [selectRange]);
+  const startISO = useMemo(() => (startDate ? toISODateInTZ(startDate, timezone) : undefined), [startDate, timezone]);
+  const endISO = useMemo(() => (endDate ? toISODateInTZ(endDate, timezone) : undefined), [endDate, timezone]);
+  const isValid = errors.length === 0;
 
   return {
     startDate,
     endDate,
-    startDateISO,
-    endDateISO,
-    formattedRange,
-    isValid,
-    error,
-    hasCompleteRange,
-    rangeDays,
-    selectStartDate,
-    selectEndDate,
-    selectRange,
+    startISO,
+    endISO,
+    setStartDate,
+    setEndDate,
+    setFromISO,
+    setPresetLastNDays,
     reset,
-    clear,
-    setPresetRange,
-    isStartDateSelectable,
-    isEndDateSelectable,
+    isValid,
+    errors,
+    bounds: { min: minDate, max: maxDate, maxRangeDays },
   };
 }
 
-// ============================================================================
-// Convenience Hooks
-// ============================================================================
-
-/**
- * Hook for selecting date ranges in the past (no future dates)
- */
-export function usePastDateRange(options: Omit<UseDateRangeOptions, 'maxDate'> = {}) {
-  return useDateRange({
-    ...options,
-    maxDate: new Date(), // Today is the maximum
-  });
-}
-
-/**
- * Hook for selecting date ranges with a maximum of 30 days
- */
-export function useMonthlyDateRange(options: Omit<UseDateRangeOptions, 'maxRange'> = {}) {
-  return useDateRange({
-    ...options,
-    maxRange: 30,
-  });
-}
-
-/**
- * Hook for selecting date ranges with a maximum of 7 days
- */
-export function useWeeklyDateRange(options: Omit<UseDateRangeOptions, 'maxRange'> = {}) {
-  return useDateRange({
-    ...options,
-    maxRange: 7,
-  });
-}
-
-/**
- * Hook for last 7 days range with preset functionality
- */
-export function useLastSevenDaysRange() {
-  const today = useMemo(() => createManilaDate(getTodayISO()), []);
-  const sevenDaysAgo = useMemo(() => {
-    const date = new Date(today);
-    date.setDate(today.getDate() - 6); // -6 to include today (7 days total)
-    return date;
-  }, [today]);
-
-  return useDateRange({
-    defaultStartDate: sevenDaysAgo,
-    defaultEndDate: today,
-    maxDate: today,
-    maxRange: 7,
-  });
-}
+export default useDateRange;

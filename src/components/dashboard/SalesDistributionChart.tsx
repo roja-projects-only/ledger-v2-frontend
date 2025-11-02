@@ -17,7 +17,6 @@
  */
 
 import { PieChart, Pie, Cell, Legend, ResponsiveContainer, Tooltip } from "recharts";
-import type { LegendProps } from "recharts";
 import { formatCurrency } from "@/lib/utils";
 import { TrendingUp } from "lucide-react";
 import type { LocationStats } from "@/lib/utils/analytics";
@@ -127,26 +126,6 @@ export function SalesDistributionChart({
     color: loc.color,
   }));
 
-  const formatLegendLabel: LegendProps["formatter"] = (value, entry, index) => {
-    void index;
-    const percentage =
-      entry && typeof entry.payload === "object" && entry.payload
-        ? (entry.payload as { percentage?: number }).percentage
-        : undefined;
-
-    const label = value === undefined || value === null ? "" : String(value);
-
-    if (typeof percentage === "number") {
-      return (
-        <span className="text-xs text-slate-300">
-          {label} ({percentage.toFixed(1)}%)
-        </span>
-      );
-    }
-
-    return <span className="text-xs text-slate-300">{label}</span>;
-  };
-
   if (loading) {
     return (
       <div className="bg-card border rounded-lg p-6">
@@ -204,7 +183,11 @@ export function SalesDistributionChart({
               height={36}
               iconType="circle"
               iconSize={8}
-              formatter={formatLegendLabel}
+              formatter={(value, entry: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
+                <span className="text-xs text-slate-300">
+                  {value} ({entry.payload.percentage.toFixed(1)}%)
+                </span>
+              )}
             />
           </PieChart>
         </ResponsiveContainer>

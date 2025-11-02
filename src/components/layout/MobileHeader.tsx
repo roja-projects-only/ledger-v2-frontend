@@ -8,7 +8,7 @@
  */
 
 import { Button } from "@/components/ui/button";
-import { useSettings } from "@/lib/hooks/useSettings";
+import { useSettings } from "@/lib/contexts/SettingsContext";
 import { Menu, ChevronRight } from "lucide-react";
 import { useLocation } from "react-router-dom";
 

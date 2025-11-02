@@ -2,7 +2,7 @@
  * Application constants
  */
 
-import { Location, type Settings, type DateConfig } from "./types";
+import { Location, type Settings } from "./types";
 
 // ============================================================================
 // Business Constants
@@ -29,13 +29,10 @@ export const LOCATIONS = [
  * Default application settings
  */
 export const DEFAULT_SETTINGS: Settings = {
-  unitPrice: 23.0, // PHP per container
+  unitPrice: 25.0, // PHP per container
   currency: "PHP",
   businessName: undefined,
   enableCustomPricing: true, // Custom pricing enabled by default
-  enableCreditFeature: true, // Credit feature enabled by default
-  defaultCreditLimit: 1000.0, // PHP 1000 default credit limit
-  daysBeforeOverdue: 30, // 30 days before debt is considered overdue
 };
 
 // ============================================================================
@@ -115,40 +112,3 @@ export const MAX_BUSINESS_NAME_LENGTH = 100;
  * Maximum sale notes length
  */
 export const MAX_SALE_NOTES_LENGTH = 500;
-
-// ============================================================================
-// Date Configuration Constants
-// ============================================================================
-
-/**
- * Default date configuration for the application
- */
-export const DEFAULT_DATE_CONFIG: DateConfig = {
-  timezone: DEFAULT_TIMEZONE,
-  locale: "en-US",
-  dateFormat: DATE_FORMAT,
-  dateTimeFormat: DATETIME_FORMAT,
-  relativeThreshold: 7, // Show relative dates for up to 7 days
-  businessDays: [1, 2, 3, 4, 5], // Monday to Friday
-  holidays: [], // No holidays configured by default
-};
-
-/**
- * Maximum days for relative date formatting
- */
-export const MAX_RELATIVE_DAYS = 30;
-
-/**
- * Date range presets in days
- */
-export const DATE_RANGE_PRESETS = {
-  LAST_7_DAYS: 7,
-  LAST_30_DAYS: 30,
-  LAST_90_DAYS: 90,
-  LAST_YEAR: 365,
-} as const;
-
-/**
- * Maximum allowed date range in days
- */
-export const MAX_DATE_RANGE_DAYS = 365;
