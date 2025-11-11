@@ -34,4 +34,14 @@ export const queryKeys = {
     all: ['users'] as const,
     lists: () => [...queryKeys.users.all, 'list'] as const,
   },
+  
+  // Debts query keys
+  debts: {
+    all: ['debts'] as const,
+    summary: () => [...queryKeys.debts.all, 'summary'] as const,
+    customer: (id: string) => [...queryKeys.debts.all, 'customer', id] as const,
+    customerHistory: (id: string) => [...queryKeys.debts.all, 'customer-history', id] as const,
+    transactions: (filters?: Record<string, unknown>) => [...queryKeys.debts.all, 'transactions', filters] as const,
+    metrics: () => [...queryKeys.debts.all, 'metrics'] as const,
+  },
 } as const;
