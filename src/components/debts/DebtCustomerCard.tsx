@@ -3,29 +3,26 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { LocationBadge } from '@/components/shared/LocationBadge';
-import type { DebtSummaryItem } from '@/lib/types';
+import type { DebtSummaryItem, Location } from '@/lib/types';
 import { cn, formatCurrency } from '@/lib/utils';
 import { Eye, CreditCard } from 'lucide-react';
 
 interface DebtCustomerCardProps {
   item: DebtSummaryItem;
+  location?: Location;
   onViewDetails?: (customerId: string) => void;
   onRecordPayment?: (customerId: string) => void;
   className?: string;
 }
 
-export function DebtCustomerCard({ item, onViewDetails, onRecordPayment, className }: DebtCustomerCardProps) {
+export function DebtCustomerCard({ item, location, onViewDetails, onRecordPayment, className }: DebtCustomerCardProps) {
   const isZero = Math.abs(item.balance) < 0.001;
   return (
     <Card className={cn('h-full', className)}>
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center justify-between gap-2">
           <span className="truncate font-semibold">{item.customerName}</span>
-          {/* Optional: show location if provided by caller (narrow type cast) */}
-          {(() => {
-            const maybe = item as unknown as { location?: string };
-            return maybe.location ? <LocationBadge location={maybe.location as unknown as never} size="sm" /> : null;
-          })()}
+          {location && <LocationBadge location={location} size="sm" />}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
