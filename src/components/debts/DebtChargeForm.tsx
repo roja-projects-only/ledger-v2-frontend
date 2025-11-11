@@ -1,0 +1,107 @@
+import { useState, useRef } from 'react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { NumberInput } from '@/components/shared/NumberInput';
+import { useDebts } from '@/lib/hooks/useDebts';
+import { useCustomers } from '@/lib/hooks/useCustomers';
+import { formatCurrency, cn } from '@/lib/utils';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
+import { ChevronsUpDown, Check, Plus } from 'lucide-react';
+import { LocationBadge } from '@/components/shared/LocationBadge';
+import { toast } from 'sonner';
+
+interface DebtChargeFormProps {
+  onSuccess?: () => void;
+  defaultCustomerId?: string;
+  date?: string; // ISO date override (defaults to today)
+}
+
+export function DebtChargeForm({ onSuccess, defaultCustomerId, date }: DebtChargeFormProps) {
+  const { customers } = useCustomers();
+  const { createCharge } = useDebts();
+  const [customerId, setCustomerId] = useState(defaultCustomerId || '');
+  const [containers, setContainers] = useState('');
+  const [notes, setNotes] = useState('');
+  const [open, setOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const containersRef = useRef<HTMLInputElement>(null);
+
+  const selectedCustomer = customers.find(c => c.id === customerId);
+
+  const unitPrice = selectedCustomer?.customUnitPrice || 0; // display only; backend will resolve
+  const amount = containers && !isNaN(Number(containers)) ? Number(containers) * unitPrice : 0;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customerId) return toast.error('Select a customer');
+    const cnt = Number(containers);
+    if (!cnt || cnt <= 0) return toast.error('Enter containers > 0');
+    setSubmitting(true);
+    try {
+      await createCharge({ customerId, containers: cnt, transactionDate: (date || new Date().toISOString()), notes: notes.trim() || undefined });
+      toast.success('Charge added');
+      setContainers('');
+      setNotes('');
+      onSuccess?.();
+      setTimeout(()=>containersRef.current?.focus(),100);
+    } catch {
+      // handled by mutation toast
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label>Customer *</Label>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" role="combobox" className="w-full justify-between">
+              {selectedCustomer ? (
+                <span className="flex items-center w-full justify-between gap-2">
+                  <span className="truncate">{selectedCustomer.name}</span>
+                  <LocationBadge location={selectedCustomer.location} size="sm" />
+                </span>
+              ) : 'Select customer...'}
+              <ChevronsUpDown className="h-4 w-4 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Search customer" />
+              <CommandEmpty>No customer found.</CommandEmpty>
+              <CommandGroup className="max-h-64 overflow-auto">
+                {customers.map(c => (
+                  <CommandItem key={c.id} value={c.name} onSelect={() => { setCustomerId(c.id); setOpen(false); setTimeout(()=>containersRef.current?.focus(),80); }}>
+                    <Check className={cn('mr-2 h-4 w-4', customerId===c.id ? 'opacity-100' : 'opacity-0')} />
+                    <div className="flex items-center gap-2 justify-between w-full">
+                      <span className="truncate">{c.name}</span>
+                      <LocationBadge location={c.location} size="sm" />
+                    </div>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      </div>
+      <div className="space-y-2">
+        <Label>Containers *</Label>
+        <NumberInput value={containers} onChange={setContainers} min={1} step={1} inputRef={containersRef} />
+      </div>
+      <div className="space-y-2">
+        <Label>Notes</Label>
+        <Textarea value={notes} onChange={(e)=>setNotes(e.target.value)} rows={3} placeholder="Optional notes" />
+      </div>
+      {selectedCustomer && (
+        <p className="text-xs text-muted-foreground">
+          {containers || 0} × {formatCurrency(unitPrice || 0)} = {formatCurrency(amount)} (customer pricing shown; final pricing resolved server-side)
+        </p>
+      )}
+      <Button type="submit" className="w-full" disabled={submitting}>{submitting? 'Saving...' : (<><Plus className="h-4 w-4 mr-1" /> Add Charge</>)}</Button>
+    </form>
+  );
+}
