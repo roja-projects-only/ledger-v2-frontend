@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useCustomers } from '@/lib/hooks/useCustomers';
 import { useDebts } from '@/lib/hooks/useDebts';
-import { ChevronsUpDown, Check, CalendarDays, ClipboardList, Users, UploadCloud, Layers, Droplet, HandCoins } from 'lucide-react';
+import { ChevronsUpDown, Check, CalendarDays, ClipboardList, Users, UploadCloud, Layers, Droplet, HandCoins, Info, BarChart2, Clock } from 'lucide-react';
 import { usePricing } from '@/lib/hooks/usePricing';
 import { formatCurrency } from '@/lib/utils';
 import { BalancePreview } from '@/components/debts/BalancePreview';
@@ -32,7 +32,7 @@ interface LineEntry {
 export default function PostDayDebtWizard() {
   const navigate = useNavigate();
   const { customers } = useCustomers();
-  const { createCharge, createPayment, summary } = useDebts();
+  const { createCharge, createPayment, summary, metrics } = useDebts();
   const { getEffectivePrice, calculateTotal } = usePricing();
 
   const [step, setStep] = useState<Step>(1);
@@ -169,9 +169,74 @@ export default function PostDayDebtWizard() {
       {/* Step 1: Date */}
       {step === 1 && (
         <Card>
-          <CardHeader><CardTitle>Select Date</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <DatePicker value={date} onChange={setDate} />
+          <CardHeader>
+            <CardTitle>Select Date</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-3">
+                <DatePicker value={date} onChange={setDate} />
+                {/* Friendly relative label */}
+                {(() => {
+                  if (!date) return null;
+                  const today = new Date(); today.setHours(0,0,0,0);
+                  const picked = new Date(date); picked.setHours(0,0,0,0);
+                  const yesterday = new Date(today); yesterday.setDate(today.getDate()-1);
+                  const fmt = new Intl.DateTimeFormat(undefined, { weekday:'short', month:'short', day:'numeric', year:'numeric' }).format(date);
+                  let rel = 'Selected';
+                  if (picked.getTime() === today.getTime()) rel = 'Today';
+                  else if (picked.getTime() === yesterday.getTime()) rel = 'Yesterday';
+                  return (
+                    <div className="text-xs text-muted-foreground flex items-center gap-2">
+                      <CalendarDays className="h-3 w-3" />
+                      <span>{rel} — {fmt}</span>
+                    </div>
+                  );
+                })()}
+                {/* Contextual warnings */}
+                {(() => {
+                  if (!date) return null;
+                  const today = new Date(); today.setHours(0,0,0,0);
+                  const picked = new Date(date); picked.setHours(0,0,0,0);
+                  const future = picked.getTime() > today.getTime();
+                  const weekend = [0,6].includes(picked.getDay());
+                  if (!future && !weekend) return null;
+                  return (
+                    <div className="flex items-start gap-2 rounded-md border px-3 py-2 text-xs">
+                      <Info className="h-4 w-4 mt-[2px] text-amber-500" />
+                      <div className="space-y-1">
+                        {future && <div className="text-amber-600 dark:text-amber-400">Posting to a future date – verify intent.</div>}
+                        {weekend && <div className="text-blue-600 dark:text-blue-400">Weekend selected – ensure business rules allow entries.</div>}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <BarChart2 className="h-4 w-4" /> Day Overview
+                </div>
+                <div className="grid grid-cols-3 gap-3 text-xs">
+                  <div className="rounded-md border p-2 flex flex-col gap-1">
+                    <span className="flex items-center gap-1 text-muted-foreground"><Clock className="h-3 w-3" />Outstanding</span>
+                    <span className="text-sm font-semibold">{metrics ? formatCurrency(metrics.totalOutstanding) : '—'}</span>
+                  </div>
+                  <div className="rounded-md border p-2 flex flex-col gap-1">
+                    <span className="flex items-center gap-1 text-muted-foreground"><HandCoins className="h-3 w-3" />Payments Today</span>
+                    <span className="text-sm font-semibold">{metrics ? formatCurrency(metrics.totalPaymentsToday) : '—'}</span>
+                  </div>
+                  <div className="rounded-md border p-2 flex flex-col gap-1">
+                    <span className="flex items-center gap-1 text-muted-foreground"><Users className="h-3 w-3" />Active Tabs</span>
+                    <span className="text-sm font-semibold">{metrics ? metrics.activeCustomers : '—'}</span>
+                  </div>
+                </div>
+                <div className="rounded-md border p-3 text-xs space-y-2">
+                  <div className="font-medium">How this date is used</div>
+                  <p className="text-muted-foreground leading-relaxed">All charge and payment entries recorded in later steps will be stamped with the selected date. Adjust before continuing to avoid misclassification in daily reports.</p>
+                  <p className="text-muted-foreground leading-relaxed">Use the quick presets for speed; future-dated entries are permitted but flagged for audit.</p>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}

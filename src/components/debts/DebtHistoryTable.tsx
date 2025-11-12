@@ -65,17 +65,22 @@ export function DebtHistoryTable({ initialFilters }: DebtHistoryTableProps) {
       `Generated At:,${new Date().toISOString()}`,
       `Filters:,Customer=${customerId||'ALL'}; Type=${type||'ALL'}; Status=${status||'ALL'}; Start=${filters.startDate||''}; End=${filters.endDate||''}`
     ].join('\n');
-    const header = ['Date/Time','Customer Tab','Action','Containers','Amount','Balance After','Note','Entered By'];
-    const body = rows.map(r => [
-      new Date(r.transactionDate).toLocaleString(),
-      r.debtTabId,
-      r.transactionType,
-      r.containers ?? '',
-      r.amount ?? '',
-      r.balanceAfter,
-      r.notes ?? '',
-      r.enteredById ?? '',
-    ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const header = ['Date/Time','Customer','Action','Containers','Amount','Balance After','Note','Entered By'];
+    const body = rows.map(r => {
+      const anyRow: any = r as any;
+      const cname = anyRow.debtTab?.customer?.name || anyRow.customerName || anyRow.debtTabId;
+      const enteredBy = anyRow.enteredBy?.username ?? r.enteredById ?? '';
+      return [
+        new Date(r.transactionDate).toLocaleString(),
+        cname,
+        r.transactionType,
+        r.containers ?? '',
+        r.amount ?? '',
+        r.balanceAfter,
+        r.notes ?? '',
+        enteredBy,
+      ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(',');
+    }).join('\n');
     const csv = `${meta}\n\n${header.join(',')}\n${body}`;
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -101,21 +106,26 @@ export function DebtHistoryTable({ initialFilters }: DebtHistoryTableProps) {
         .nowrap { white-space: nowrap; }
       </style>`;
     const meta = `Customer: ${customerId||'ALL'} | Type: ${type||'ALL'} | Status: ${status||'ALL'} | Start: ${filters.startDate||''} | End: ${filters.endDate||''}`;
-    const rowsHtml = rows.map(r => `<tr>
+    const rowsHtml = rows.map(r => {
+      const anyRow: any = r as any;
+      const cname = anyRow.debtTab?.customer?.name || anyRow.customerName || anyRow.debtTabId;
+      const enteredBy = anyRow.enteredBy?.username ?? r.enteredById ?? '';
+      return `<tr>
       <td class="nowrap">${new Date(r.transactionDate).toLocaleString()}</td>
-      <td>${r.debtTabId}</td>
+      <td>${cname}</td>
       <td>${r.transactionType}</td>
       <td class="nowrap" style="text-align:right">${r.containers ?? ''}</td>
       <td class="nowrap" style="text-align:right">${r.amount ?? ''}</td>
       <td class="nowrap" style="text-align:right">${r.balanceAfter}</td>
       <td>${(r.notes||'').replace(/</g,'&lt;')}</td>
-      <td>${r.enteredById ?? ''}</td>
-    </tr>`).join('');
+      <td>${enteredBy}</td>
+    </tr>`;
+    }).join('');
     w.document.write(`<!DOCTYPE html><html><head><title>Debt History Export</title>${style}</head><body>
       <h1>Debt History Export</h1>
       <div class="meta">Generated: ${new Date().toLocaleString()}<br>${meta}</div>
       <table><thead><tr>
-        <th>Date/Time</th><th>Customer Tab</th><th>Action</th><th>Containers</th><th>Amount</th><th>Balance After</th><th>Note</th><th>Entered By</th>
+        <th>Date/Time</th><th>Customer</th><th>Action</th><th>Containers</th><th>Amount</th><th>Balance After</th><th>Note</th><th>Entered By</th>
       </tr></thead><tbody>${rowsHtml}</tbody></table>
       <script>window.print();</script>
     </body></html>`);
