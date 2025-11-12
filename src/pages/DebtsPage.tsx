@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -40,6 +40,29 @@ export default function DebtsPage() {
       location: c.location,
     }));
   }, [customers, summaryMap]);
+
+  // Pagination for customer list (mobile-aware)
+  const [, setIsMobile] = useState(false); // state only to trigger limit changes
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(12);
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 640px)');
+    const onChange = (e: MediaQueryListEvent | MediaQueryList) => {
+      const m = 'matches' in e ? e.matches : (e as MediaQueryList).matches;
+      setIsMobile(m);
+      setLimit(m ? 6 : 12);
+      setPage(1);
+    };
+    onChange(mql as any);
+    mql.addEventListener?.('change', onChange as any);
+    ;(mql as any).addListener?.(onChange);
+    return () => {
+      mql.removeEventListener?.('change', onChange as any);
+      ;(mql as any).removeListener?.(onChange);
+    };
+  }, []);
+  const totalPages = Math.max(1, Math.ceil(merged.length / limit));
+  const paged = useMemo(() => merged.slice((page-1)*limit, (page-1)*limit + limit), [merged, page, limit]);
 
   const onSelectCustomer = (id: string) => {
     setOpen(false);
@@ -97,8 +120,9 @@ export default function DebtsPage() {
       <Separator />
 
       {tab==='list' && (
+        <>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {merged.map(({ item, location }) => (
+          {paged.map(({ item, location }) => (
             <DebtCustomerCard
               key={item.customerId}
               item={item}
@@ -108,6 +132,12 @@ export default function DebtsPage() {
             />
           ))}
         </div>
+        <div className="mt-3 flex items-center justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={()=> setPage(p=> Math.max(1, p-1))} disabled={page<=1}>Prev</Button>
+          <div className="text-xs text-muted-foreground">Page {page} of {totalPages}</div>
+          <Button variant="outline" size="sm" onClick={()=> setPage(p=> Math.min(totalPages, p+1))} disabled={page>=totalPages}>Next</Button>
+        </div>
+        </>
       )}
 
       {tab==='history' && (

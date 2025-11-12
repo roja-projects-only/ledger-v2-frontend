@@ -132,6 +132,11 @@ export default function PostDayDebtWizard() {
     try {
       const isoDate = toISO(date)!;
       if (!selectedCustomer || !reviewRow) { toast.error('Missing selection'); setSubmitting(false); return; }
+      if (reviewRow.type === 'PAYMENT' && (reviewRow.previousBalance ?? 0) <= 0) {
+        toast.error('No outstanding balance to record payment.');
+        setSubmitting(false);
+        return;
+      }
       if (reviewRow.type === 'CHARGE') {
         await createCharge({ customerId: reviewRow.id, containers: reviewRow.containers, transactionDate: isoDate, notes: reviewRow.notes || undefined });
       } else {
@@ -218,19 +223,26 @@ export default function PostDayDebtWizard() {
                   <Button type="button" className="w-full xs:w-auto sm:w-auto" variant={entry.entryType==='CHARGE'?'default':'outline'} size="sm" onClick={()=>setEntry({ ...entry, entryType:'CHARGE', cashReceived:'' })}>
                     <Droplet className="h-3 w-3 mr-1" /> Charge
                   </Button>
-                  <Button type="button" className="w-full xs:w-auto sm:w-auto" variant={entry.entryType==='PAYMENT'?'default':'outline'} size="sm" onClick={()=>setEntry({ ...entry, entryType:'PAYMENT', containers:'' })}>
-                    <HandCoins className="h-3 w-3 mr-1" /> Payment
-                  </Button>
+                  {(priorBalances.get(selectedCustomer.id) ?? 0) > 0 && (
+                    <Button type="button" className="w-full xs:w-auto sm:w-auto" variant={entry.entryType==='PAYMENT'?'default':'outline'} size="sm" onClick={()=>setEntry({ ...entry, entryType:'PAYMENT', containers:'' })}>
+                      <HandCoins className="h-3 w-3 mr-1" /> Payment
+                    </Button>
+                  )}
                 </div>
                 {entry.entryType === 'CHARGE' ? (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label>Containers Delivered (qty)</Label>
                       <NumberInput value={entry.containers} onChange={(v)=> setEntry({ ...entry, containers: v })} min={1} step={1} />
+                      <div className="text-[12px] text-muted-foreground">
+                        Unit: {formatCurrency(getEffectivePrice(selectedCustomer as any))} · Charge: {formatCurrency(calculateTotal(Number(entry.containers||'0'), selectedCustomer as any))}
+                      </div>
                     </div>
-                    <div className="md:col-span-2 text-xs text-muted-foreground rounded-md border p-3 min-h-[44px] flex items-center">
-                      Unit: {formatCurrency(getEffectivePrice(selectedCustomer as any))} · Charge Preview: {formatCurrency(calculateTotal(Number(entry.containers||'0'), selectedCustomer as any))}
-                    </div>
+                    <BalancePreview
+                      className="md:col-span-2"
+                      current={priorBalances.get(selectedCustomer.id) ?? 0}
+                      after={(priorBalances.get(selectedCustomer.id) ?? 0) + calculateTotal(Number(entry.containers||'0'), selectedCustomer as any)}
+                    />
                     <div className="md:col-span-3 space-y-2">
                       <Label>Notes</Label>
                       <Textarea rows={3} value={entry.notes} onChange={(ev)=> setEntry({ ...entry, notes: ev.target.value })} />

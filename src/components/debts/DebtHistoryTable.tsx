@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,7 +25,24 @@ export function DebtHistoryTable({ initialFilters }: DebtHistoryTableProps) {
   const [type, setType] = useState<DebtHistoryFilters['transactionType']>(initialFilters?.transactionType);
   const [status, setStatus] = useState<DebtHistoryFilters['status']>(initialFilters?.status);
   const [page, setPage] = useState(initialFilters?.page ?? 1);
-  const [limit] = useState(initialFilters?.limit ?? 50);
+  const [limit, setLimit] = useState(initialFilters?.limit ?? 50);
+  const [, setIsMobile] = useState(false); // tracked only to trigger limit changes
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 640px)');
+    const onChange = (e: MediaQueryListEvent | MediaQueryList) => {
+      const m = 'matches' in e ? e.matches : (e as MediaQueryList).matches;
+      setIsMobile(m);
+      setLimit(m ? 10 : 25);
+      setPage(1);
+    };
+    onChange(mql as any);
+    mql.addEventListener?.('change', onChange as any);
+    ;(mql as any).addListener?.(onChange);
+    return () => {
+      mql.removeEventListener?.('change', onChange as any);
+      ;(mql as any).removeListener?.(onChange);
+    };
+  }, []);
   const [start, setStart] = useState<Date | undefined>(initialFilters?.startDate ? new Date(initialFilters.startDate) : undefined);
   const [end, setEnd] = useState<Date | undefined>(initialFilters?.endDate ? new Date(initialFilters.endDate) : undefined);
 

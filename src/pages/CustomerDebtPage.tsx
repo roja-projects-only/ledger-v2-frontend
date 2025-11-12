@@ -23,7 +23,7 @@ export default function CustomerDebtPage() {
   const search = new URLSearchParams(location.search);
   const highlightId = search.get('highlight');
   const highlightTabId = search.get('tabId');
-  const { customerDebt, customerHistory, markPaid } = useDebts(customerId);
+  const { customerDebt, customerHistory, markPaid, useTransactions } = useDebts(customerId);
 
   const [activeTab, setActiveTab] = useState<'open'|'history'|'notes'>('open');
   const [showCharge, setShowCharge] = useState(false);
@@ -35,7 +35,25 @@ export default function CustomerDebtPage() {
   // Cast unknown customer payload to Customer for display
   const customer = (customerDebt?.customer as unknown as Customer) || undefined;
   const openTab = (customerDebt?.tab as DebtTab | null) || null;
-  const openTransactions = (customerDebt?.transactions as DebtTransaction[]) || [];
+  // Paginated open-tab transactions (mobile-aware page size)
+  const [isMobile, setIsMobile] = useState(false);
+  const [page, setPage] = useState(1);
+  const limit = isMobile ? 10 : 20;
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 640px)');
+    const onChange = (e: MediaQueryListEvent | MediaQueryList) => setIsMobile('matches' in e ? e.matches : (e as MediaQueryList).matches);
+    onChange(mql as any);
+    mql.addEventListener?.('change', onChange as any); // modern
+    ;(mql as any).addListener?.(onChange);
+    return () => {
+      mql.removeEventListener?.('change', onChange as any);
+      ;(mql as any).removeListener?.(onChange);
+    };
+  }, []);
+
+  const openTrxQ = useTransactions({ customerId: customerId, status: 'OPEN', page, limit });
+  const openTransactions = openTrxQ.data?.data || [];
+  const totalPages = openTrxQ.data?.pagination.totalPages || 1;
 
   // Compute unit price hint from customer
   const unitPrice = customer?.customUnitPrice;
@@ -93,7 +111,8 @@ export default function CustomerDebtPage() {
 
   const markPaidNow = async () => {
     if (!customerId) return;
-    await markPaid({ customerId, transactionDate: new Date().toISOString() });
+    const remaining = openTab?.totalBalance ?? 0;
+    await markPaid({ customerId, finalPayment: remaining > 0 ? remaining : undefined, transactionDate: new Date().toISOString() });
     setConfirmClose(false);
   };
 
@@ -144,13 +163,15 @@ export default function CustomerDebtPage() {
           {/* Quick actions */}
           <div className="flex flex-wrap gap-2">
             <Button className="w-full sm:w-auto" onClick={()=>setShowCharge(true)}><Plus className="h-4 w-4 mr-1" /> New Charge</Button>
-            <Button className="w-full sm:w-auto" variant="outline" onClick={()=>setShowPayment(true)} disabled={!openTab || (openTab?.totalBalance ?? 0) <= 0}>
+            {openTab && (openTab.totalBalance ?? 0) > 0 && (
+              <Button className="w-full sm:w-auto" variant="outline" onClick={()=>setShowPayment(true)}>
               <CircleDollarSign className="h-4 w-4 mr-1" /> Partial Payment
-            </Button>
+              </Button>
+            )}
             <Button className="w-full sm:w-auto" variant="outline" onClick={()=>setShowAdjustment(true)}>
               <Wrench className="h-4 w-4 mr-1" /> Adjustment
             </Button>
-            <Button className="w-full sm:w-auto" variant="destructive" onClick={()=>setConfirmClose(true)} disabled={!openTab || (openTab?.totalBalance ?? 0) !== 0}>
+            <Button className="w-full sm:w-auto" variant="destructive" onClick={()=>setConfirmClose(true)} disabled={!openTab}>
               <CheckCircle2 className="h-4 w-4 mr-1" /> Mark Paid
             </Button>
           </div>
@@ -170,8 +191,19 @@ export default function CustomerDebtPage() {
             <CardTitle>Open Tab Timeline</CardTitle>
           </CardHeader>
           <CardContent>
-            {openTransactions.length > 0 ? (
-              <DebtTimeline transactions={openTransactions} selectedId={highlightId || undefined} />
+            {openTrxQ.isLoading ? (
+              <div className="text-sm text-muted-foreground">Loading...</div>
+            ) : openTransactions.length > 0 ? (
+              <>
+                <DebtTimeline transactions={openTransactions} selectedId={highlightId || undefined} />
+                <div className="mt-3 flex items-center justify-between gap-2">
+                  <div className="text-xs text-muted-foreground">Page {page} of {totalPages}</div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={()=> setPage(p=> Math.max(1, p-1))} disabled={page<=1}>Previous</Button>
+                    <Button variant="outline" size="sm" onClick={()=> setPage(p=> Math.min(totalPages, p+1))} disabled={page>=totalPages}>Next</Button>
+                  </div>
+                </div>
+              </>
             ) : (
               <div className="text-sm text-muted-foreground flex items-center gap-2"><CircleSlash className="h-4 w-4" /> No transactions</div>
             )}
@@ -235,7 +267,11 @@ export default function CustomerDebtPage() {
       <Dialog open={showPayment} onOpenChange={setShowPayment}>
         <DialogContent>
           <DialogHeader><DialogTitle>Record Payment</DialogTitle></DialogHeader>
-          <DebtPaymentForm customerId={customerId} currentBalance={openTab?.totalBalance || 0} onSuccess={()=> setShowPayment(false)} />
+          {openTab && (openTab.totalBalance ?? 0) > 0 ? (
+            <DebtPaymentForm customerId={customerId} currentBalance={openTab?.totalBalance || 0} onSuccess={()=> setShowPayment(false)} />
+          ) : (
+            <div className="text-sm text-muted-foreground">No outstanding balance.</div>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -250,7 +286,12 @@ export default function CustomerDebtPage() {
         open={confirmClose}
         onOpenChange={setConfirmClose}
         title="Mark Tab as Paid"
-        description="Mark the current tab as paid. This requires balance to be zero."
+        description={(() => {
+          const remaining = openTab?.totalBalance ?? 0;
+          return remaining > 0
+            ? `This will record a final payment of ${formatCurrency(remaining)} and close the tab.`
+            : 'This will close the tab.';
+        })()}
         confirmText="Mark Paid"
         variant="destructive"
         onConfirm={markPaidNow}

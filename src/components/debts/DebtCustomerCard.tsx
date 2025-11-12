@@ -48,16 +48,17 @@ export function DebtCustomerCard({ item, location, onViewDetails, onRecordPaymen
             <span className="sm:hidden">View</span>
             <span className="hidden sm:inline">View Details</span>
           </Button>
-          <Button
-            variant="default"
-            className="w-full md:flex-1 min-w-0 text-center whitespace-nowrap leading-tight py-2 px-3"
-            onClick={() => onRecordPayment?.(item.customerId)}
-            disabled={isZero}
-          >
-            <CreditCard className="h-4 w-4 mr-1" />
-            <span className="sm:hidden">Pay</span>
-            <span className="hidden sm:inline">Record Payment</span>
-          </Button>
+          {!isZero && (
+            <Button
+              variant="default"
+              className="w-full md:flex-1 min-w-0 text-center whitespace-nowrap leading-tight py-2 px-3"
+              onClick={() => onRecordPayment?.(item.customerId)}
+            >
+              <CreditCard className="h-4 w-4 mr-1" />
+              <span className="sm:hidden">Pay</span>
+              <span className="hidden sm:inline">Record Payment</span>
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
