@@ -92,7 +92,7 @@ export function DebtChargeForm({ onSuccess, defaultCustomerId, date }: DebtCharg
         </Popover>
       </div>
       <div className="space-y-2">
-        <Label>Containers *</Label>
+        <Label>Containers (qty of water containers) *</Label>
         <NumberInput
           value={containers}
           onChange={(v)=>{ setContainers(v); if(error) setError(null); }}
@@ -110,9 +110,10 @@ export function DebtChargeForm({ onSuccess, defaultCustomerId, date }: DebtCharg
         <Textarea value={notes} onChange={(e)=>setNotes(e.target.value)} rows={3} placeholder="Optional notes" />
       </div>
       {selectedCustomer && (
-        <p className="text-xs text-muted-foreground">
-          {containers || 0} × {formatCurrency(unitPrice || 0)} = {formatCurrency(amount)} (customer pricing shown; final pricing resolved server-side)
-        </p>
+        <div className="rounded-md border p-2 text-xs text-muted-foreground space-y-1">
+          <div><strong>Pricing Preview:</strong> {containers || 0} × {formatCurrency(unitPrice || 0)} = {formatCurrency(amount)}</div>
+          <div>Each container priced using customer/unit settings. Final authoritative price stored server-side.</div>
+        </div>
       )}
       <Button type="submit" className="w-full" disabled={submitting}>{submitting? 'Saving...' : (<><Plus className="h-4 w-4 mr-1" /> Add Charge</>)}</Button>
     </form>

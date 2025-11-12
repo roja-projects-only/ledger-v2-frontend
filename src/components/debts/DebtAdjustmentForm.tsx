@@ -47,10 +47,15 @@ export function DebtAdjustmentForm({ customerId, currentBalance, onSuccess }: De
     } finally { setSubmitting(false); }
   };
 
+  const projectedBalance = amount ? currentBalance + Number(amount) : currentBalance;
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="rounded-md border p-2 text-xs text-muted-foreground">
+        Use this to correct the balance. Positive values increase the amount owed; negative values decrease it.
+      </div>
       <div className="space-y-2">
-        <Label>Adjustment Amount * (use negative to reduce)</Label>
+        <Label>Adjustment (PHP, negative to reduce) *</Label>
         <NumberInput
           value={amount}
           onChange={(v)=>{ setAmount(v); if (errors) setErrors(null); }}
@@ -59,7 +64,10 @@ export function DebtAdjustmentForm({ customerId, currentBalance, onSuccess }: De
           aria-describedby={errors?.amount ? 'adjustment-amount-error' : undefined}
           aria-invalid={!!errors?.amount}
         />
-        <p className="text-xs text-muted-foreground">Current Balance: {currentBalance.toLocaleString(undefined,{style:'currency',currency:'PHP'})}</p>
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>Current: {currentBalance.toLocaleString(undefined,{style:'currency',currency:'PHP'})}</span>
+          <span>After adjustment: {projectedBalance.toLocaleString(undefined,{style:'currency',currency:'PHP'})}</span>
+        </div>
         {errors?.amount && <p id="adjustment-amount-error" className="text-xs text-destructive" role="alert">{errors.amount}</p>}
       </div>
       <div className="space-y-2">

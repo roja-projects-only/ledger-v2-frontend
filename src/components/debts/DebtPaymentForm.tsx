@@ -40,10 +40,15 @@ export function DebtPaymentForm({ customerId, currentBalance, onSuccess }: DebtP
     }
   };
 
+  const projectedBalance = amount ? Math.max(0, currentBalance - Number(amount)) : currentBalance;
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="rounded-md border p-2 text-xs text-muted-foreground">
+        This form records a cash payment in PHP. It reduces the customer debt balance.
+      </div>
       <div className="space-y-2">
-        <Label>Payment Amount *</Label>
+        <Label>Cash Payment (PHP) *</Label>
         <NumberInput
           value={amount}
           onChange={(v)=>{ setAmount(v); if(error) setError(null); }}
@@ -53,7 +58,10 @@ export function DebtPaymentForm({ customerId, currentBalance, onSuccess }: DebtP
           aria-describedby={error ? 'payment-error' : undefined}
           aria-invalid={!!error}
         />
-        <p className="text-xs text-muted-foreground">Balance: {currentBalance.toLocaleString(undefined, { style:'currency', currency:'PHP' })}</p>
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>Current: {currentBalance.toLocaleString(undefined, { style:'currency', currency:'PHP' })}</span>
+          <span>After payment: {projectedBalance.toLocaleString(undefined, { style:'currency', currency:'PHP' })}</span>
+        </div>
         {error && <p id="payment-error" className="text-xs text-destructive" role="alert">{error}</p>}
       </div>
       <div className="space-y-2">
