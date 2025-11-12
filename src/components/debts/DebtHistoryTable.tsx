@@ -111,12 +111,12 @@ export function DebtHistoryTable({ initialFilters }: DebtHistoryTableProps) {
         {/* Customer filter */}
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" role="combobox" className="min-w-[220px] justify-between">
+            <Button variant="outline" role="combobox" className="w-full sm:min-w-[220px] justify-between">
               {customerId ? (customers.find(c=>c.id===customerId)?.name ?? 'Unknown') : 'All customers'}
               <ChevronsUpDown className="h-4 w-4 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+          <PopoverContent className="w-[var(--radix-popover-trigger-width)] max-w-[calc(100vw-2rem)] p-0" align="start">
             <Command>
               <CommandInput placeholder="Search customer" />
               <CommandEmpty>No customer found.</CommandEmpty>
@@ -149,7 +149,7 @@ export function DebtHistoryTable({ initialFilters }: DebtHistoryTableProps) {
           ))}
         </div>
 
-        <div className="ml-auto flex gap-2">
+        <div className="ml-auto w-full sm:w-auto flex justify-end gap-2">
           <Button variant="outline" onClick={exportCSV}><Download className="h-4 w-4 mr-1" /> CSV</Button>
           <Button variant="outline" onClick={exportPDF}><FileText className="h-4 w-4 mr-1" /> PDF</Button>
         </div>

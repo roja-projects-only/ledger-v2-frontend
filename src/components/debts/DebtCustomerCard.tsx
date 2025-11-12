@@ -38,7 +38,7 @@ export function DebtCustomerCard({ item, location, onViewDetails, onRecordPaymen
           </Badge>
         </div>
         <Separator />
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <Button variant="outline" className="w-full" onClick={() => onViewDetails?.(item.customerId)}>
             <Eye className="h-4 w-4 mr-1" /> View Details
           </Button>

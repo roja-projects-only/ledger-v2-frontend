@@ -159,7 +159,7 @@ export default function PostDayDebtWizard() {
       </div>
 
       {/* Step Header */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Badge variant={step===1?'default':'outline'}><CalendarDays className="h-3 w-3 mr-1" /> Date</Badge>
         <Badge variant={step===2?'default':'outline'}><Users className="h-3 w-3 mr-1" /> Customers</Badge>
         <Badge variant={step===3?'default':'outline'}><ClipboardList className="h-3 w-3 mr-1" /> Entries</Badge>
@@ -183,12 +183,12 @@ export default function PostDayDebtWizard() {
           <CardContent className="space-y-3">
             <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="min-w-[260px] justify-between" role="combobox">
+                <Button variant="outline" className="w-full sm:min-w-[260px] justify-between" role="combobox">
                   {selectedIds.length === 0 ? 'Choose customers...' : `${selectedIds.length} selected`}
                   <ChevronsUpDown className="h-4 w-4 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+              <PopoverContent className="w-[var(--radix-popover-trigger-width)] max-w-[calc(100vw-2rem)] p-0" align="start">
                 <Command>
                   <CommandInput placeholder="Search customer" />
                   <CommandEmpty>No customer found.</CommandEmpty>
@@ -269,15 +269,15 @@ export default function PostDayDebtWizard() {
           <CardHeader><CardTitle>Review</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             <div className="text-sm">Date: <b>{date?.toLocaleDateString()}</b></div>
-            <div className="rounded-lg border">
-              <div className="grid grid-cols-12 gap-2 p-2 text-xs text-muted-foreground">
+            <div className="rounded-lg border overflow-x-auto">
+              <div className="grid grid-cols-12 gap-2 p-2 text-xs text-muted-foreground min-w-[560px]">
                 <div className="col-span-4">Customer</div>
                 <div className="col-span-2 text-right">Containers</div>
                 <div className="col-span-2 text-right">Payment</div>
                 <div className="col-span-4">Notes</div>
               </div>
               <Separator />
-              <div className="divide-y">
+              <div className="divide-y min-w-[560px]">
                 {reviewRows.map((r)=> (
                   <div key={r.id} className="grid grid-cols-12 gap-2 p-2 text-sm">
                     <div className="col-span-4 truncate">{r.name}</div>

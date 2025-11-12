@@ -122,14 +122,14 @@ export default function CustomerDebtPage() {
 
           {/* Quick actions */}
           <div className="flex flex-wrap gap-2">
-            <Button onClick={()=>setShowCharge(true)}><Plus className="h-4 w-4 mr-1" /> New Charge</Button>
-            <Button variant="outline" onClick={()=>setShowPayment(true)} disabled={!openTab || (openTab?.totalBalance ?? 0) <= 0}>
+            <Button className="w-full sm:w-auto" onClick={()=>setShowCharge(true)}><Plus className="h-4 w-4 mr-1" /> New Charge</Button>
+            <Button className="w-full sm:w-auto" variant="outline" onClick={()=>setShowPayment(true)} disabled={!openTab || (openTab?.totalBalance ?? 0) <= 0}>
               <CircleDollarSign className="h-4 w-4 mr-1" /> Partial Payment
             </Button>
-            <Button variant="outline" onClick={()=>setShowAdjustment(true)}>
+            <Button className="w-full sm:w-auto" variant="outline" onClick={()=>setShowAdjustment(true)}>
               <Wrench className="h-4 w-4 mr-1" /> Adjustment
             </Button>
-            <Button variant="destructive" onClick={()=>setConfirmClose(true)} disabled={!openTab || (openTab?.totalBalance ?? 0) !== 0}>
+            <Button className="w-full sm:w-auto" variant="destructive" onClick={()=>setConfirmClose(true)} disabled={!openTab || (openTab?.totalBalance ?? 0) !== 0}>
               <CheckCircle2 className="h-4 w-4 mr-1" /> Mark Paid
             </Button>
           </div>

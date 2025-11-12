@@ -35,14 +35,14 @@ export function DebtTimeline({ transactions, selectedId, className }: DebtTimeli
   const items = [...transactions].sort((a,b)=> new Date(b.transactionDate).getTime() - new Date(a.transactionDate).getTime());
   return (
     <div className={cn('relative', className)}>
-      <div className="absolute left-4 top-0 bottom-0 border-l border-border/50" />
-      <ul className="space-y-4">
+      <div className="absolute left-3 sm:left-4 top-0 bottom-0 border-l border-border/50" />
+      <ul className="space-y-3 sm:space-y-4">
         {items.map((t) => {
           const TIcon = tone[t.transactionType].icon;
           const isSelected = selectedId === t.id;
           return (
-            <li key={t.id} className="relative pl-12">
-              <div className={cn('absolute left-2.5 h-2.5 w-2.5 rounded-full', tone[t.transactionType].dot)} />
+            <li key={t.id} className="relative pl-10 sm:pl-12">
+              <div className={cn('absolute left-1.5 sm:left-2.5 h-2.5 w-2.5 rounded-full', tone[t.transactionType].dot)} />
               <div className={cn('rounded-lg border p-3', isSelected && 'ring-2 ring-primary')}> 
                 <div className="flex items-center gap-2">
                   <Badge className={tone[t.transactionType].badge}>{t.transactionType}</Badge>
