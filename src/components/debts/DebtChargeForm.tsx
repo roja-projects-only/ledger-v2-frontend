@@ -4,7 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { NumberInput } from '@/components/shared/NumberInput';
 import { useDebts } from '@/lib/hooks/useDebts';
-import { useCustomers } from '@/lib/hooks/useCustomers';
+import { useCustomerList } from '@/lib/hooks/useCustomers';
 import { formatCurrency, cn } from '@/lib/utils';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
@@ -20,7 +20,7 @@ interface DebtChargeFormProps {
 }
 
 export function DebtChargeForm({ onSuccess, defaultCustomerId, date }: DebtChargeFormProps) {
-  const { customers } = useCustomers();
+  const { customers } = useCustomerList();
   const { createCharge } = useDebts();
   const { getEffectivePrice, calculateTotal } = usePricing();
   const [customerId, setCustomerId] = useState(defaultCustomerId || '');

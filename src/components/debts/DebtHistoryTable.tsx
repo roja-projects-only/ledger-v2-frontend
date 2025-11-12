@@ -7,7 +7,7 @@ import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem } from '
 import { DateRangePicker } from '@/components/date/DateRangePicker';
 import { Separator } from '@/components/ui/separator';
 import { ChevronsUpDown, Download, FileText } from 'lucide-react';
-import { useCustomers } from '@/lib/hooks/useCustomers';
+import { useCustomerList } from '@/lib/hooks/useCustomers';
 import { useDebtTransactionsQuery } from '@/lib/queries/debtsQueries';
 import type { DebtHistoryFilters } from '@/lib/types';
 import { formatCurrency } from '@/lib/utils';
@@ -19,7 +19,7 @@ interface DebtHistoryTableProps {
 
 export function DebtHistoryTable({ initialFilters }: DebtHistoryTableProps) {
   const navigate = useNavigate();
-  const { customers } = useCustomers();
+  const { customers } = useCustomerList();
   const [open, setOpen] = useState(false);
   const [customerId, setCustomerId] = useState<string | undefined>(initialFilters?.customerId);
   const [type, setType] = useState<DebtHistoryFilters['transactionType']>(initialFilters?.transactionType);

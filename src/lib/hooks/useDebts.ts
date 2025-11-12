@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import type { DebtSummaryItem, DebtHistoryFilters, DebtMetrics } from '@/lib/types';
 import {
   useDebtSummaryQuery,
@@ -10,6 +11,7 @@ import {
   usePaymentMutation,
   useAdjustmentMutation,
   useMarkPaidMutation,
+  invalidateDebtCaches,
 } from '@/lib/queries/debtsQueries';
 
 export function useDebts(customerId?: string) {
@@ -17,6 +19,7 @@ export function useDebts(customerId?: string) {
   const customerDebtQ = useCustomerDebtQuery(customerId || '', !!customerId);
   const customerHistoryQ = useCustomerDebtHistoryQuery(customerId || '', !!customerId);
   const metricsQ = useDebtMetricsQuery();
+  const queryClient = useQueryClient();
 
   const charge = useChargeMutation();
   const payment = usePaymentMutation();
@@ -27,6 +30,9 @@ export function useDebts(customerId?: string) {
   const customerDebt = useMemo(() => customerDebtQ.data ?? null, [customerDebtQ.data]);
   const customerHistory = useMemo(() => customerHistoryQ.data ?? { tabs: [], transactions: [] }, [customerHistoryQ.data]);
   const metrics: DebtMetrics | undefined = metricsQ.data;
+  const refreshCustomerDebt = useCallback((id?: string) => {
+    invalidateDebtCaches(queryClient, id);
+  }, [queryClient]);
 
   return {
     // Data
@@ -45,7 +51,16 @@ export function useDebts(customerId?: string) {
     createAdjustment: adjustment.mutateAsync,
     markPaid: markPaid.mutateAsync,
 
-    // Fetch helpers
-    useTransactions: (filters: DebtHistoryFilters) => useDebtTransactionsQuery(filters),
+    // Helpers
+    refreshCustomerDebt,
+    useTransactions: (filters: DebtHistoryFilters) => useStableDebtTransactions(filters),
   };
+}
+
+function useStableDebtTransactions(filters: DebtHistoryFilters) {
+  const normalizedFilters = useMemo(() => ({
+    ...filters,
+  }), [filters]);
+
+  return useDebtTransactionsQuery(normalizedFilters);
 }

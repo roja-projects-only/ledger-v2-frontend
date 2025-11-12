@@ -1,8 +1,32 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import type { InvalidateQueryFilters, QueryClient } from '@tanstack/react-query';
 import { debtsApi, handleApiError } from '@/lib/api';
 import { queryKeys } from '@/lib/queryKeys';
 import type { DebtHistoryFilters, PaginatedDebtTransactions } from '@/lib/types';
 import { toast } from 'sonner';
+
+export function buildDebtInvalidationTargets(customerId?: string): InvalidateQueryFilters[] {
+  const targets: InvalidateQueryFilters[] = [
+    { queryKey: queryKeys.debts.summary() },
+    { queryKey: queryKeys.debts.metrics() },
+    { queryKey: queryKeys.debts.transactionsRoot(), exact: false },
+  ];
+
+  if (customerId) {
+    targets.push(
+      { queryKey: queryKeys.debts.customer(customerId) },
+      { queryKey: queryKeys.debts.customerHistory(customerId) },
+    );
+  }
+
+  return targets;
+}
+
+export function invalidateDebtCaches(qc: QueryClient, customerId?: string) {
+  for (const target of buildDebtInvalidationTargets(customerId)) {
+    qc.invalidateQueries(target);
+  }
+}
 
 // Queries
 export function useDebtSummaryQuery() {
@@ -70,9 +94,7 @@ export function useChargeMutation() {
     },
     onSuccess: (_data, vars) => {
       toast.success('Charge recorded');
-      qc.invalidateQueries({ queryKey: queryKeys.debts.customer(vars.customerId) });
-      qc.invalidateQueries({ queryKey: queryKeys.debts.summary() });
-      qc.invalidateQueries({ queryKey: queryKeys.debts.metrics() });
+      invalidateDebtCaches(qc, vars.customerId);
     },
   });
 }
@@ -92,9 +114,7 @@ export function usePaymentMutation() {
     },
     onSuccess: (_d, v) => {
       toast.success('Payment recorded');
-      qc.invalidateQueries({ queryKey: queryKeys.debts.customer(v.customerId) });
-      qc.invalidateQueries({ queryKey: queryKeys.debts.summary() });
-      qc.invalidateQueries({ queryKey: queryKeys.debts.metrics() });
+      invalidateDebtCaches(qc, v.customerId);
     },
   });
 }
@@ -114,9 +134,7 @@ export function useAdjustmentMutation() {
     },
     onSuccess: (_d, v) => {
       toast.success('Adjustment recorded');
-      qc.invalidateQueries({ queryKey: queryKeys.debts.customer(v.customerId) });
-      qc.invalidateQueries({ queryKey: queryKeys.debts.summary() });
-      qc.invalidateQueries({ queryKey: queryKeys.debts.metrics() });
+      invalidateDebtCaches(qc, v.customerId);
     },
   });
 }
@@ -136,10 +154,7 @@ export function useMarkPaidMutation() {
     },
     onSuccess: (_d, v) => {
       toast.success('Debt tab closed');
-      qc.invalidateQueries({ queryKey: queryKeys.debts.customer(v.customerId) });
-      qc.invalidateQueries({ queryKey: queryKeys.debts.summary() });
-      qc.invalidateQueries({ queryKey: queryKeys.debts.metrics() });
-      qc.invalidateQueries({ queryKey: queryKeys.debts.transactions() });
+      invalidateDebtCaches(qc, v.customerId);
     },
   });
 }

@@ -15,7 +15,7 @@ import { useDebts } from '@/lib/hooks/useDebts';
 import { formatCurrency, cn } from '@/lib/utils';
 import type { Customer, DebtTab, DebtTransaction } from '@/lib/types';
 import { ArrowLeft, CircleDollarSign, Plus, CheckCircle2, Wrench, CircleSlash } from 'lucide-react';
-import { salesApi } from '@/lib/api';
+import { useTodaySalesQuery } from '@/lib/queries/salesQueries';
 
 export default function CustomerDebtPage() {
   const { customerId = '' } = useParams<{ customerId: string }>();
@@ -30,7 +30,7 @@ export default function CustomerDebtPage() {
   const [showPayment, setShowPayment] = useState(false);
   const [showAdjustment, setShowAdjustment] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
-  const [todaySalesCount, setTodaySalesCount] = useState<number | null>(null);
+  const { data: todaySales = [], isLoading: todaySalesLoading } = useTodaySalesQuery({ enabled: !!customerId });
 
   // Cast unknown customer payload to Customer for display
   const customer = (customerDebt?.customer as unknown as Customer) || undefined;
@@ -58,21 +58,10 @@ export default function CustomerDebtPage() {
   // Compute unit price hint from customer
   const unitPrice = customer?.customUnitPrice;
 
-  // Fetch today's sales count for this customer (read-only)
-  useEffect(() => {
-    let mounted = true;
-    async function load() {
-      try {
-        const sales = await salesApi.today();
-        if (!mounted) return;
-        setTodaySalesCount(sales.filter(s => s.customerId === customerId).length);
-      } catch {
-        if (mounted) setTodaySalesCount(null);
-      }
-    }
-    if (customerId) load();
-    return () => { mounted = false; };
-  }, [customerId]);
+  const todaySalesCount = useMemo(() => {
+    if (!customerId || todaySalesLoading) return null;
+    return todaySales.filter(s => s.customerId === customerId).length;
+  }, [customerId, todaySales, todaySalesLoading]);
 
   // Past tabs and map of transactions grouped by tab
   const closedTabs = useMemo(() => (customerHistory?.tabs || []).filter(t => t.status === 'CLOSED'), [customerHistory]);

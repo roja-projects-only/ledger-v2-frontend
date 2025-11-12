@@ -13,6 +13,7 @@ import { salesApi, handleApiError } from '@/lib/api';
 import type { ListResponse } from '@/lib/api/adapters';
 import type { Sale } from '@/lib/types';
 import { queryKeys } from '@/lib/queryKeys';
+import { getTodayISO } from '@/lib/utils';
 import { toast } from 'sonner';
 
 // ============================================================================
@@ -55,6 +56,16 @@ export function useSalesQuery() {
     queryKey: queryKeys.sales.lists(),
     queryFn: fetchAllSales,
     staleTime: 30 * 1000, // 30 seconds
+  });
+}
+
+export function useTodaySalesQuery(options?: { enabled?: boolean }) {
+  const today = getTodayISO();
+  return useQuery({
+    queryKey: queryKeys.sales.list({ scope: 'today', date: today }),
+    queryFn: salesApi.today,
+    staleTime: 15 * 1000,
+    enabled: options?.enabled ?? true,
   });
 }
 

@@ -28,7 +28,7 @@ import type { Sale } from "@/lib/types";
 import { getSemanticColor } from "@/lib/colors";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { usePricing } from "@/lib/hooks/usePricing";
-import { useCustomers } from "@/lib/hooks/useCustomers";
+import { useCustomerList } from "@/lib/hooks/useCustomers";
 
 // ============================================================================
 // Types
@@ -57,7 +57,7 @@ export function DailySalesTrendChart({
   endDate,
   loading = false,
 }: DailySalesTrendChartProps) {
-  const { customers } = useCustomers();
+  const { customers } = useCustomerList();
   const { getEffectivePrice } = usePricing();
 
   // Aggregate sales by day

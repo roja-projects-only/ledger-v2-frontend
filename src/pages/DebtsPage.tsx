@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
 import { ChevronsUpDown, CreditCard, Users } from 'lucide-react';
-import { useCustomers } from '@/lib/hooks/useCustomers';
+import { useCustomerList } from '@/lib/hooks/useCustomers';
 import { useDebts } from '@/lib/hooks/useDebts';
 import DebtCustomerCard from '@/components/debts/DebtCustomerCard';
 import DebtHistoryTable from '@/components/debts/DebtHistoryTable';
@@ -16,7 +16,7 @@ import type { DebtSummaryItem } from '@/lib/types';
 
 export default function DebtsPage() {
   const navigate = useNavigate();
-  const { customers } = useCustomers();
+  const { customers } = useCustomerList();
   const { summary } = useDebts();
 
   const [tab, setTab] = useState<'list'|'history'>('list');

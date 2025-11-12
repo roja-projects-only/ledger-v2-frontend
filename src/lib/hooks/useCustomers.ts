@@ -20,9 +20,19 @@ import { useSales } from "./useSales";
 // Hook
 // ============================================================================
 
-export function useCustomers() {
-  // Fetch customers with React Query (automatic caching)
+export function useCustomerList() {
   const { data: customers = [], isLoading: loading, error: queryError } = useCustomersQuery();
+  const error = queryError ? (queryError as Error).message : null;
+
+  return {
+    customers,
+    loading,
+    error,
+  };
+}
+
+export function useCustomers() {
+  const { customers, loading, error } = useCustomerList();
   
   // Mutations with optimistic updates
   const addCustomerMutation = useAddCustomerMutation();
@@ -31,9 +41,6 @@ export function useCustomers() {
 
   // Get sales data for checking if customer has sales
   const { sales } = useSales();
-
-  // Convert React Query error to string
-  const error = queryError ? (queryError as Error).message : null;
 
   // Delete confirmation state
   const [deleteConfirmation, setDeleteConfirmation] = useState<{

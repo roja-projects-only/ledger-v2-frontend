@@ -10,7 +10,7 @@ import { NumberInput } from '@/components/shared/NumberInput';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { useCustomers } from '@/lib/hooks/useCustomers';
+import { useCustomerList } from '@/lib/hooks/useCustomers';
 import { useDebts } from '@/lib/hooks/useDebts';
 import { ChevronsUpDown, Check, CalendarDays, ClipboardList, Users, UploadCloud, Layers, Droplet, HandCoins, Info, BarChart2, Clock } from 'lucide-react';
 import { usePricing } from '@/lib/hooks/usePricing';
@@ -31,7 +31,7 @@ interface LineEntry {
 
 export default function PostDayDebtWizard() {
   const navigate = useNavigate();
-  const { customers } = useCustomers();
+  const { customers } = useCustomerList();
   const { createCharge, createPayment, summary, metrics } = useDebts();
   const { getEffectivePrice, calculateTotal } = usePricing();
 

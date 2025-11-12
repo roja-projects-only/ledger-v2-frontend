@@ -18,7 +18,7 @@ import { KPICard } from "@/components/shared/KPICard";
 import { DailySalesTrendChart } from "@/components/analysis/DailySalesTrendChart";
 import { CustomerPerformanceChart } from "@/components/analysis/CustomerPerformanceChart";
 import { useSales } from "@/lib/hooks/useSales";
-import { useCustomers } from "@/lib/hooks/useCustomers";
+import { useCustomerList } from "@/lib/hooks/useCustomers";
 import { useKPIs } from "@/lib/hooks/useKPIs";
 import type { KPI } from "@/lib/types";
 import { formatCurrency, getTodayISO } from "@/lib/utils";
@@ -28,7 +28,7 @@ import { formatCurrency, getTodayISO } from "@/lib/utils";
 // ============================================================================
 
 export function DateRangeAnalysis() {
-  const { customers, loading: customersLoading } = useCustomers();
+  const { customers, loading: customersLoading } = useCustomerList();
   const { getSalesByDateRange, loading: salesLoading } = useSales();
 
   // Default to last 7 days in Asia/Manila timezone
