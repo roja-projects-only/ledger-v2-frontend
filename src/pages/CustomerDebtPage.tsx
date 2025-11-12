@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,10 @@ import { salesApi } from '@/lib/api';
 
 export default function CustomerDebtPage() {
   const { customerId = '' } = useParams<{ customerId: string }>();
+  const location = useLocation();
+  const search = new URLSearchParams(location.search);
+  const highlightId = search.get('highlight');
+  const highlightTabId = search.get('tabId');
   const { customerDebt, customerHistory, markPaid } = useDebts(customerId);
 
   const [activeTab, setActiveTab] = useState<'open'|'history'|'notes'>('open');
@@ -69,6 +73,23 @@ export default function CustomerDebtPage() {
   }, [customerHistory]);
 
   const [expandedTabId, setExpandedTabId] = useState<string | null>(null);
+  // Auto-expand closed tab containing highlight if not in open tab
+  useEffect(() => {
+    if (highlightId) {
+      const inOpen = openTransactions.some(t => t.id === highlightId);
+      if (!inOpen) {
+        // find closed tab containing highlight
+        for (const tab of closedTabs) {
+          const list = transactionsByTab.get(tab.id) || [];
+          if (list.some(t => t.id === highlightId)) {
+            setActiveTab('history');
+            setExpandedTabId(tab.id);
+            break;
+          }
+        }
+      }
+    }
+  }, [highlightId, openTransactions, closedTabs, transactionsByTab]);
 
   const markPaidNow = async () => {
     if (!customerId) return;
@@ -150,7 +171,7 @@ export default function CustomerDebtPage() {
           </CardHeader>
           <CardContent>
             {openTransactions.length > 0 ? (
-              <DebtTimeline transactions={openTransactions} />
+              <DebtTimeline transactions={openTransactions} selectedId={highlightId || undefined} />
             ) : (
               <div className="text-sm text-muted-foreground flex items-center gap-2"><CircleSlash className="h-4 w-4" /> No transactions</div>
             )}
@@ -183,7 +204,7 @@ export default function CustomerDebtPage() {
                 </div>
                 {expandedTabId === tab.id && (
                   <div className="mt-3">
-                    <DebtTimeline transactions={transactionsByTab.get(tab.id) || []} />
+                    <DebtTimeline transactions={transactionsByTab.get(tab.id) || []} selectedId={highlightTabId === tab.id ? (highlightId || undefined) : (highlightId && transactionsByTab.get(tab.id)?.some(t=>t.id===highlightId) ? highlightId : undefined)} />
                   </div>
                 )}
               </div>

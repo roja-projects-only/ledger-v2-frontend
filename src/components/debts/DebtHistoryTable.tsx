@@ -173,10 +173,14 @@ export function DebtHistoryTable({ initialFilters }: DebtHistoryTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.map((r) => (
-              <TableRow key={r.id} className="cursor-pointer" onClick={()=>navigate(`/debts/customer/${r.debtTabId}`)}>
+            {rows.map((r) => {
+              const anyRow: any = r as any;
+              const cid = anyRow.debtTab?.customerId || anyRow.customerId || r.debtTabId;
+              const cname = anyRow.debtTab?.customer?.name || anyRow.customerName || anyRow.debtTabId;
+              return (
+              <TableRow key={r.id} className="cursor-pointer" onClick={()=>navigate(`/debts/customer/${cid}?highlight=${r.id}&tabId=${r.debtTabId}`)}>
                 <TableCell>{new Date(r.transactionDate).toLocaleString()}</TableCell>
-                <TableCell>{r.debtTabId}</TableCell>
+                <TableCell>{cname}</TableCell>
                 <TableCell>{r.transactionType}</TableCell>
                 <TableCell className="text-right">{r.containers ?? ''}</TableCell>
                 <TableCell className="text-right">{r.amount ? formatCurrency(r.amount) : ''}</TableCell>
@@ -184,21 +188,25 @@ export function DebtHistoryTable({ initialFilters }: DebtHistoryTableProps) {
                 <TableCell className="truncate max-w-[240px]">{r.notes}</TableCell>
                 <TableCell>{r.enteredById ?? ''}</TableCell>
               </TableRow>
-            ))}
+            );})}
           </TableBody>
         </Table>
       </div>
 
       {/* Mobile cards */}
       <div className="md:hidden space-y-2">
-        {rows.map((r) => (
-          <button key={r.id} onClick={()=>navigate(`/debts/customer/${r.debtTabId}`)} className="w-full text-left">
+        {rows.map((r) => {
+          const anyRow: any = r as any;
+          const cid = anyRow.debtTab?.customerId || anyRow.customerId || r.debtTabId;
+          const cname = anyRow.debtTab?.customer?.name || anyRow.customerName || anyRow.debtTabId;
+          return (
+          <button key={r.id} onClick={()=>navigate(`/debts/customer/${cid}?highlight=${r.id}&tabId=${r.debtTabId}`)} className="w-full text-left">
             <div className="rounded-lg border p-3">
               <div className="flex items-center justify-between">
                 <div className="text-sm font-medium">{r.transactionType}</div>
                 <div className="text-xs text-muted-foreground">{new Date(r.transactionDate).toLocaleString()}</div>
               </div>
-              <div className="mt-1 text-sm">Customer: {r.debtTabId}</div>
+              <div className="mt-1 text-sm">Customer: {cname}</div>
               <div className="mt-1 grid grid-cols-2 gap-2 text-sm">
                 <div>Containers: {r.containers ?? '-'}</div>
                 <div className="text-right">Amount: {r.amount ? formatCurrency(r.amount) : '-'}</div>
@@ -210,7 +218,7 @@ export function DebtHistoryTable({ initialFilters }: DebtHistoryTableProps) {
               {r.notes && <div className="mt-1 text-xs text-muted-foreground">Note: {r.notes}</div>}
             </div>
           </button>
-        ))}
+        );})}
       </div>
 
       {/* Pagination */}
