@@ -10,11 +10,14 @@ interface BalancePreviewProps {
 }
 
 export function BalancePreview({ current, after, className }: BalancePreviewProps) {
-  const delta = after - current; // positive = increase owed, negative = decrease
+  const delta = after - current; // positive = increase owed (charge), negative = decrease (payment)
   const decreased = delta < 0;
   const increased = delta > 0;
   const settled = after === 0;
-  const pct = current > 0 ? Math.min(100, Math.max(0, Math.round(((current - after) / current) * 100))) : 0;
+  // Standardized progress: show magnitude of change relative to CURRENT balance.
+  // - Payments (decrease): "Cleared X%"
+  // - Charges (increase): "Increase X%"
+  const changePct = current > 0 ? Math.min(100, Math.max(0, Math.round((Math.abs(delta) / current) * 100))) : (after > 0 ? 100 : 0);
 
   return (
     <div className={cn("rounded-md border p-3 space-y-2", className)}>
@@ -42,12 +45,14 @@ export function BalancePreview({ current, after, className }: BalancePreviewProp
       <div>
         <div className="h-2 w-full rounded bg-muted overflow-hidden">
           <div
-            className={cn("h-full bg-primary transition-[width] duration-300", decreased ? "bg-emerald-500" : increased ? "bg-amber-500" : "bg-muted-foreground")}
-            style={{ width: `${pct}%` }}
-            aria-label="Progress toward clearing balance"
+            className={cn("h-full transition-[width] duration-300", decreased ? "bg-emerald-500" : increased ? "bg-amber-500" : "bg-muted-foreground")}
+            style={{ width: `${changePct}%` }}
+            aria-label={decreased ? "Percent cleared" : increased ? "Percent increase" : "No change"}
           />
         </div>
-        <div className="mt-1 text-[11px] text-muted-foreground">{pct}% cleared</div>
+        <div className="mt-1 text-[11px] text-muted-foreground">
+          {decreased ? `${changePct}% cleared` : increased ? `Increase ${changePct}%` : 'No change'}
+        </div>
       </div>
     </div>
   );
