@@ -58,7 +58,7 @@ export function DebtPaymentForm({ customerId, currentBalance, onSuccess }: DebtP
         <NumberInput
           value={amount}
           onChange={(v)=>{ setAmount(v); if(error) setError(null); }}
-          min={0.01}
+          min={1}
           step={1}
           quickValues={[]}
           aria-label="Payment Amount"
@@ -66,12 +66,26 @@ export function DebtPaymentForm({ customerId, currentBalance, onSuccess }: DebtP
           aria-invalid={!!error}
         />
         {uniquePresetValues.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {uniquePresetValues.map(v => (
-              <Button key={v} type="button" variant="outline" size="sm" className="flex-1 min-w-[60px]" onClick={()=>{ setAmount(String(v)); if(error) setError(null); }}>
-                {v === full ? 'Settle' : v === half ? `Half (${v})` : v}
-              </Button>
-            ))}
+          <div className="mt-2 space-y-2">
+            <div className="flex flex-wrap gap-2">
+              {uniquePresetValues.filter(v=> v !== full && v !== half).map(v => (
+                <Button key={v} type="button" variant="outline" size="sm" className="flex-1 min-w-[70px]" onClick={()=>{ setAmount(String(v)); if(error) setError(null); }}>
+                  {v}
+                </Button>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              {half && (
+                <Button type="button" variant="outline" size="sm" className="flex-1 min-w-[90px]" onClick={()=>{ setAmount(String(half)); if(error) setError(null); }}>
+                  Half ({half})
+                </Button>
+              )}
+              {full && (
+                <Button type="button" variant="outline" size="sm" className="flex-1 min-w-[90px]" onClick={()=>{ setAmount(String(full)); if(error) setError(null); }}>
+                  Settle
+                </Button>
+              )}
+            </div>
           </div>
         )}
         <div className="flex items-center justify-between text-xs text-muted-foreground">

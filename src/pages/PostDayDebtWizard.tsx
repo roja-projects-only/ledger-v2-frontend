@@ -239,20 +239,41 @@ export default function PostDayDebtWizard() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label>Cash Received (PHP)</Label>
-                      <NumberInput value={entry.cashReceived} onChange={(v)=> setEntry({ ...entry, cashReceived: v })} min={0.01} step={1} quickValues={[]} />
-                      <div className="flex flex-wrap gap-2">
+                      <NumberInput value={entry.cashReceived} onChange={(v)=> setEntry({ ...entry, cashReceived: v })} min={1} step={1} quickValues={[]} />
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap gap-2">
                         {(() => {
                           const prev = priorBalances.get(selectedCustomer.id) ?? 0;
                           const base = [50,100,150,200,300,500];
-                          const half = prev > 0 ? Math.max(1, Math.round(prev/2)) : null;
-                          const full = prev > 0 ? prev : null;
-                          const values = Array.from(new Set([...(base.filter(v=>v<=prev)), half, full].filter(Boolean)));
-                          return values.map((v)=> (
-                            <Button key={v as number} type="button" variant="outline" size="sm" className="flex-1 min-w-[60px]" onClick={()=> setEntry({ ...entry, cashReceived: String(v) })}>
-                              {v === full ? 'Settle' : v === half ? `Half (${v})` : v}
+                          const baseValues = Array.from(new Set(base.filter(v=>v<=prev)));
+                          return baseValues.map((v)=> (
+                            <Button key={v as number} type="button" variant="outline" size="sm" className="flex-1 min-w-[70px]" onClick={()=> setEntry({ ...entry, cashReceived: String(v) })}>
+                              {v}
                             </Button>
                           ));
                         })()}
+                        </div>
+                        <div className="flex gap-2">
+                          {(() => {
+                            const prev = priorBalances.get(selectedCustomer.id) ?? 0;
+                            const half = prev > 0 ? Math.max(1, Math.round(prev/2)) : null;
+                            const full = prev > 0 ? prev : null;
+                            return (
+                              <>
+                                {half && (
+                                  <Button type="button" variant="outline" size="sm" className="flex-1 min-w-[90px]" onClick={()=> setEntry({ ...entry, cashReceived: String(half) })}>
+                                    Half ({half})
+                                  </Button>
+                                )}
+                                {full && (
+                                  <Button type="button" variant="outline" size="sm" className="flex-1 min-w-[90px]" onClick={()=> setEntry({ ...entry, cashReceived: String(full) })}>
+                                    Settle
+                                  </Button>
+                                )}
+                              </>
+                            );
+                          })()}
+                        </div>
                       </div>
                     </div>
                     <div className="md:col-span-2 text-xs text-muted-foreground rounded-md border p-3 min-h-[44px] flex items-center justify-between">
