@@ -10,6 +10,7 @@ import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover
 import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
 import { ChevronsUpDown, Check, Plus } from 'lucide-react';
 import { LocationBadge } from '@/components/shared/LocationBadge';
+import { usePricing } from '@/lib/hooks/usePricing';
 import { toast } from 'sonner';
 
 interface DebtChargeFormProps {
@@ -21,6 +22,7 @@ interface DebtChargeFormProps {
 export function DebtChargeForm({ onSuccess, defaultCustomerId, date }: DebtChargeFormProps) {
   const { customers } = useCustomers();
   const { createCharge } = useDebts();
+  const { getEffectivePrice, calculateTotal } = usePricing();
   const [customerId, setCustomerId] = useState(defaultCustomerId || '');
   const [containers, setContainers] = useState('');
   const [notes, setNotes] = useState('');
@@ -30,9 +32,8 @@ export function DebtChargeForm({ onSuccess, defaultCustomerId, date }: DebtCharg
   const containersRef = useRef<HTMLInputElement>(null);
 
   const selectedCustomer = customers.find(c => c.id === customerId);
-
-  const unitPrice = selectedCustomer?.customUnitPrice || 0; // display only; backend will resolve
-  const amount = containers && !isNaN(Number(containers)) ? Number(containers) * unitPrice : 0;
+  const unitPrice = getEffectivePrice(selectedCustomer);
+  const amount = containers && !isNaN(Number(containers)) ? calculateTotal(Number(containers), selectedCustomer) : 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
