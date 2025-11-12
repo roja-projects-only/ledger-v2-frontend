@@ -6,6 +6,7 @@ import { NumberInput } from '@/components/shared/NumberInput';
 import { useDebts } from '@/lib/hooks/useDebts';
 import { toast } from 'sonner';
 import { CheckCircle2 } from 'lucide-react';
+import { BalancePreview } from './BalancePreview';
 
 interface DebtPaymentFormProps {
   customerId: string;
@@ -88,10 +89,7 @@ export function DebtPaymentForm({ customerId, currentBalance, onSuccess }: DebtP
             </div>
           </div>
         )}
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>Current: {currentBalance.toLocaleString(undefined, { style:'currency', currency:'PHP' })}</span>
-          <span>After payment: {projectedBalance.toLocaleString(undefined, { style:'currency', currency:'PHP' })}</span>
-        </div>
+        <BalancePreview current={currentBalance} after={projectedBalance} />
         {error && <p id="payment-error" className="text-xs text-destructive" role="alert">{error}</p>}
       </div>
       <div className="space-y-2">

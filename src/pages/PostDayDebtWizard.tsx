@@ -15,6 +15,7 @@ import { useDebts } from '@/lib/hooks/useDebts';
 import { ChevronsUpDown, Check, CalendarDays, ClipboardList, Users, UploadCloud, Layers, Droplet, HandCoins } from 'lucide-react';
 import { usePricing } from '@/lib/hooks/usePricing';
 import { formatCurrency } from '@/lib/utils';
+import { BalancePreview } from '@/components/debts/BalancePreview';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -276,12 +277,11 @@ export default function PostDayDebtWizard() {
                         </div>
                       </div>
                     </div>
-                    <div className="md:col-span-2 text-xs text-muted-foreground rounded-md border p-3 min-h-[44px] flex items-center justify-between">
-                      <span>Current: {formatCurrency(priorBalances.get(selectedCustomer.id) ?? 0)}</span>
-                      <span>
-                        After: {formatCurrency(Math.max(0, (priorBalances.get(selectedCustomer.id) ?? 0) - Number(entry.cashReceived||'0')))}
-                      </span>
-                    </div>
+                    <BalancePreview
+                      className="md:col-span-2"
+                      current={priorBalances.get(selectedCustomer.id) ?? 0}
+                      after={Math.max(0, (priorBalances.get(selectedCustomer.id) ?? 0) - Number(entry.cashReceived||'0'))}
+                    />
                     <div className="md:col-span-3 space-y-2">
                       <Label>Notes</Label>
                       <Textarea rows={3} value={entry.notes} onChange={(ev)=> setEntry({ ...entry, notes: ev.target.value })} />
