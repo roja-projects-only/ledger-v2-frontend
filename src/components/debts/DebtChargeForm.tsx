@@ -26,6 +26,7 @@ export function DebtChargeForm({ onSuccess, defaultCustomerId, date }: DebtCharg
   const [notes, setNotes] = useState('');
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const containersRef = useRef<HTMLInputElement>(null);
 
   const selectedCustomer = customers.find(c => c.id === customerId);
@@ -35,9 +36,10 @@ export function DebtChargeForm({ onSuccess, defaultCustomerId, date }: DebtCharg
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customerId) return toast.error('Select a customer');
+    setError(null);
+    if (!customerId) { setError('Select a customer'); toast.error('Select a customer'); return; }
     const cnt = Number(containers);
-    if (!cnt || cnt <= 0) return toast.error('Enter containers > 0');
+    if (!cnt || cnt <= 0) { setError('Enter containers > 0'); toast.error('Enter containers > 0'); return; }
     setSubmitting(true);
     try {
       await createCharge({ customerId, containers: cnt, transactionDate: (date || new Date().toISOString()), notes: notes.trim() || undefined });
@@ -90,7 +92,17 @@ export function DebtChargeForm({ onSuccess, defaultCustomerId, date }: DebtCharg
       </div>
       <div className="space-y-2">
         <Label>Containers *</Label>
-        <NumberInput value={containers} onChange={setContainers} min={1} step={1} inputRef={containersRef} />
+        <NumberInput
+          value={containers}
+          onChange={(v)=>{ setContainers(v); if(error) setError(null); }}
+          min={1}
+          step={1}
+          inputRef={containersRef}
+          aria-label="Containers"
+          aria-describedby={error ? 'charge-error' : undefined}
+          aria-invalid={!!error}
+        />
+        {error && <p id="charge-error" className="text-xs text-destructive mt-1" role="alert">{error}</p>}
       </div>
       <div className="space-y-2">
         <Label>Notes</Label>

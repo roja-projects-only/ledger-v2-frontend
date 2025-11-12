@@ -18,12 +18,14 @@ export function DebtPaymentForm({ customerId, currentBalance, onSuccess }: DebtP
   const [amount, setAmount] = useState('');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const val = Number(amount);
-    if (!val || val <= 0) return toast.error('Enter payment amount > 0');
-    if (val > currentBalance + 0.001) return toast.error('Overpayment is not allowed');
+    setError(null);
+    if (!val || val <= 0) { setError('Enter payment amount > 0'); toast.error('Enter payment amount > 0'); return; }
+    if (val > currentBalance + 0.001) { setError('Overpayment is not allowed'); toast.error('Overpayment is not allowed'); return; }
     setSubmitting(true);
     try {
       await createPayment({ customerId, amount: val, transactionDate: new Date().toISOString(), notes: notes.trim() || undefined });
@@ -42,8 +44,17 @@ export function DebtPaymentForm({ customerId, currentBalance, onSuccess }: DebtP
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label>Payment Amount *</Label>
-        <NumberInput value={amount} onChange={setAmount} min={0.01} step={1} />
+        <NumberInput
+          value={amount}
+          onChange={(v)=>{ setAmount(v); if(error) setError(null); }}
+          min={0.01}
+          step={1}
+          aria-label="Payment Amount"
+          aria-describedby={error ? 'payment-error' : undefined}
+          aria-invalid={!!error}
+        />
         <p className="text-xs text-muted-foreground">Balance: {currentBalance.toLocaleString(undefined, { style:'currency', currency:'PHP' })}</p>
+        {error && <p id="payment-error" className="text-xs text-destructive" role="alert">{error}</p>}
       </div>
       <div className="space-y-2">
         <Label>Notes</Label>

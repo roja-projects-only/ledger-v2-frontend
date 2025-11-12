@@ -32,6 +32,7 @@ interface NumberInputProps {
   inputRef?: React.RefObject<HTMLInputElement | null>;
   "aria-label"?: string;
   "aria-describedby"?: string;
+  "aria-invalid"?: boolean;
 }
 
 // ============================================================================
@@ -51,6 +52,7 @@ export function NumberInput({
   inputRef,
   "aria-label": ariaLabel,
   "aria-describedby": ariaDescribedBy,
+  "aria-invalid": ariaInvalid,
 }: NumberInputProps) {
   const { vibrate } = useHaptics();
 
@@ -152,6 +154,7 @@ export function NumberInput({
           className="text-center text-lg font-medium"
           aria-label={ariaLabel}
           aria-describedby={ariaDescribedBy}
+          aria-invalid={ariaInvalid}
         />
 
         <Button

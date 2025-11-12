@@ -19,21 +19,28 @@ export function DebtAdjustmentForm({ customerId, currentBalance, onSuccess }: De
   const [reason, setReason] = useState('');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<{ amount?: string; reason?: string } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const val = Number(amount);
-    if (!val || Math.abs(val) < 0.0001) return toast.error('Adjustment amount cannot be zero');
-    if (!reason.trim()) return toast.error('Reason is required');
-    // Negative adjustment reduces balance; ensure not below zero
+    const nextErrors: { amount?: string; reason?: string } = {};
+    if (!val || Math.abs(val) < 0.0001) nextErrors.amount = 'Adjustment amount cannot be zero';
+    if (!reason.trim()) nextErrors.reason = 'Reason is required';
     if (val < 0 && Math.abs(val) > currentBalance + 0.001) {
-      return toast.error('Adjustment would create negative balance');
+      nextErrors.amount = 'Adjustment would create negative balance';
+    }
+    if (nextErrors.amount || nextErrors.reason) {
+      setErrors(nextErrors);
+      toast.error(nextErrors.amount || nextErrors.reason!);
+      return;
     }
     setSubmitting(true);
     try {
       await createAdjustment({ customerId, amount: val, reason: reason.trim(), transactionDate: new Date().toISOString(), notes: notes.trim() || undefined });
       toast.success('Adjustment recorded');
       setAmount(''); setReason(''); setNotes('');
+      setErrors(null);
       onSuccess?.();
     } catch {
       // handled by mutation toast
@@ -44,12 +51,28 @@ export function DebtAdjustmentForm({ customerId, currentBalance, onSuccess }: De
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label>Adjustment Amount * (use negative to reduce)</Label>
-        <NumberInput value={amount} onChange={setAmount} step={1} />
+        <NumberInput
+          value={amount}
+          onChange={(v)=>{ setAmount(v); if (errors) setErrors(null); }}
+          step={1}
+          aria-label="Adjustment Amount"
+          aria-describedby={errors?.amount ? 'adjustment-amount-error' : undefined}
+          aria-invalid={!!errors?.amount}
+        />
         <p className="text-xs text-muted-foreground">Current Balance: {currentBalance.toLocaleString(undefined,{style:'currency',currency:'PHP'})}</p>
+        {errors?.amount && <p id="adjustment-amount-error" className="text-xs text-destructive" role="alert">{errors.amount}</p>}
       </div>
       <div className="space-y-2">
         <Label>Reason *</Label>
-        <Textarea value={reason} onChange={(e)=>setReason(e.target.value)} rows={2} placeholder="Required reason" />
+        <Textarea
+          value={reason}
+          onChange={(e)=>{ setReason(e.target.value); if (errors) setErrors(null); }}
+          rows={2}
+          placeholder="Required reason"
+          aria-invalid={errors?.reason ? true : undefined}
+          aria-describedby={errors?.reason ? 'adjustment-reason-error' : undefined}
+        />
+        {errors?.reason && <p id="adjustment-reason-error" className="text-xs text-destructive" role="alert">{errors.reason}</p>}
       </div>
       <div className="space-y-2">
         <Label>Notes</Label>
