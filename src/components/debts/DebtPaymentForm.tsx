@@ -60,6 +60,7 @@ export function DebtPaymentForm({ customerId, currentBalance, onSuccess }: DebtP
           onChange={(v)=>{ setAmount(v); if(error) setError(null); }}
           min={0.01}
           step={1}
+          quickValues={[]}
           aria-label="Payment Amount"
           aria-describedby={error ? 'payment-error' : undefined}
           aria-invalid={!!error}
@@ -67,7 +68,7 @@ export function DebtPaymentForm({ customerId, currentBalance, onSuccess }: DebtP
         {uniquePresetValues.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-2">
             {uniquePresetValues.map(v => (
-              <Button key={v} type="button" variant="secondary" size="sm" onClick={()=>{ setAmount(String(v)); if(error) setError(null); }}>
+              <Button key={v} type="button" variant="outline" size="sm" className="flex-1 min-w-[60px]" onClick={()=>{ setAmount(String(v)); if(error) setError(null); }}>
                 {v === full ? 'Settle' : v === half ? `Half (${v})` : v}
               </Button>
             ))}

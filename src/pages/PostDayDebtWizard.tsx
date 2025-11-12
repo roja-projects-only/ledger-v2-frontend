@@ -239,7 +239,7 @@ export default function PostDayDebtWizard() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label>Cash Received (PHP)</Label>
-                      <NumberInput value={entry.cashReceived} onChange={(v)=> setEntry({ ...entry, cashReceived: v })} min={0.01} step={1} />
+                      <NumberInput value={entry.cashReceived} onChange={(v)=> setEntry({ ...entry, cashReceived: v })} min={0.01} step={1} quickValues={[]} />
                       <div className="flex flex-wrap gap-2">
                         {(() => {
                           const prev = priorBalances.get(selectedCustomer.id) ?? 0;
@@ -248,7 +248,7 @@ export default function PostDayDebtWizard() {
                           const full = prev > 0 ? prev : null;
                           const values = Array.from(new Set([...(base.filter(v=>v<=prev)), half, full].filter(Boolean)));
                           return values.map((v)=> (
-                            <Button key={v as number} type="button" variant="secondary" size="sm" onClick={()=> setEntry({ ...entry, cashReceived: String(v) })}>
+                            <Button key={v as number} type="button" variant="outline" size="sm" className="flex-1 min-w-[60px]" onClick={()=> setEntry({ ...entry, cashReceived: String(v) })}>
                               {v === full ? 'Settle' : v === half ? `Half (${v})` : v}
                             </Button>
                           ));
