@@ -12,76 +12,60 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useCustomers } from '@/lib/hooks/useCustomers';
 import { useDebts } from '@/lib/hooks/useDebts';
-import { ChevronsUpDown, Check, CalendarDays, ClipboardList, Users, UploadCloud, Layers } from 'lucide-react';
+import { ChevronsUpDown, Check, CalendarDays, ClipboardList, Users, UploadCloud, Layers, Droplet, HandCoins } from 'lucide-react';
+import { usePricing } from '@/lib/hooks/usePricing';
+import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 type Step = 1 | 2 | 3 | 4;
+type EntryType = 'CHARGE' | 'PAYMENT';
 
 interface LineEntry {
-  containers: string; // number string
-  payment: string; // number string
+  entryType: EntryType; // CHARGE or PAYMENT
+  containers: string; // qty (for CHARGE)
+  cashReceived: string; // PHP (for PAYMENT)
   notes: string;
-  finalMode: boolean; // Quick Final State toggle
 }
 
 export default function PostDayDebtWizard() {
   const navigate = useNavigate();
   const { customers } = useCustomers();
-  const { createCharge, createPayment } = useDebts();
+  const { createCharge, createPayment, summary } = useDebts();
+  const { getEffectivePrice, calculateTotal } = usePricing();
 
   const [step, setStep] = useState<Step>(1);
   const [date, setDate] = useState<Date | undefined>(new Date());
 
-  // Step 2: customer selection (multi-select)
+  // Step 2: single customer selection
   const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const allSelected = selectedIds.length === customers.length;
+  const [selectedId, setSelectedId] = useState<string>('');
 
-  // Step 3: entries per selected customer
-  const [entries, setEntries] = useState<Record<string, LineEntry>>({});
+  // Step 3: entry for selected customer
+  const [entry, setEntry] = useState<LineEntry>({ entryType: 'CHARGE', containers: '', cashReceived: '', notes: '' });
 
-  const selectedCustomers = useMemo(() => customers.filter(c => selectedIds.includes(c.id)), [customers, selectedIds]);
-
-  const ensureEntry = (id: string) => {
-    setEntries((old) => ({
-      ...old,
-      [id]: old[id] || { containers: '', payment: '', notes: '', finalMode: false },
-    }));
-  };
-
-  const setEntry = (id: string, patch: Partial<LineEntry>) => {
-    setEntries((old) => ({
-      ...old,
-      [id]: { ...(old[id] || { containers: '', payment: '', notes: '', finalMode: false }), ...patch },
-    }));
-  };
+  const selectedCustomer = useMemo(() => customers.find(c => c.id === selectedId), [customers, selectedId]);
 
   const next = () => setStep((s) => (Math.min(4, (s + 1) as number) as Step));
   const prev = () => setStep((s) => (Math.max(1, (s - 1) as number) as Step));
 
   const validateStep2 = () => {
-    if (selectedIds.length === 0) {
-      toast.error('Please select at least one customer');
+    if (!selectedId) {
+      toast.error('Please select a customer');
       return false;
     }
     return true;
   };
 
   const validateStep3 = () => {
-    for (const id of selectedIds) {
-      const e = entries[id];
-      if (!e) return false;
-      const containers = Number(e.containers || '0');
-      const payment = Number(e.payment || '0');
-      if (containers <= 0 && payment <= 0) {
-        toast.error('Each selected customer must have containers or payment');
-        return false;
-      }
-      if (containers < 0 || payment < 0) {
-        toast.error('Values cannot be negative');
-        return false;
-      }
+    if (entry.entryType === 'CHARGE') {
+      const containers = Number(entry.containers || '0');
+      if (containers <= 0) { toast.error('Enter containers > 0'); return false; }
+      if (containers < 0) { toast.error('Values cannot be negative'); return false; }
+    } else {
+      const cash = Number(entry.cashReceived || '0');
+      if (cash <= 0) { toast.error('Enter payment amount > 0'); return false; }
+      if (cash < 0) { toast.error('Values cannot be negative'); return false; }
     }
     return true;
   };
@@ -94,8 +78,6 @@ export default function PostDayDebtWizard() {
     }
     if (step === 2) {
       if (!validateStep2()) return;
-      // init entries
-      selectedIds.forEach(ensureEntry);
       next();
       return;
     }
@@ -110,21 +92,36 @@ export default function PostDayDebtWizard() {
 
   const toISO = (d?: Date) => (d ? d.toISOString().split('T')[0] : undefined);
 
-  const reviewRows = useMemo(() => {
-    return selectedCustomers.map((c) => {
-      const e = entries[c.id];
-      const containers = Number(e?.containers || '0');
-      const payment = Number(e?.payment || '0');
-      return {
-        id: c.id,
-        name: c.name,
-        containers,
-        payment,
-        notes: e?.notes || '',
-        finalMode: e?.finalMode || false,
-      };
+  const priorBalances = useMemo(() => {
+    const map = new Map<string, number>();
+    (summary || []).forEach((s: any) => {
+      if (s.customerId) map.set(s.customerId, s.balance);
     });
-  }, [selectedCustomers, entries]);
+    return map;
+  }, [summary]);
+
+  const reviewRow = useMemo(() => {
+    if (!selectedCustomer) return null;
+    const type = entry.entryType;
+    const unit = getEffectivePrice(selectedCustomer as any);
+    const containers = type === 'CHARGE' ? Number(entry.containers || '0') : 0;
+    const charge = type === 'CHARGE' ? calculateTotal(containers, selectedCustomer as any) : 0;
+    const cash = type === 'PAYMENT' ? Number(entry.cashReceived || '0') : 0;
+    const prev = priorBalances.get(selectedCustomer.id) ?? 0;
+    const resulting = Math.max(0, prev + charge - cash);
+    return {
+      id: selectedCustomer.id,
+      name: selectedCustomer.name,
+      type,
+      containers,
+      unit,
+      charge,
+      cash,
+      notes: entry.notes || '',
+      previousBalance: prev,
+      resultingBalance: resulting,
+    };
+  }, [selectedCustomer, entry, getEffectivePrice, calculateTotal, priorBalances]);
 
   const [submitting, setSubmitting] = useState(false);
 
@@ -133,14 +130,11 @@ export default function PostDayDebtWizard() {
     setSubmitting(true);
     try {
       const isoDate = toISO(date)!;
-      for (const row of reviewRows) {
-        // Expand final state into discrete transactions
-        if (row.containers > 0) {
-          await createCharge({ customerId: row.id, containers: row.containers, transactionDate: isoDate, notes: row.notes || undefined });
-        }
-        if (row.payment > 0) {
-          await createPayment({ customerId: row.id, amount: row.payment, transactionDate: isoDate, notes: row.notes || undefined });
-        }
+      if (!selectedCustomer || !reviewRow) { toast.error('Missing selection'); setSubmitting(false); return; }
+      if (reviewRow.type === 'CHARGE') {
+        await createCharge({ customerId: reviewRow.id, containers: reviewRow.containers, transactionDate: isoDate, notes: reviewRow.notes || undefined });
+      } else {
+        await createPayment({ customerId: reviewRow.id, amount: reviewRow.cash, transactionDate: isoDate, notes: reviewRow.notes || undefined });
       }
       toast.success('Post day entries recorded');
       navigate('/debts');
@@ -170,21 +164,21 @@ export default function PostDayDebtWizard() {
       {step === 1 && (
         <Card>
           <CardHeader><CardTitle>Select Date</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-4">
             <DatePicker value={date} onChange={setDate} />
           </CardContent>
         </Card>
       )}
 
-      {/* Step 2: Customers */}
+      {/* Step 2: Customer */}
       {step === 2 && (
         <Card>
-          <CardHeader><CardTitle>Select Customers</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
+          <CardHeader><CardTitle>Select Customer</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
             <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full sm:min-w-[260px] justify-between" role="combobox">
-                  {selectedIds.length === 0 ? 'Choose customers...' : `${selectedIds.length} selected`}
+                  {!selectedId ? 'Choose customer...' : customers.find(c=>c.id===selectedId)?.name}
                   <ChevronsUpDown className="h-4 w-4 opacity-50" />
                 </Button>
               </PopoverTrigger>
@@ -193,23 +187,12 @@ export default function PostDayDebtWizard() {
                   <CommandInput placeholder="Search customer" />
                   <CommandEmpty>No customer found.</CommandEmpty>
                   <CommandGroup className="max-h-72 overflow-auto">
-                    <CommandItem value="__all__" onSelect={() => {
-                      if (allSelected) setSelectedIds([]); else setSelectedIds(customers.map(c=>c.id));
-                    }}>
-                      <Check className={cn('mr-2 h-4 w-4', allSelected ? 'opacity-100' : 'opacity-0')} />
-                      All customers
-                    </CommandItem>
-                    {customers.map(c => {
-                      const active = selectedIds.includes(c.id);
-                      return (
-                        <CommandItem key={c.id} value={c.name} onSelect={() => {
-                          setSelectedIds((list) => active ? list.filter(id=>id!==c.id) : [...list, c.id]);
-                        }}>
-                          <Check className={cn('mr-2 h-4 w-4', active ? 'opacity-100' : 'opacity-0')} />
-                          {c.name}
-                        </CommandItem>
-                      );
-                    })}
+                    {customers.map(c => (
+                      <CommandItem key={c.id} value={c.name} onSelect={() => { setSelectedId(c.id); setCustomerPopoverOpen(false); }}>
+                        <Check className={cn('mr-2 h-4 w-4', selectedId === c.id ? 'opacity-100' : 'opacity-0')} />
+                        {c.name}
+                      </CommandItem>
+                    ))}
                   </CommandGroup>
                 </Command>
               </PopoverContent>
@@ -218,47 +201,60 @@ export default function PostDayDebtWizard() {
         </Card>
       )}
 
-      {/* Step 3: Entries */}
+      {/* Step 3: Entry */}
       {step === 3 && (
         <Card>
-          <CardHeader><CardTitle>Enter Containers / Payments</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {selectedCustomers.length === 0 && (<div className="text-sm text-muted-foreground">No customers selected.</div>)}
-            <div className="space-y-3">
-              {selectedCustomers.map(c => {
-                const e = entries[c.id] || { containers:'', payment:'', notes:'', finalMode:false };
-                return (
-                  <div key={c.id} className="rounded-lg border p-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="font-medium truncate">{c.name}</div>
-                      <div className="flex items-center gap-2 text-xs">
-                        <span>Final State</span>
-                        <Button variant={e.finalMode?'default':'outline'} size="sm" onClick={()=> setEntry(c.id, { finalMode: !e.finalMode })}>
-                          {e.finalMode ? 'On' : 'Off'}
-                        </Button>
-                      </div>
+          <CardHeader><CardTitle>Enter Entry</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            {!selectedCustomer && (<div className="text-sm text-muted-foreground">No customer selected.</div>)}
+            {selectedCustomer && (
+              <div className="rounded-lg border p-4 space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="font-medium truncate">{selectedCustomer.name}</div>
+                  <div className="text-xs text-muted-foreground">Prev balance: {formatCurrency(priorBalances.get(selectedCustomer.id) ?? 0)}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button type="button" variant={entry.entryType==='CHARGE'?'default':'outline'} size="sm" onClick={()=>setEntry({ ...entry, entryType:'CHARGE', cashReceived:'' })}>
+                    <Droplet className="h-3 w-3 mr-1" /> Charge
+                  </Button>
+                  <Button type="button" variant={entry.entryType==='PAYMENT'?'default':'outline'} size="sm" onClick={()=>setEntry({ ...entry, entryType:'PAYMENT', containers:'' })}>
+                    <HandCoins className="h-3 w-3 mr-1" /> Payment
+                  </Button>
+                </div>
+                {entry.entryType === 'CHARGE' ? (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label>Containers Delivered (qty)</Label>
+                      <NumberInput value={entry.containers} onChange={(v)=> setEntry({ ...entry, containers: v })} min={1} step={1} />
                     </div>
-                    <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <div>
-                        <Label>Containers</Label>
-                        <NumberInput value={e.containers} onChange={(v)=> setEntry(c.id, { containers: v })} min={0} step={1} />
-                      </div>
-                      <div>
-                        <Label>Payment (PHP)</Label>
-                        <NumberInput value={e.payment} onChange={(v)=> setEntry(c.id, { payment: v })} min={0} step={1} />
-                      </div>
-                      <div>
-                        <Label>Notes</Label>
-                        <Textarea rows={2} value={e.notes} onChange={(ev)=> setEntry(c.id, { notes: ev.target.value })} />
-                      </div>
+                    <div className="md:col-span-2 text-xs text-muted-foreground rounded-md border p-3 min-h-[44px] flex items-center">
+                      Unit: {formatCurrency(getEffectivePrice(selectedCustomer as any))} · Charge Preview: {formatCurrency(calculateTotal(Number(entry.containers||'0'), selectedCustomer as any))}
                     </div>
-                    {e.finalMode && (
-                      <p className="mt-2 text-xs text-muted-foreground">Final State mode: values will be expanded into discrete charge/payment transactions on submit.</p>
-                    )}
+                    <div className="md:col-span-3 space-y-2">
+                      <Label>Notes</Label>
+                      <Textarea rows={3} value={entry.notes} onChange={(ev)=> setEntry({ ...entry, notes: ev.target.value })} />
+                    </div>
                   </div>
-                );
-              })}
-            </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label>Cash Received (PHP)</Label>
+                      <NumberInput value={entry.cashReceived} onChange={(v)=> setEntry({ ...entry, cashReceived: v })} min={0.01} step={1} />
+                    </div>
+                    <div className="md:col-span-2 text-xs text-muted-foreground rounded-md border p-3 min-h-[44px] flex items-center justify-between">
+                      <span>Current: {formatCurrency(priorBalances.get(selectedCustomer.id) ?? 0)}</span>
+                      <span>
+                        After: {formatCurrency(Math.max(0, (priorBalances.get(selectedCustomer.id) ?? 0) - Number(entry.cashReceived||'0')))}
+                      </span>
+                    </div>
+                    <div className="md:col-span-3 space-y-2">
+                      <Label>Notes</Label>
+                      <Textarea rows={3} value={entry.notes} onChange={(ev)=> setEntry({ ...entry, notes: ev.target.value })} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -267,25 +263,32 @@ export default function PostDayDebtWizard() {
       {step === 4 && (
         <Card>
           <CardHeader><CardTitle>Review</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-4">
             <div className="text-sm">Date: <b>{date?.toLocaleDateString()}</b></div>
             <div className="rounded-lg border overflow-x-auto">
-              <div className="grid grid-cols-12 gap-2 p-2 text-xs text-muted-foreground min-w-[560px]">
-                <div className="col-span-4">Customer</div>
-                <div className="col-span-2 text-right">Containers</div>
-                <div className="col-span-2 text-right">Payment</div>
-                <div className="col-span-4">Notes</div>
+              <div className="grid grid-cols-12 gap-3 p-3 text-xs text-muted-foreground min-w-[820px]">
+                <div className="col-span-3">Customer</div>
+                <div className="col-span-2">Type</div>
+                <div className="col-span-1 text-right">Qty</div>
+                <div className="col-span-2 text-right">Unit / Charge</div>
+                <div className="col-span-2 text-right">Cash</div>
+                <div className="col-span-1 text-right">Prev</div>
+                <div className="col-span-1 text-right">Result</div>
               </div>
               <Separator />
-              <div className="divide-y min-w-[560px]">
-                {reviewRows.map((r)=> (
-                  <div key={r.id} className="grid grid-cols-12 gap-2 p-2 text-sm">
-                    <div className="col-span-4 truncate">{r.name}</div>
-                    <div className="col-span-2 text-right">{r.containers}</div>
-                    <div className="col-span-2 text-right">{r.payment}</div>
-                    <div className="col-span-4 truncate">{r.notes}</div>
+              <div className="divide-y min-w-[820px]">
+                {reviewRow && (
+                  <div className="grid grid-cols-12 gap-3 p-3 text-sm">
+                    <div className="col-span-3 truncate">{reviewRow.name}</div>
+                    <div className="col-span-2">{reviewRow.type === 'CHARGE' ? 'Charge' : 'Payment'}</div>
+                    <div className="col-span-1 text-right">{reviewRow.containers || '-'}</div>
+                    <div className="col-span-2 text-right">{formatCurrency(reviewRow.unit)} / {formatCurrency(reviewRow.charge)}</div>
+                    <div className="col-span-2 text-right">{formatCurrency(reviewRow.cash)}</div>
+                    <div className="col-span-1 text-right">{formatCurrency(reviewRow.previousBalance)}</div>
+                    <div className="col-span-1 text-right font-medium">{formatCurrency(reviewRow.resultingBalance)}</div>
+                    {reviewRow.notes && <div className="col-span-12 text-xs text-muted-foreground">Note: {reviewRow.notes}</div>}
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </CardContent>
