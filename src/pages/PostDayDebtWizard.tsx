@@ -240,6 +240,20 @@ export default function PostDayDebtWizard() {
                     <div className="space-y-2">
                       <Label>Cash Received (PHP)</Label>
                       <NumberInput value={entry.cashReceived} onChange={(v)=> setEntry({ ...entry, cashReceived: v })} min={0.01} step={1} />
+                      <div className="flex flex-wrap gap-2">
+                        {(() => {
+                          const prev = priorBalances.get(selectedCustomer.id) ?? 0;
+                          const base = [50,100,150,200,300,500];
+                          const half = prev > 0 ? Math.max(1, Math.round(prev/2)) : null;
+                          const full = prev > 0 ? prev : null;
+                          const values = Array.from(new Set([...(base.filter(v=>v<=prev)), half, full].filter(Boolean)));
+                          return values.map((v)=> (
+                            <Button key={v as number} type="button" variant="secondary" size="sm" onClick={()=> setEntry({ ...entry, cashReceived: String(v) })}>
+                              {v === full ? 'Settle' : v === half ? `Half (${v})` : v}
+                            </Button>
+                          ));
+                        })()}
+                      </div>
                     </div>
                     <div className="md:col-span-2 text-xs text-muted-foreground rounded-md border p-3 min-h-[44px] flex items-center justify-between">
                       <span>Current: {formatCurrency(priorBalances.get(selectedCustomer.id) ?? 0)}</span>

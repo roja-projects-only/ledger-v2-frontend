@@ -41,6 +41,12 @@ export function DebtPaymentForm({ customerId, currentBalance, onSuccess }: DebtP
   };
 
   const projectedBalance = amount ? Math.max(0, currentBalance - Number(amount)) : currentBalance;
+  const numericBalance = currentBalance || 0;
+  const basePresets = [50,100,150,200,300,500];
+  const filteredPresets = basePresets.filter(p=>p <= numericBalance && p>=50); // only show relevant amounts
+  const half = numericBalance > 0 ? Math.max(1, Math.round(numericBalance/2)) : null;
+  const full = numericBalance > 0 ? numericBalance : null;
+  const uniquePresetValues = Array.from(new Set([...filteredPresets, half, full].filter(Boolean)));
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -58,6 +64,15 @@ export function DebtPaymentForm({ customerId, currentBalance, onSuccess }: DebtP
           aria-describedby={error ? 'payment-error' : undefined}
           aria-invalid={!!error}
         />
+        {uniquePresetValues.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {uniquePresetValues.map(v => (
+              <Button key={v} type="button" variant="secondary" size="sm" onClick={()=>{ setAmount(String(v)); if(error) setError(null); }}>
+                {v === full ? 'Settle' : v === half ? `Half (${v})` : v}
+              </Button>
+            ))}
+          </div>
+        )}
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>Current: {currentBalance.toLocaleString(undefined, { style:'currency', currency:'PHP' })}</span>
           <span>After payment: {projectedBalance.toLocaleString(undefined, { style:'currency', currency:'PHP' })}</span>
