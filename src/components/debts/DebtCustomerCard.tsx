@@ -39,10 +39,10 @@ export function DebtCustomerCard({ item, location, onViewDetails, onRecordPaymen
         </div>
         <Separator />
         <div className="flex flex-col sm:flex-row gap-2">
-          <Button variant="outline" className="w-full" onClick={() => onViewDetails?.(item.customerId)}>
+          <Button variant="outline" className="w-full sm:flex-1" onClick={() => onViewDetails?.(item.customerId)}>
             <Eye className="h-4 w-4 mr-1" /> View Details
           </Button>
-          <Button variant="default" className="w-full" onClick={() => onRecordPayment?.(item.customerId)} disabled={isZero}>
+          <Button variant="default" className="w-full sm:flex-1" onClick={() => onRecordPayment?.(item.customerId)} disabled={isZero}>
             <CreditCard className="h-4 w-4 mr-1" /> Record Payment
           </Button>
         </div>
