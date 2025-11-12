@@ -44,19 +44,22 @@ export function DebtHistoryTable({ initialFilters }: DebtHistoryTableProps) {
   const pg = data?.pagination;
 
   const exportCSV = () => {
-    const header = ['Date/Time','Customer','Action','Containers','Amount','Balance After','Note','Entered By'];
-    const csv = [header.join(',')].concat(
-      rows.map(r => [
-        new Date(r.transactionDate).toLocaleString(),
-        r.debtTabId,
-        r.transactionType,
-        String(r.containers ?? ''),
-        String(r.amount ?? ''),
-        String(r.balanceAfter ?? ''),
-        JSON.stringify(r.notes ?? ''),
-        r.enteredById ?? '',
-      ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(','))
-    ).join('\n');
+    const meta = [
+      `Generated At:,${new Date().toISOString()}`,
+      `Filters:,Customer=${customerId||'ALL'}; Type=${type||'ALL'}; Status=${status||'ALL'}; Start=${filters.startDate||''}; End=${filters.endDate||''}`
+    ].join('\n');
+    const header = ['Date/Time','Customer Tab','Action','Containers','Amount','Balance After','Note','Entered By'];
+    const body = rows.map(r => [
+      new Date(r.transactionDate).toLocaleString(),
+      r.debtTabId,
+      r.transactionType,
+      r.containers ?? '',
+      r.amount ?? '',
+      r.balanceAfter,
+      r.notes ?? '',
+      r.enteredById ?? '',
+    ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const csv = `${meta}\n\n${header.join(',')}\n${body}`;
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -64,6 +67,42 @@ export function DebtHistoryTable({ initialFilters }: DebtHistoryTableProps) {
     a.download = `debt-history-${Date.now()}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const exportPDF = () => {
+    // Without external libs, open a print-friendly window and let user "Save as PDF".
+    const w = window.open('', '_blank');
+    if (!w) return;
+    const style = `
+      <style>
+        body { font-family: system-ui, Arial, sans-serif; margin: 24px; }
+        h1 { font-size: 18px; margin: 0 0 8px; }
+        .meta { font-size: 12px; margin-bottom: 16px; color:#555; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th, td { border: 1px solid #444; padding: 4px 6px; vertical-align: top; }
+        th { background: #f2f2f2; }
+        .nowrap { white-space: nowrap; }
+      </style>`;
+    const meta = `Customer: ${customerId||'ALL'} | Type: ${type||'ALL'} | Status: ${status||'ALL'} | Start: ${filters.startDate||''} | End: ${filters.endDate||''}`;
+    const rowsHtml = rows.map(r => `<tr>
+      <td class="nowrap">${new Date(r.transactionDate).toLocaleString()}</td>
+      <td>${r.debtTabId}</td>
+      <td>${r.transactionType}</td>
+      <td class="nowrap" style="text-align:right">${r.containers ?? ''}</td>
+      <td class="nowrap" style="text-align:right">${r.amount ?? ''}</td>
+      <td class="nowrap" style="text-align:right">${r.balanceAfter}</td>
+      <td>${(r.notes||'').replace(/</g,'&lt;')}</td>
+      <td>${r.enteredById ?? ''}</td>
+    </tr>`).join('');
+    w.document.write(`<!DOCTYPE html><html><head><title>Debt History Export</title>${style}</head><body>
+      <h1>Debt History Export</h1>
+      <div class="meta">Generated: ${new Date().toLocaleString()}<br>${meta}</div>
+      <table><thead><tr>
+        <th>Date/Time</th><th>Customer Tab</th><th>Action</th><th>Containers</th><th>Amount</th><th>Balance After</th><th>Note</th><th>Entered By</th>
+      </tr></thead><tbody>${rowsHtml}</tbody></table>
+      <script>window.print();</script>
+    </body></html>`);
+    w.document.close();
   };
 
   return (
@@ -112,7 +151,7 @@ export function DebtHistoryTable({ initialFilters }: DebtHistoryTableProps) {
 
         <div className="ml-auto flex gap-2">
           <Button variant="outline" onClick={exportCSV}><Download className="h-4 w-4 mr-1" /> CSV</Button>
-          <Button variant="outline" disabled title="PDF export coming soon"><FileText className="h-4 w-4 mr-1" /> PDF</Button>
+          <Button variant="outline" onClick={exportPDF}><FileText className="h-4 w-4 mr-1" /> PDF</Button>
         </div>
       </div>
 
