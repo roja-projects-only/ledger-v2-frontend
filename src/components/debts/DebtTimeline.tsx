@@ -73,7 +73,13 @@ export function DebtTimeline({ transactions, selectedId, className }: DebtTimeli
                 <Separator className="my-2" />
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>Balance after: <b className="text-foreground">{t.balanceAfter.toLocaleString()}</b></span>
-                  {t.enteredById && <span>Entered by: {t.enteredById}</span>}
+                  {(
+                    ((t as any).enteredBy?.username) || t.enteredById
+                  ) && (
+                    <span>
+                      Entered by: {((t as any).enteredBy?.username) || t.enteredById}
+                    </span>
+                  )}
                 </div>
                 {t.notes && (<p className="mt-1 text-xs text-muted-foreground">Note: {t.notes}</p>)}
               </div>

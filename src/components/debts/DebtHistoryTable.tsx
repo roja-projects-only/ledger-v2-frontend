@@ -186,7 +186,7 @@ export function DebtHistoryTable({ initialFilters }: DebtHistoryTableProps) {
                 <TableCell className="text-right">{r.amount ? formatCurrency(r.amount) : ''}</TableCell>
                 <TableCell className="text-right">{formatCurrency(r.balanceAfter)}</TableCell>
                 <TableCell className="truncate max-w-[240px]">{r.notes}</TableCell>
-                <TableCell>{r.enteredById ?? ''}</TableCell>
+                <TableCell>{(r as any).enteredBy?.username ?? r.enteredById ?? ''}</TableCell>
               </TableRow>
             );})}
           </TableBody>
@@ -216,6 +216,7 @@ export function DebtHistoryTable({ initialFilters }: DebtHistoryTableProps) {
                 </div>
               </div>
               {r.notes && <div className="mt-1 text-xs text-muted-foreground">Note: {r.notes}</div>}
+              <div className="mt-1 text-xs text-muted-foreground">Entered by: {(r as any).enteredBy?.username ?? r.enteredById ?? ''}</div>
             </div>
           </button>
         );})}
