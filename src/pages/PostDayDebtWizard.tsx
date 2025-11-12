@@ -146,14 +146,14 @@ export default function PostDayDebtWizard() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl p-4 space-y-4">
+    <div className="mx-auto max-w-5xl p-3 sm:p-4 space-y-4">
       <div className="flex items-center gap-2">
         <Layers className="h-5 w-5" />
         <h1 className="text-xl font-semibold">Post Day (Debts)</h1>
       </div>
 
       {/* Step Header */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap pb-1">
         <Badge variant={step===1?'default':'outline'}><CalendarDays className="h-3 w-3 mr-1" /> Date</Badge>
         <Badge variant={step===2?'default':'outline'}><Users className="h-3 w-3 mr-1" /> Customers</Badge>
         <Badge variant={step===3?'default':'outline'}><ClipboardList className="h-3 w-3 mr-1" /> Entries</Badge>
@@ -182,7 +182,7 @@ export default function PostDayDebtWizard() {
                   <ChevronsUpDown className="h-4 w-4 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[var(--radix-popover-trigger-width)] max-w-[calc(100vw-2rem)] p-0" align="start">
+              <PopoverContent className="w-[min(90vw,var(--radix-popover-trigger-width))] max-w-[calc(100vw-2rem)] p-0" align="start">
                 <Command>
                   <CommandInput placeholder="Search customer" />
                   <CommandEmpty>No customer found.</CommandEmpty>
@@ -213,11 +213,11 @@ export default function PostDayDebtWizard() {
                   <div className="font-medium truncate">{selectedCustomer.name}</div>
                   <div className="text-xs text-muted-foreground">Prev balance: {formatCurrency(priorBalances.get(selectedCustomer.id) ?? 0)}</div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button type="button" variant={entry.entryType==='CHARGE'?'default':'outline'} size="sm" onClick={()=>setEntry({ ...entry, entryType:'CHARGE', cashReceived:'' })}>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button type="button" className="w-full xs:w-auto sm:w-auto" variant={entry.entryType==='CHARGE'?'default':'outline'} size="sm" onClick={()=>setEntry({ ...entry, entryType:'CHARGE', cashReceived:'' })}>
                     <Droplet className="h-3 w-3 mr-1" /> Charge
                   </Button>
-                  <Button type="button" variant={entry.entryType==='PAYMENT'?'default':'outline'} size="sm" onClick={()=>setEntry({ ...entry, entryType:'PAYMENT', containers:'' })}>
+                  <Button type="button" className="w-full xs:w-auto sm:w-auto" variant={entry.entryType==='PAYMENT'?'default':'outline'} size="sm" onClick={()=>setEntry({ ...entry, entryType:'PAYMENT', containers:'' })}>
                     <HandCoins className="h-3 w-3 mr-1" /> Payment
                   </Button>
                 </div>
@@ -265,7 +265,8 @@ export default function PostDayDebtWizard() {
           <CardHeader><CardTitle>Review</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="text-sm">Date: <b>{date?.toLocaleDateString()}</b></div>
-            <div className="rounded-lg border overflow-x-auto">
+            {/* Desktop table */}
+            <div className="hidden md:block rounded-lg border overflow-x-auto">
               <div className="grid grid-cols-12 gap-3 p-3 text-xs text-muted-foreground min-w-[820px]">
                 <div className="col-span-3">Customer</div>
                 <div className="col-span-2">Type</div>
@@ -291,17 +292,36 @@ export default function PostDayDebtWizard() {
                 )}
               </div>
             </div>
+            {/* Mobile cards */}
+            <div className="md:hidden space-y-3">
+              {reviewRow && (
+                <div className="rounded-lg border p-3 text-sm">
+                  <div className="font-medium">{reviewRow.name}</div>
+                  <div className="mt-1 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                    <div>Type</div><div className="text-right text-foreground">{reviewRow.type === 'CHARGE' ? 'Charge' : 'Payment'}</div>
+                    <div>Qty</div><div className="text-right text-foreground">{reviewRow.containers || '-'}</div>
+                    <div>Unit</div><div className="text-right text-foreground">{formatCurrency(reviewRow.unit)}</div>
+                    <div>Charge</div><div className="text-right text-foreground">{formatCurrency(reviewRow.charge)}</div>
+                    <div>Cash</div><div className="text-right text-foreground">{formatCurrency(reviewRow.cash)}</div>
+                    <div>Prev</div><div className="text-right text-foreground">{formatCurrency(reviewRow.previousBalance)}</div>
+                    <div>Result</div><div className="text-right text-foreground font-medium">{formatCurrency(reviewRow.resultingBalance)}</div>
+                  </div>
+                  {reviewRow.notes && <div className="mt-2 text-xs text-muted-foreground">Note: {reviewRow.notes}</div>}
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       )}
-
-      <div className="flex items-center justify-between">
-        <Button variant="outline" onClick={onBack} disabled={step===1}>Back</Button>
-        {step < 4 ? (
-          <Button onClick={onNext}>Next</Button>
-        ) : (
-          <Button onClick={onSubmit} disabled={submitting}>{submitting ? 'Submitting...' : 'Submit All'}</Button>
-        )}
+      <div className="sticky bottom-0 left-0 right-0 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t">
+        <div className="mx-auto max-w-5xl p-3 flex gap-2">
+          <Button className="flex-1 sm:flex-none" variant="outline" onClick={onBack} disabled={step===1}>Back</Button>
+          {step < 4 ? (
+            <Button className="flex-1 sm:flex-none" onClick={onNext}>Next</Button>
+          ) : (
+            <Button className="flex-1 sm:flex-none" onClick={onSubmit} disabled={submitting}>{submitting ? 'Submitting...' : 'Submit All'}</Button>
+          )}
+        </div>
       </div>
     </div>
   );
