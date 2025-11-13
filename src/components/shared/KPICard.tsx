@@ -45,7 +45,8 @@ export function KPICard({
 }: KPICardProps) {
   const theme = variant ? getKPIVariant(variant) : null;
   const cardClasses = cn(
-    "h-full gap-0 sm:gap-0",
+    // Compact mobile height to avoid tall, vertical look
+    "h-full gap-0 sm:gap-0 min-h-[88px] sm:min-h-[108px]",
     theme && "border-2",
     theme?.bg,
     theme?.border,
@@ -71,34 +72,34 @@ export function KPICard({
 
   return (
     <Card className={cardClasses}>
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-1 sm:pb-2">
         <div className="flex items-center gap-2">
           {Icon && (
             <div
               className={cn(
-                "p-1.5 rounded-md",
+                "p-1.5 sm:p-2 rounded-md",
                 theme?.iconBg ?? "bg-primary/10",
               )}
             >
               <Icon
                 className={cn(
-                  "h-3.5 w-3.5",
+                  "h-3.5 w-3.5 sm:h-4 sm:w-4",
                   theme?.icon ?? "text-primary",
                 )}
               />
             </div>
           )}
-          <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          <CardTitle className="text-[11px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide">
             {label}
           </CardTitle>
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="text-2xl font-bold">{value}</div>
+        <div className="text-xl sm:text-2xl font-bold leading-tight">{value}</div>
         {trend && (
           <p
             className={cn(
-              "text-xs mt-0.5",
+              "text-[11px] sm:text-xs mt-0.5",
               trend.direction === "up" && "text-green-600",
               trend.direction === "down" && "text-red-600",
               trend.direction === "neutral" && "text-muted-foreground"

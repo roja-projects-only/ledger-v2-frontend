@@ -94,7 +94,8 @@ export function StatCard({
 
   // Apply KPI color theme to card
   const cardClasses = cn(
-    "h-full gap-0 sm:gap-0",
+    // Keep cards compact on mobile to avoid tall rectangles
+    "h-full gap-0 sm:gap-0 min-h-[92px] sm:min-h-[110px]",
     "border-2",
     theme.bg,
     theme.border,
@@ -121,41 +122,41 @@ export function StatCard({
 
   return (
     <Card className={cardClasses}>
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-1 sm:pb-2">
         <div className="flex items-center gap-2">
           {/* Icon Badge */}
           <div
             className={cn(
-              "p-2 rounded-md",
+              "p-1.5 sm:p-2 rounded-md",
               theme.iconBg
             )}
           >
-            <Icon className={cn("h-4 w-4", theme.icon)} />
+            <Icon className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", theme.icon)} />
           </div>
           
           {/* Label */}
-          <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <h3 className="text-[11px] sm:text-xs font-medium uppercase tracking-wide text-muted-foreground">
             {label}
           </h3>
         </div>
       </CardHeader>
       
-      <CardContent className="pt-0 space-y-2">
+      <CardContent className="pt-0 space-y-1.5 sm:space-y-2">
         {/* Large Value */}
-        <p className="text-3xl font-bold">
+        <p className="text-2xl sm:text-3xl font-bold leading-tight">
           {value}
         </p>
         
         {/* Trend Indicator */}
         <div className="flex items-center gap-1">
-          <TrendIcon className={cn("h-3.5 w-3.5", trendColor)} />
-          <p className={cn("text-sm font-medium", trendColor)}>
+          <TrendIcon className={cn("h-3 w-3 sm:h-3.5 sm:w-3.5", trendColor)} />
+          <p className={cn("text-xs sm:text-sm font-medium", trendColor)}>
             {Math.abs(trend.percentage).toFixed(1)}% {trend.label}
           </p>
         </div>
         
         {/* Mini Sparkline */}
-        <div className="pt-2 -mx-2">
+        <div className="pt-1 sm:pt-2 -mx-2">
           <MiniSparkline
             data={sparklineData}
             color={sparklineColor}
