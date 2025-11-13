@@ -28,6 +28,8 @@ import {
   LogOut,
   ChevronRight,
   BarChart3,
+  Wallet,
+  Wand2,
 } from "lucide-react";
 
 // ============================================================================
@@ -57,6 +59,8 @@ const NAV_LINKS: NavLink[] = [
   { label: "Analysis", path: "/analysis", icon: TrendingUp },
   { label: "Customers", path: "/customers", icon: Users },
   { label: "History", path: "/history", icon: History },
+  { label: "Debts", path: "/debts", icon: Wallet },
+  { label: "Post Day (Debts)", path: "/debts/post-day", icon: Wand2 },
   { label: "Settings", path: "/settings", icon: Settings, adminOnly: true },
 ];
 

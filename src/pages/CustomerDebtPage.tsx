@@ -211,9 +211,11 @@ export default function CustomerDebtPage() {
       </Card>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {(['open','history','notes'] as const).map(t => (
-          <Button key={t} variant={activeTab===t? 'default':'outline'} onClick={()=>setActiveTab(t)}>{t==='open'?'Open Tab': t==='history'?'Past Tabs':'Notes'}</Button>
+          <Button key={t} className="w-full xs:w-auto" variant={activeTab===t? 'default':'outline'} onClick={()=>setActiveTab(t)}>
+            {t==='open'?'Open Tab': t==='history'?'Past Tabs':'Notes'}
+          </Button>
         ))}
       </div>
 

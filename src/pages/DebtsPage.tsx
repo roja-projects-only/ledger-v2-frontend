@@ -104,13 +104,13 @@ export default function DebtsPage() {
         </div>
       ) : (
         <>
-          <div className="flex items-center gap-2">
-            <Button variant={tab==='list'?'default':'outline'} onClick={()=>setTab('list')}><Users className="h-4 w-4 mr-1" /> Customer List</Button>
-            <Button variant={tab==='history'?'default':'outline'} onClick={()=>setTab('history')}>History Log</Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button className="w-full xs:w-auto" variant={tab==='list'?'default':'outline'} onClick={()=>setTab('list')}><Users className="h-4 w-4 mr-1" /> Customer List</Button>
+            <Button className="w-full xs:w-auto" variant={tab==='history'?'default':'outline'} onClick={()=>setTab('history')}>History Log</Button>
 
             <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="ml-auto min-w-[260px] justify-between" role="combobox">
+                <Button variant="outline" className="w-full sm:ml-auto sm:min-w-[260px] justify-between" role="combobox">
                   Search customers...
                   <ChevronsUpDown className="h-4 w-4 opacity-50" />
                 </Button>
