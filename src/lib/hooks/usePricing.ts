@@ -1,9 +1,10 @@
 /**
  * usePricing - Custom hook for pricing calculations with custom pricing support
- * 
+ *
  * Handles pricing logic with toggle-aware behavior:
  * - When enableCustomPricing is ON: Use customer.customUnitPrice if set, else global
  * - When enableCustomPricing is OFF: Always use global price (ignore custom prices)
+ * - While settings are loading: default to global price to keep UI deterministic
  */
 
 import { useSettings } from "@/lib/contexts/SettingsContext";

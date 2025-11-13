@@ -49,7 +49,7 @@ import { getEffectivePriceFromData } from "@/lib/hooks/usePricing";
 
 ```tsx
 export function MyComponent({ sale, customer }: Props) {
-  const { getEffectivePrice } = usePricing();
+  const { getEffectivePrice, customPricingEnabled } = usePricing();
   
   // Calculate effective price
   const effectivePrice = getEffectivePrice(customer);
@@ -130,7 +130,8 @@ const price = getEffectivePrice(customer);
 - [ ] Toggle ON → Custom prices are used
 - [ ] No customer → Falls back gracefully
 - [ ] Sale creation → Correct price saved
-- [ ] Display updates → When toggle changes
+- [ ] Display updates → When toggle changes (watch `customPricingEnabled`)
+- [ ] Settings still loading → Hooks default to global price until data arrives
 
 ---
 

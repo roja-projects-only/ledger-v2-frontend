@@ -27,7 +27,7 @@ Sales records store `unitPrice` at the time of creation. However, the **effectiv
 2. **Toggle ON**: Use `customer.customUnitPrice` if set, else fall back to global price
 
 ### The Solution
-Never calculate totals directly with `sale.unitPrice` or `sale.total`. Always use the pricing utilities.
+Never calculate totals directly with `sale.unitPrice` or `sale.total`. Always use the pricing utilities. They mirror the backend contract (`settings.enableCustomPricing`, `settings.unitPrice`, `customer.customUnitPrice`) and fall back to sensible defaults while the Settings context is loading.
 
 ---
 
@@ -125,7 +125,7 @@ const {
   calculateTotal,         // (quantity: number, customer?: Customer) => number
   hasCustomPrice,         // (customer?: Customer) => boolean
   isCustomPriceActive,    // (customer?: Customer) => boolean
-  customPricingEnabled    // boolean
+  customPricingEnabled    // boolean (defaults to true until settings load)
 } = usePricing();
 ```
 

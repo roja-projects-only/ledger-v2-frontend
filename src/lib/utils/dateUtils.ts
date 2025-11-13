@@ -1,5 +1,6 @@
 /**
- * Enhanced date/time utilities for consistent formatting and calculations
+ * Enhanced date/time utilities for consistent formatting and calculations.
+ * Defaults to the Manila timezone (`defaultDateConfig.timezone`) for all transforms.
  */
 
 import {

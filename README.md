@@ -2,7 +2,7 @@
 
 > **Part of Polyrepo**: [Backend Repository](https://github.com/walaywashere/ledger-v2-backend) | [Migration Guide](https://github.com/walaywashere/ledger-v2/blob/main/POLYREPO_MIGRATION.md)
 
-React + Vite + TypeScript frontend web app for a family-run water refilling business sales tracking system with React Query caching and mobile-optimized UI.
+React + Vite + TypeScript frontend web app for a family-run water refilling business sales tracking system with React Query caching, debt management tools, and mobile-optimized UI.
 
 ## 🚀 Quick Start
 
@@ -39,15 +39,20 @@ App runs at: `http://localhost:5173`
 - When **ON**: Each customer can have individual unit price
 - When **OFF**: All sales use global unit price
 - Toggle respects all existing custom prices (reversible)
-- **See**: `docs/PRICING_GUIDE.md` for implementation details
+- Pricing-aware components must import `usePricing()` or `getEffectivePriceFromData()` (see `docs/PRICING_GUIDE.md`)
 
 ### Pages
-- **Today** (`/`) - Quick entry form + today's sales + KPIs + location chart
-- **Previous** (`/previous`) - Date selector + past entries
-- **Analysis** (`/analysis`) - Multi-day trends with charts
+- **Dashboard** (`/`) - At-a-glance KPIs + stitched analytics (lazy loaded)
+- **Today** (`/today`) - Quick entry form + today's sales + KPIs + location chart
+- **Previous** (`/previous`) - Date selector + past entries with delete confirmations
+- **Analysis** (`/analysis`) - Multi-day trend charts (daily + location performance)
 - **History** (`/history`) - Per-customer purchase timeline
 - **Customers** (`/customers`) - Customer CRUD with search/pagination
-- **Settings** (`/settings`) - Unit price & business name config (admin only)
+- **Debts** (`/debts`) - Running tab overview with charges, payments, adjustments
+- **Debts > Customer** (`/debts/customer/:customerId`) - Customer debt detail + ledger
+- **Debts Wizard** (`/debts/post-day`) - Guided flow for post-day reconciliation
+- **Settings** (`/settings`) - Unit price, custom pricing toggle, business info (admin only)
+- **Login** (`/login`) - Passcode-based authentication
 
 ### Performance Optimizations
 - ⚡ **React Query Caching** - 80% reduction in API requests
@@ -82,12 +87,16 @@ frontend-v2/
 │   └── PRICING_GUIDE.md    # ⚠️ Required reading for pricing components
 ├── src/
 │   ├── pages/              # Route-level pages
+│   │   ├── Dashboard.tsx
 │   │   ├── Today.tsx
 │   │   ├── PreviousEntries.tsx
 │   │   ├── DateRangeAnalysis.tsx
 │   │   ├── CustomerHistory.tsx
 │   │   ├── Customers.tsx
 │   │   ├── Settings.tsx
+│   │   ├── DebtsPage.tsx
+│   │   ├── CustomerDebtPage.tsx
+│   │   ├── PostDayDebtWizard.tsx
 │   │   └── Login.tsx
 │   ├── components/         # Reusable UI components
 │   │   ├── layout/         # Sidebar, Navbar, MobileNav
@@ -238,19 +247,19 @@ VITE_API_URL=https://your-backend.railway.app/api
 ## 📝 Development Notes
 
 ### Key Patterns
-- **Path Aliases**: Use `@/` prefix for imports
-- **API Responses**: Always use adapter functions
-- **Date Handling**: Extract date part `.split('T')[0]`
-- **Loading States**: Use Skeleton components
-- **Error Handling**: Show toast notifications
-- **Pricing Calculations**: ALWAYS use `usePricing()` hook - see `docs/PRICING_GUIDE.md`
+- **Path Aliases**: Use `@/` prefix for imports (configured in `tsconfig`)
+- **API Responses**: Route adapters normalize backend envelopes (see `lib/api/adapters.ts`)
+- **Date Handling**: Always rely on helpers in `lib/utils/dateUtils.ts` or `getTodayISO()` for Manila timezone accuracy
+- **State Management**: React Query caches API data; domain hooks wrap queries/mutations for Today/Dashboard/Debt flows
+- **Loading States**: Use Skeleton components and optimistic updates via React Query mutations
+- **Error Handling**: Surface issues via Sonner toasts (`<Toaster />` in `App.tsx`) and domain hook error callbacks
+- **Pricing Calculations**: ALWAYS use `usePricing()` or `getEffectivePriceFromData()` (docs/PRICING_GUIDE.md)
 
 ### React Query Benefits
-- Automatic caching (pages share data)
-- Background refetch on window focus
-- Optimistic updates (instant UI)
-- Request deduplication
-- Error rollback
+- Automatic caching (shared across Today, Dashboard, Debt flows)
+- Background refetch on window focus + stale-time awareness (30s default)
+- Optimistic updates (instant UI when adding sales/charges)
+- Request deduplication and error rollbacks
 
 ### Performance Tips
 - Use `useMemo` for computed values
