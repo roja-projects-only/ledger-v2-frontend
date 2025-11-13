@@ -27,6 +27,10 @@ const CustomerHistory = lazy(() => import("@/pages/CustomerHistory").then(m => (
 const Settings = lazy(() => import("@/pages/Settings").then(m => ({ default: m.Settings })));
 const Customers = lazy(() => import("@/pages/Customers").then(m => ({ default: m.Customers })));
 const NotFound = lazy(() => import("@/pages/NotFound").then(m => ({ default: m.NotFound })));
+// Debt pages
+const DebtsPage = lazy(() => import("@/pages/DebtsPage").then(m => ({ default: m.default })));
+const CustomerDebtPage = lazy(() => import("@/pages/CustomerDebtPage").then(m => ({ default: m.default })));
+const PostDayDebtWizard = lazy(() => import("@/pages/PostDayDebtWizard").then(m => ({ default: m.default })));
 
 /**
  * LoginRedirect - Redirect authenticated users away from login page
@@ -118,6 +122,11 @@ function AppLayout() {
               
               {/* Customer History Page */}
               <Route path="/history" element={<CustomerHistory />} />
+
+              {/* Debts Module */}
+              <Route path="/debts" element={<DebtsPage />} />
+              <Route path="/debts/customer/:customerId" element={<CustomerDebtPage />} />
+              <Route path="/debts/post-day" element={<PostDayDebtWizard />} />
               
               {/* 404 Page - Catch-all for unknown routes */}
               <Route path="*" element={<NotFound />} />

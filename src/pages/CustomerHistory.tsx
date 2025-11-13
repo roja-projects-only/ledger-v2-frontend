@@ -36,7 +36,7 @@ import { Check, ChevronsUpDown, User, CalendarIcon } from "lucide-react";
 import { KPICard } from "@/components/shared/KPICard";
 import { PurchaseTimeline } from "@/components/customer-history/PurchaseTimeline";
 import { useSales } from "@/lib/hooks/useSales";
-import { useCustomers } from "@/lib/hooks/useCustomers";
+import { useCustomerList } from "@/lib/hooks/useCustomers";
 import { useKPIs } from "@/lib/hooks/useKPIs";
 import { usePricing } from "@/lib/hooks/usePricing";
 import type { KPI } from "@/lib/types";
@@ -47,7 +47,7 @@ import { formatCurrency, cn } from "@/lib/utils";
 // ============================================================================
 
 export function CustomerHistory() {
-  const { customers, loading: customersLoading } = useCustomers();
+  const { customers, loading: customersLoading } = useCustomerList();
   const { 
     getSalesByCustomer, 
     requestDeleteSale,

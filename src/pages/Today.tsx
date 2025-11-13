@@ -21,7 +21,7 @@ import { QuickAddForm } from "@/components/today/QuickAddForm";
 import { TodayEntriesList } from "@/components/today/TodayEntriesList";
 import { SalesByLocationChart } from "@/components/today/SalesByLocationChart";
 import { useSales } from "@/lib/hooks/useSales";
-import { useCustomers } from "@/lib/hooks/useCustomers";
+import { useCustomerList } from "@/lib/hooks/useCustomers";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useKPIs } from "@/lib/hooks/useKPIs";
 import { useKeyboardShortcut } from "@/lib/hooks/useKeyboardShortcut";
@@ -40,7 +40,7 @@ export function Today() {
     customers,
     loading: customersLoading,
     error: customersError,
-  } = useCustomers();
+  } = useCustomerList();
   const {
     addSale,
     getTodaySales,

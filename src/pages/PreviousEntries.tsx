@@ -39,7 +39,7 @@ import { Plus, CalendarIcon } from "lucide-react";
 import { DateSummaryCard } from "@/components/previous/DateSummaryCard";
 import { AddEntryModal } from "@/components/previous/AddEntryModal";
 import { useSales } from "@/lib/hooks/useSales";
-import { useCustomers } from "@/lib/hooks/useCustomers";
+import { useCustomerList } from "@/lib/hooks/useCustomers";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useKeyboardShortcut } from "@/lib/hooks/useKeyboardShortcut";
 import { usePricing } from "@/lib/hooks/usePricing";
@@ -58,7 +58,7 @@ export function PreviousEntries() {
     customers,
     loading: customersLoading,
     error: customersError,
-  } = useCustomers();
+  } = useCustomerList();
   const {
     addSale,
     getSalesByDate,

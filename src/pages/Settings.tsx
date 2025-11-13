@@ -87,7 +87,7 @@ import {
 
 import { useSettings } from "@/lib/contexts/SettingsContext";
 import { useUsers } from "@/lib/hooks/useUsers";
-import { useCustomers } from "@/lib/hooks/useCustomers";
+import { useCustomerList } from "@/lib/hooks/useCustomers";
 import type { User } from "@/lib/api/users.api";
 import { MAX_USERS, PASSCODE_LENGTH, DEFAULT_SETTINGS } from "@/lib/constants";
 import { getSemanticColor } from "@/lib/colors";
@@ -127,7 +127,7 @@ export function Settings() {
 
   const {
     customers,
-  } = useCustomers();
+  } = useCustomerList();
 
 
 

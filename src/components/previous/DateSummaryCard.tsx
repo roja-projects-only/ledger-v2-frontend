@@ -18,7 +18,7 @@ import { Receipt, DollarSign, Package, TrendingUp } from "lucide-react";
 import type { Sale } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 import { usePricing } from "@/lib/hooks/usePricing";
-import { useCustomers } from "@/lib/hooks/useCustomers";
+import { useCustomerList } from "@/lib/hooks/useCustomers";
 
 // ============================================================================
 // Types
@@ -34,7 +34,7 @@ interface DateSummaryCardProps {
 // ============================================================================
 
 export function DateSummaryCard({ sales, loading = false }: DateSummaryCardProps) {
-  const { customers } = useCustomers();
+  const { customers } = useCustomerList();
   const { getEffectivePrice } = usePricing();
 
   // Calculate metrics with effective pricing

@@ -4,7 +4,7 @@
  * Features:
  * - Plus/minus buttons for incrementing/decrementing
  * - Quick value buttons (5, 10, 15, 20)
- * - Mobile numeric keyboard (inputMode="decimal")
+ * - Mobile numeric keyboard (integer-only input)
  * - Haptic feedback on button presses
  * - Responsive layout (stacked on mobile, horizontal on desktop)
  */
@@ -32,6 +32,7 @@ interface NumberInputProps {
   inputRef?: React.RefObject<HTMLInputElement | null>;
   "aria-label"?: string;
   "aria-describedby"?: string;
+  "aria-invalid"?: boolean;
 }
 
 // ============================================================================
@@ -51,19 +52,20 @@ export function NumberInput({
   inputRef,
   "aria-label": ariaLabel,
   "aria-describedby": ariaDescribedBy,
+  "aria-invalid": ariaInvalid,
 }: NumberInputProps) {
   const { vibrate } = useHaptics();
 
   /**
    * Parse current value as number
    */
-  const numValue = value ? parseFloat(value) : 0;
+  const numValue = value ? parseInt(value, 10) : 0;
 
   /**
    * Handle increment
    */
   const handleIncrement = () => {
-    const newValue = numValue + step;
+    const newValue = Math.trunc(numValue + step);
     if (!max || newValue <= max) {
       onChange(String(newValue));
       vibrate("light");
@@ -74,7 +76,7 @@ export function NumberInput({
    * Handle decrement
    */
   const handleDecrement = () => {
-    const newValue = numValue - step;
+    const newValue = Math.trunc(numValue - step);
     if (newValue >= min) {
       onChange(String(newValue));
       vibrate("light");
@@ -94,24 +96,27 @@ export function NumberInput({
    */
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;
-    
-    // Allow empty string
+
+    // Allow empty string while typing
     if (inputValue === "") {
       onChange("");
       return;
     }
 
-    // Allow decimal numbers
-    const numericValue = parseFloat(inputValue);
-    if (!isNaN(numericValue)) {
-      // Apply min/max constraints
-      if (numericValue < min) {
-        onChange(String(min));
-      } else if (max && numericValue > max) {
-        onChange(String(max));
-      } else {
-        onChange(inputValue);
-      }
+    // Integer-only: optional leading '-' if min allows negatives
+    const allowNegative = (min ?? 0) < 0;
+    const pattern = allowNegative ? /^-?\d*$/ : /^\d*$/;
+    if (!pattern.test(inputValue)) return; // ignore invalid characters
+
+    // Clamp using integer parsing
+    const numericValue = parseInt(inputValue, 10);
+    if (isNaN(numericValue)) return;
+    if (numericValue < (min ?? 0)) {
+      onChange(String(min ?? 0));
+    } else if (max !== undefined && numericValue > max) {
+      onChange(String(max));
+    } else {
+      onChange(String(numericValue));
     }
   };
 
@@ -144,7 +149,7 @@ export function NumberInput({
         <Input
           ref={inputRef}
           type="text"
-          inputMode="decimal"
+          inputMode="numeric"
           value={value}
           onChange={handleInputChange}
           placeholder={placeholder}
@@ -152,6 +157,7 @@ export function NumberInput({
           className="text-center text-lg font-medium"
           aria-label={ariaLabel}
           aria-describedby={ariaDescribedBy}
+          aria-invalid={ariaInvalid}
         />
 
         <Button

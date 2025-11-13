@@ -216,6 +216,88 @@ export interface SaleFormData {
   notes?: string;
 }
 
+// ============================================================================
+// Debt Management Types
+// ============================================================================
+
+export type DebtStatus = 'OPEN' | 'CLOSED';
+export type DebtTransactionType = 'CHARGE' | 'PAYMENT' | 'ADJUSTMENT';
+
+export interface DebtTab {
+  id: string;
+  customerId: string;
+  status: DebtStatus;
+  totalBalance: number;
+  openedAt: string; // ISO date
+  closedAt?: string; // ISO date
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DebtTransaction {
+  id: string;
+  debtTabId: string;
+  transactionType: DebtTransactionType;
+  containers?: number; // For CHARGE
+  unitPrice?: number; // For CHARGE pricing snapshot
+  amount: number; // Positive numeric value (payment reduces balance via service logic)
+  balanceAfter: number; // Resulting balance after transaction
+  notes?: string;
+  adjustmentReason?: string; // For ADJUSTMENT
+  transactionDate: string; // ISO date
+  enteredById: string; // User who entered it
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DebtSummaryItem {
+  customerId: string;
+  customerName: string;
+  balance: number;
+  status: DebtStatus;
+  openedAt: string;
+  lastUpdated: string;
+}
+
+export interface DebtMetrics {
+  totalOutstanding: number;
+  totalPaymentsToday: number;
+  activeCustomers: number;
+}
+
+export interface CustomerDebtSnapshot {
+  customer: Customer;
+  tab: DebtTab | null;
+  transactions: DebtTransaction[];
+}
+
+export interface CustomerDebtHistorySnapshot {
+  tabs: DebtTab[];
+  transactions: DebtTransaction[];
+}
+
+export interface DebtHistoryFilters {
+  customerId?: string;
+  startDate?: string; // ISO
+  endDate?: string;   // ISO
+  transactionType?: DebtTransactionType;
+  status?: DebtStatus | 'ALL';
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginatedDebtTransactions {
+  data: DebtTransaction[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
 /**
  * Form data for settings
  */
