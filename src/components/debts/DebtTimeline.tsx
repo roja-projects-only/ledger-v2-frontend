@@ -10,6 +10,12 @@ interface DebtTimelineProps {
   className?: string;
 }
 
+type TimelineEntry = DebtTransaction & {
+  enteredBy?: {
+    username?: string;
+  };
+};
+
 const tone = {
   CHARGE: {
     icon: PlusCircle,
@@ -40,6 +46,8 @@ export function DebtTimeline({ transactions, selectedId, className }: DebtTimeli
         {items.map((t) => {
           const TIcon = tone[t.transactionType].icon;
           const isSelected = selectedId === t.id;
+          const typed = t as TimelineEntry;
+          const enteredBy = typed.enteredBy?.username ?? t.enteredById ?? '';
           return (
             <li key={t.id} className="relative pl-10 sm:pl-12">
               <div className={cn('absolute left-1.5 sm:left-2.5 h-2.5 w-2.5 rounded-full', tone[t.transactionType].dot)} />
@@ -73,12 +81,8 @@ export function DebtTimeline({ transactions, selectedId, className }: DebtTimeli
                 <Separator className="my-2" />
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>Balance after: <b className="text-foreground">{t.balanceAfter.toLocaleString()}</b></span>
-                  {(
-                    ((t as any).enteredBy?.username) || t.enteredById
-                  ) && (
-                    <span>
-                      Entered by: {((t as any).enteredBy?.username) || t.enteredById}
-                    </span>
+                  {enteredBy && (
+                    <span>Entered by: {enteredBy}</span>
                   )}
                 </div>
                 {t.notes && (<p className="mt-1 text-xs text-muted-foreground">Note: {t.notes}</p>)}

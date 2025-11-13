@@ -25,11 +25,8 @@ export function DebtAdjustmentForm({ customerId, currentBalance, onSuccess }: De
     e.preventDefault();
     const val = Number(amount);
     const nextErrors: { amount?: string; reason?: string } = {};
-    if (!val || Math.abs(val) < 0.0001) nextErrors.amount = 'Adjustment amount cannot be zero';
+    if (!val || val <= 0) nextErrors.amount = 'Adjustment must be a positive whole number';
     if (!reason.trim()) nextErrors.reason = 'Reason is required';
-    if (val < 0 && Math.abs(val) > currentBalance + 0.001) {
-      nextErrors.amount = 'Adjustment would create negative balance';
-    }
     if (nextErrors.amount || nextErrors.reason) {
       setErrors(nextErrors);
       toast.error(nextErrors.amount || nextErrors.reason!);
@@ -52,14 +49,15 @@ export function DebtAdjustmentForm({ customerId, currentBalance, onSuccess }: De
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="rounded-md border p-2 text-xs text-muted-foreground">
-        Use this to correct the balance. Positive values increase the amount owed; negative values decrease it.
+        Use this to correct the balance for whole-number adjustments. Enter the number of pesos to add to the outstanding balance.
       </div>
       <div className="space-y-2">
-        <Label>Adjustment (PHP, negative to reduce) *</Label>
+        <Label>Adjustment (PHP) *</Label>
         <NumberInput
           value={amount}
           onChange={(v)=>{ setAmount(v); if (errors) setErrors(null); }}
           step={1}
+          min={1}
           aria-label="Adjustment Amount"
           aria-describedby={errors?.amount ? 'adjustment-amount-error' : undefined}
           aria-invalid={!!errors?.amount}

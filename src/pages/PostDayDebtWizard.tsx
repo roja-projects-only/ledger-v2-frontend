@@ -95,7 +95,7 @@ export default function PostDayDebtWizard() {
 
   const priorBalances = useMemo(() => {
     const map = new Map<string, number>();
-    (summary || []).forEach((s: any) => {
+    summary.forEach((s) => {
       if (s.customerId) map.set(s.customerId, s.balance);
     });
     return map;
@@ -104,9 +104,9 @@ export default function PostDayDebtWizard() {
   const reviewRow = useMemo(() => {
     if (!selectedCustomer) return null;
     const type = entry.entryType;
-    const unit = getEffectivePrice(selectedCustomer as any);
+    const unit = getEffectivePrice(selectedCustomer);
     const containers = type === 'CHARGE' ? Number(entry.containers || '0') : 0;
-    const charge = type === 'CHARGE' ? calculateTotal(containers, selectedCustomer as any) : 0;
+    const charge = type === 'CHARGE' ? calculateTotal(containers, selectedCustomer) : 0;
     const cash = type === 'PAYMENT' ? Number(entry.cashReceived || '0') : 0;
     const prev = priorBalances.get(selectedCustomer.id) ?? 0;
     const resulting = Math.max(0, prev + charge - cash);
@@ -300,13 +300,13 @@ export default function PostDayDebtWizard() {
                       <Label>Containers Delivered (qty)</Label>
                       <NumberInput value={entry.containers} onChange={(v)=> setEntry({ ...entry, containers: v })} min={1} step={1} />
                       <div className="text-[12px] text-muted-foreground">
-                        Unit: {formatCurrency(getEffectivePrice(selectedCustomer as any))} · Charge: {formatCurrency(calculateTotal(Number(entry.containers||'0'), selectedCustomer as any))}
+                        Unit: {formatCurrency(getEffectivePrice(selectedCustomer))} · Charge: {formatCurrency(calculateTotal(Number(entry.containers||'0'), selectedCustomer))}
                       </div>
                     </div>
                     <BalancePreview
                       className="md:col-span-2"
                       current={priorBalances.get(selectedCustomer.id) ?? 0}
-                      after={(priorBalances.get(selectedCustomer.id) ?? 0) + calculateTotal(Number(entry.containers||'0'), selectedCustomer as any)}
+                      after={(priorBalances.get(selectedCustomer.id) ?? 0) + calculateTotal(Number(entry.containers||'0'), selectedCustomer)}
                     />
                     <div className="md:col-span-3 space-y-2">
                       <Label>Notes</Label>
@@ -325,7 +325,7 @@ export default function PostDayDebtWizard() {
                           const base = [50,100,150,200,300,500];
                           const baseValues = Array.from(new Set(base.filter(v=>v<=prev)));
                           return baseValues.map((v)=> (
-                            <Button key={v as number} type="button" variant="outline" size="sm" className="flex-1 min-w-[70px]" onClick={()=> setEntry({ ...entry, cashReceived: String(v) })}>
+                            <Button key={v} type="button" variant="outline" size="sm" className="flex-1 min-w-[70px]" onClick={()=> setEntry({ ...entry, cashReceived: String(v) })}>
                               {v}
                             </Button>
                           ));

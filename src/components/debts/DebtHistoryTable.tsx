@@ -1,21 +1,35 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
 import { DateRangePicker } from '@/components/date/DateRangePicker';
 import { Separator } from '@/components/ui/separator';
-import { ChevronsUpDown, Download, FileText } from 'lucide-react';
+import { ChevronsUpDown, Download, FileText, Loader2 } from 'lucide-react';
 import { useCustomerList } from '@/lib/hooks/useCustomers';
 import { useDebtTransactionsQuery } from '@/lib/queries/debtsQueries';
-import type { DebtHistoryFilters } from '@/lib/types';
+import type { DebtHistoryFilters, DebtTransaction } from '@/lib/types';
 import { formatCurrency } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 
 interface DebtHistoryTableProps {
   initialFilters?: DebtHistoryFilters;
 }
+
+type DebtHistoryRow = DebtTransaction & {
+  debtTab?: {
+    customerId?: string;
+    customer?: {
+      name?: string;
+    };
+  };
+  customerName?: string;
+  customerId?: string;
+  enteredBy?: {
+    username?: string;
+  };
+};
 
 export function DebtHistoryTable({ initialFilters }: DebtHistoryTableProps) {
   const navigate = useNavigate();
@@ -26,22 +40,22 @@ export function DebtHistoryTable({ initialFilters }: DebtHistoryTableProps) {
   const [status, setStatus] = useState<DebtHistoryFilters['status']>(initialFilters?.status);
   const [page, setPage] = useState(initialFilters?.page ?? 1);
   const [limit, setLimit] = useState(initialFilters?.limit ?? 50);
-  const [, setIsMobile] = useState(false); // tracked only to trigger limit changes
   useEffect(() => {
     const mql = window.matchMedia('(max-width: 640px)');
-    const onChange = (e: MediaQueryListEvent | MediaQueryList) => {
-      const m = 'matches' in e ? e.matches : (e as MediaQueryList).matches;
-      setIsMobile(m);
-      setLimit(m ? 10 : 25);
+    const apply = (matches: boolean) => {
+      setLimit(matches ? 10 : 25);
       setPage(1);
     };
-    onChange(mql as any);
-    mql.addEventListener?.('change', onChange as any);
-    ;(mql as any).addListener?.(onChange);
-    return () => {
-      mql.removeEventListener?.('change', onChange as any);
-      ;(mql as any).removeListener?.(onChange);
-    };
+    apply(mql.matches);
+
+    const listener = (event: MediaQueryListEvent) => apply(event.matches);
+    if (typeof mql.addEventListener === 'function') {
+      mql.addEventListener('change', listener);
+      return () => mql.removeEventListener('change', listener);
+    }
+
+    mql.addListener(listener);
+    return () => mql.removeListener(listener);
   }, []);
   const [start, setStart] = useState<Date | undefined>(initialFilters?.startDate ? new Date(initialFilters.startDate) : undefined);
   const [end, setEnd] = useState<Date | undefined>(initialFilters?.endDate ? new Date(initialFilters.endDate) : undefined);
@@ -56,9 +70,13 @@ export function DebtHistoryTable({ initialFilters }: DebtHistoryTableProps) {
     limit,
   }), [customerId, type, status, start, end, page, limit]);
 
-  const { data } = useDebtTransactionsQuery(filters);
+  const { data, isLoading, isError, error, isFetching } = useDebtTransactionsQuery(filters);
   const rows = data?.data ?? [];
+  const tableRows = rows as DebtHistoryRow[];
   const pg = data?.pagination;
+  const fetchErrorMessage = isError ? (error instanceof Error ? error.message : String(error)) : null;
+  const showEmptyState = !isLoading && rows.length === 0;
+  const refreshing = isFetching && !isLoading;
 
   const exportCSV = () => {
     const meta = [
@@ -66,10 +84,9 @@ export function DebtHistoryTable({ initialFilters }: DebtHistoryTableProps) {
       `Filters:,Customer=${customerId||'ALL'}; Type=${type||'ALL'}; Status=${status||'ALL'}; Start=${filters.startDate||''}; End=${filters.endDate||''}`
     ].join('\n');
     const header = ['Date/Time','Customer','Action','Containers','Amount','Balance After','Note','Entered By'];
-    const body = rows.map(r => {
-      const anyRow: any = r as any;
-      const cname = anyRow.debtTab?.customer?.name || anyRow.customerName || anyRow.debtTabId;
-      const enteredBy = anyRow.enteredBy?.username ?? r.enteredById ?? '';
+    const body = tableRows.map((r) => {
+      const cname = r.debtTab?.customer?.name || r.customerName || r.debtTabId;
+      const enteredBy = r.enteredBy?.username ?? r.enteredById ?? '';
       return [
         new Date(r.transactionDate).toLocaleString(),
         cname,
@@ -106,10 +123,9 @@ export function DebtHistoryTable({ initialFilters }: DebtHistoryTableProps) {
         .nowrap { white-space: nowrap; }
       </style>`;
     const meta = `Customer: ${customerId||'ALL'} | Type: ${type||'ALL'} | Status: ${status||'ALL'} | Start: ${filters.startDate||''} | End: ${filters.endDate||''}`;
-    const rowsHtml = rows.map(r => {
-      const anyRow: any = r as any;
-      const cname = anyRow.debtTab?.customer?.name || anyRow.customerName || anyRow.debtTabId;
-      const enteredBy = anyRow.enteredBy?.username ?? r.enteredById ?? '';
+    const rowsHtml = tableRows.map((r) => {
+      const cname = r.debtTab?.customer?.name || r.customerName || r.debtTabId;
+      const enteredBy = r.enteredBy?.username ?? r.enteredById ?? '';
       return `<tr>
       <td class="nowrap">${new Date(r.transactionDate).toLocaleString()}</td>
       <td>${cname}</td>
@@ -163,98 +179,164 @@ export function DebtHistoryTable({ initialFilters }: DebtHistoryTableProps) {
         <DateRangePicker startDate={start} endDate={end} onStartDateChange={(d)=>{ setStart(d); setPage(1); }} onEndDateChange={(d)=>{ setEnd(d); setPage(1); }} />
 
         {/* Type filter */}
-        <div className="flex gap-1">
-          {(['ALL','CHARGE','PAYMENT','ADJUSTMENT'] as const).map(v => (
-            <Badge key={v} variant={type=== (v==='ALL'? undefined : v) ? 'default' : 'outline'} className="cursor-pointer" onClick={()=>{ setType(v==='ALL'? undefined : v); setPage(1); }}>{v}</Badge>
-          ))}
+        <div className="flex flex-wrap gap-1" role="group" aria-label="Transaction type filter">
+          {(['ALL','CHARGE','PAYMENT','ADJUSTMENT'] as const).map((v) => {
+            const nextType = v === 'ALL' ? undefined : v;
+            const isActive = type === nextType;
+            const label = v === 'ALL' ? 'All Types' : v.charAt(0) + v.slice(1).toLowerCase();
+            return (
+              <Button
+                key={v}
+                type="button"
+                size="sm"
+                variant={isActive ? 'default' : 'outline'}
+                aria-pressed={isActive}
+                className="min-w-[88px]"
+                onClick={() => {
+                  setType(nextType);
+                  setPage(1);
+                }}
+              >
+                {label}
+              </Button>
+            );
+          })}
         </div>
 
         {/* Status filter */}
-        <div className="flex gap-1">
-          {(['ALL','OPEN','CLOSED'] as const).map(v => (
-            <Badge key={v} variant={status=== (v==='ALL'? undefined : v) ? 'default' : 'outline'} className="cursor-pointer" onClick={()=>{ setStatus(v==='ALL'? undefined : v); setPage(1); }}>{v}</Badge>
-          ))}
+        <div className="flex flex-wrap gap-1" role="group" aria-label="Tab status filter">
+          {(['ALL','OPEN','CLOSED'] as const).map((v) => {
+            const nextStatus = v === 'ALL' ? undefined : v;
+            const isActive = status === nextStatus;
+            const label = v === 'ALL' ? 'All Statuses' : v.charAt(0) + v.slice(1).toLowerCase();
+            return (
+              <Button
+                key={v}
+                type="button"
+                size="sm"
+                variant={isActive ? 'default' : 'outline'}
+                aria-pressed={isActive}
+                className="min-w-[96px]"
+                onClick={() => {
+                  setStatus(nextStatus);
+                  setPage(1);
+                }}
+              >
+                {label}
+              </Button>
+            );
+          })}
         </div>
 
         <div className="ml-auto w-full sm:w-auto flex justify-end gap-2">
-          <Button variant="outline" onClick={exportCSV}><Download className="h-4 w-4 mr-1" /> CSV</Button>
-          <Button variant="outline" onClick={exportPDF}><FileText className="h-4 w-4 mr-1" /> PDF</Button>
+          <Button variant="outline" onClick={exportCSV} disabled={isLoading || rows.length === 0}>
+            <Download className="h-4 w-4 mr-1" /> CSV
+          </Button>
+          <Button variant="outline" onClick={exportPDF} disabled={isLoading || rows.length === 0}>
+            <FileText className="h-4 w-4 mr-1" /> PDF
+          </Button>
         </div>
       </div>
 
       <Separator />
+      {fetchErrorMessage && (
+        <Alert variant="destructive">
+          <AlertDescription>{fetchErrorMessage}</AlertDescription>
+        </Alert>
+      )}
 
-      {/* Desktop table */}
-      <div className="hidden md:block">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date/Time</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Action</TableHead>
-              <TableHead className="text-right">Containers</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
-              <TableHead className="text-right">Balance After</TableHead>
-              <TableHead>Note</TableHead>
-              <TableHead>Entered By</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.map((r) => {
-              const anyRow: any = r as any;
-              const cid = anyRow.debtTab?.customerId || anyRow.customerId || r.debtTabId;
-              const cname = anyRow.debtTab?.customer?.name || anyRow.customerName || anyRow.debtTabId;
+      {refreshing && !fetchErrorMessage && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Loader2 className="h-3 w-3 animate-spin" /> Refreshing results…
+        </div>
+      )}
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading history…
+        </div>
+      ) : showEmptyState ? (
+        <div className="rounded-md border border-dashed p-8 text-center text-sm text-muted-foreground">
+          No transactions match the current filters.
+        </div>
+      ) : (
+        <>
+          {/* Desktop table */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date/Time</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Action</TableHead>
+                  <TableHead className="text-right">Containers</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="text-right">Balance After</TableHead>
+                  <TableHead>Note</TableHead>
+                  <TableHead>Entered By</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {tableRows.map((r) => {
+                  const cid = r.debtTab?.customerId || r.customerId || r.debtTabId;
+                  const cname = r.debtTab?.customer?.name || r.customerName || r.debtTabId;
+                  const enteredBy = r.enteredBy?.username ?? r.enteredById ?? '';
+                  return (
+                    <TableRow key={r.id} className="cursor-pointer" onClick={()=>navigate(`/debts/customer/${cid}?highlight=${r.id}&tabId=${r.debtTabId}`)}>
+                      <TableCell>{new Date(r.transactionDate).toLocaleString()}</TableCell>
+                      <TableCell>{cname}</TableCell>
+                      <TableCell>{r.transactionType}</TableCell>
+                      <TableCell className="text-right">{r.containers ?? ''}</TableCell>
+                      <TableCell className="text-right">{r.amount ? formatCurrency(r.amount) : ''}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(r.balanceAfter)}</TableCell>
+                      <TableCell className="truncate max-w-[240px]">{r.notes}</TableCell>
+                      <TableCell>{enteredBy}</TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="md:hidden space-y-2">
+            {tableRows.map((r) => {
+              const cid = r.debtTab?.customerId || r.customerId || r.debtTabId;
+              const cname = r.debtTab?.customer?.name || r.customerName || r.debtTabId;
+              const enteredBy = r.enteredBy?.username ?? r.enteredById ?? '';
               return (
-              <TableRow key={r.id} className="cursor-pointer" onClick={()=>navigate(`/debts/customer/${cid}?highlight=${r.id}&tabId=${r.debtTabId}`)}>
-                <TableCell>{new Date(r.transactionDate).toLocaleString()}</TableCell>
-                <TableCell>{cname}</TableCell>
-                <TableCell>{r.transactionType}</TableCell>
-                <TableCell className="text-right">{r.containers ?? ''}</TableCell>
-                <TableCell className="text-right">{r.amount ? formatCurrency(r.amount) : ''}</TableCell>
-                <TableCell className="text-right">{formatCurrency(r.balanceAfter)}</TableCell>
-                <TableCell className="truncate max-w-[240px]">{r.notes}</TableCell>
-                <TableCell>{(r as any).enteredBy?.username ?? r.enteredById ?? ''}</TableCell>
-              </TableRow>
-            );})}
-          </TableBody>
-        </Table>
-      </div>
+                <button key={r.id} onClick={()=>navigate(`/debts/customer/${cid}?highlight=${r.id}&tabId=${r.debtTabId}`)} className="w-full text-left">
+                  <div className="rounded-lg border p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm font-medium">{r.transactionType}</div>
+                      <div className="text-xs text-muted-foreground">{new Date(r.transactionDate).toLocaleString()}</div>
+                    </div>
+                    <div className="mt-1 text-sm">Customer: {cname}</div>
+                    <div className="mt-1 grid grid-cols-2 gap-2 text-sm">
+                      <div>Containers: {r.containers ?? '-'}</div>
+                      <div className="text-right">Amount: {r.amount ? formatCurrency(r.amount) : '-'}</div>
+                      <div className="col-span-2 flex items-center justify-between">
+                        <span>Balance After</span>
+                        <span className="font-medium">{formatCurrency(r.balanceAfter)}</span>
+                      </div>
+                    </div>
+                    {r.notes && <div className="mt-1 text-xs text-muted-foreground">Note: {r.notes}</div>}
+                    <div className="mt-1 text-xs text-muted-foreground">Entered by: {enteredBy}</div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
 
-      {/* Mobile cards */}
-      <div className="md:hidden space-y-2">
-        {rows.map((r) => {
-          const anyRow: any = r as any;
-          const cid = anyRow.debtTab?.customerId || anyRow.customerId || r.debtTabId;
-          const cname = anyRow.debtTab?.customer?.name || anyRow.customerName || anyRow.debtTabId;
-          return (
-          <button key={r.id} onClick={()=>navigate(`/debts/customer/${cid}?highlight=${r.id}&tabId=${r.debtTabId}`)} className="w-full text-left">
-            <div className="rounded-lg border p-3">
-              <div className="flex items-center justify-between">
-                <div className="text-sm font-medium">{r.transactionType}</div>
-                <div className="text-xs text-muted-foreground">{new Date(r.transactionDate).toLocaleString()}</div>
-              </div>
-              <div className="mt-1 text-sm">Customer: {cname}</div>
-              <div className="mt-1 grid grid-cols-2 gap-2 text-sm">
-                <div>Containers: {r.containers ?? '-'}</div>
-                <div className="text-right">Amount: {r.amount ? formatCurrency(r.amount) : '-'}</div>
-                <div className="col-span-2 flex items-center justify-between">
-                  <span>Balance After</span>
-                  <span className="font-medium">{formatCurrency(r.balanceAfter)}</span>
-                </div>
-              </div>
-              {r.notes && <div className="mt-1 text-xs text-muted-foreground">Note: {r.notes}</div>}
-              <div className="mt-1 text-xs text-muted-foreground">Entered by: {(r as any).enteredBy?.username ?? r.enteredById ?? ''}</div>
-            </div>
-          </button>
-        );})}
-      </div>
-
-      {/* Pagination */}
-      <div className="flex items-center justify-end gap-2">
-        <Button variant="outline" disabled={!pg?.hasPrev} onClick={()=> setPage(p=> Math.max(1, p-1))}>Prev</Button>
-        <div className="text-sm text-muted-foreground">Page {pg?.page ?? page} / {pg?.totalPages ?? 1}</div>
-        <Button variant="outline" disabled={!pg?.hasNext} onClick={()=> setPage(p=> p+1)}>Next</Button>
-      </div>
+      {rows.length > 0 && (
+        <div className="flex items-center justify-end gap-2">
+          <Button variant="outline" disabled={!pg?.hasPrev} onClick={()=> setPage(p=> Math.max(1, p-1))}>Prev</Button>
+          <div className="text-sm text-muted-foreground">Page {pg?.page ?? page} / {pg?.totalPages ?? 1}</div>
+          <Button variant="outline" disabled={!pg?.hasNext} onClick={()=> setPage(p=> p+1)}>Next</Button>
+        </div>
+      )}
     </div>
   );
 }

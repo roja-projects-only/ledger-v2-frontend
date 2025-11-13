@@ -7,6 +7,8 @@ import type {
   DebtHistoryFilters,
   PaginatedDebtTransactions,
   DebtMetrics,
+  CustomerDebtSnapshot,
+  CustomerDebtHistorySnapshot,
 } from '@/lib/types';
 
 // Adapter for summary list (simple array)
@@ -32,15 +34,15 @@ export const debtsApi = {
   },
 
   // GET /api/debts/customer/:customerId
-  getCustomerDebt: async (customerId: string): Promise<{ customer: unknown; tab: DebtTab | null; transactions: DebtTransaction[] }> => {
+  getCustomerDebt: async (customerId: string): Promise<CustomerDebtSnapshot> => {
     const res = await apiClient.get(`/debts/customer/${customerId}`);
-    return adaptItemResponse<{ customer: unknown; tab: DebtTab | null; transactions: DebtTransaction[] }>(res).data;
+    return adaptItemResponse<CustomerDebtSnapshot>(res).data;
   },
 
   // GET /api/debts/customer/:customerId/history
-  getCustomerDebtHistory: async (customerId: string): Promise<{ tabs: DebtTab[]; transactions: DebtTransaction[] }> => {
+  getCustomerDebtHistory: async (customerId: string): Promise<CustomerDebtHistorySnapshot> => {
     const res = await apiClient.get(`/debts/customer/${customerId}/history`);
-    return adaptItemResponse<{ tabs: DebtTab[]; transactions: DebtTransaction[] }>(res).data;
+    return adaptItemResponse<CustomerDebtHistorySnapshot>(res).data;
   },
 
   // GET /api/debts/transactions

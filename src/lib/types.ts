@@ -265,6 +265,17 @@ export interface DebtMetrics {
   activeCustomers: number;
 }
 
+export interface CustomerDebtSnapshot {
+  customer: Customer;
+  tab: DebtTab | null;
+  transactions: DebtTransaction[];
+}
+
+export interface CustomerDebtHistorySnapshot {
+  tabs: DebtTab[];
+  transactions: DebtTransaction[];
+}
+
 export interface DebtHistoryFilters {
   customerId?: string;
   startDate?: string; // ISO

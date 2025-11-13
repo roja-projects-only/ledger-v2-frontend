@@ -1,6 +1,12 @@
 import { useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import type { DebtSummaryItem, DebtHistoryFilters, DebtMetrics } from '@/lib/types';
+import type {
+  DebtSummaryItem,
+  DebtHistoryFilters,
+  DebtMetrics,
+  CustomerDebtSnapshot,
+  CustomerDebtHistorySnapshot,
+} from '@/lib/types';
 import {
   useDebtSummaryQuery,
   useCustomerDebtQuery,
@@ -27,8 +33,14 @@ export function useDebts(customerId?: string) {
   const markPaid = useMarkPaidMutation();
 
   const summary: DebtSummaryItem[] = summaryQ.data ?? [];
-  const customerDebt = useMemo(() => customerDebtQ.data ?? null, [customerDebtQ.data]);
-  const customerHistory = useMemo(() => customerHistoryQ.data ?? { tabs: [], transactions: [] }, [customerHistoryQ.data]);
+  const customerDebt: CustomerDebtSnapshot | null = useMemo(
+    () => customerDebtQ.data ?? null,
+    [customerDebtQ.data],
+  );
+  const customerHistory: CustomerDebtHistorySnapshot = useMemo(
+    () => customerHistoryQ.data ?? { tabs: [], transactions: [] },
+    [customerHistoryQ.data],
+  );
   const metrics: DebtMetrics | undefined = metricsQ.data;
   const refreshCustomerDebt = useCallback((id?: string) => {
     invalidateDebtCaches(queryClient, id);
@@ -40,10 +52,16 @@ export function useDebts(customerId?: string) {
     customerDebt,
     customerHistory,
     metrics,
+    summaryStatus: {
+      isLoading: summaryQ.isLoading,
+      isFetching: summaryQ.isFetching,
+      isError: summaryQ.isError,
+      error: summaryQ.error,
+    },
 
     // States
     loading: summaryQ.isLoading || customerDebtQ.isLoading || customerHistoryQ.isLoading,
-    error: summaryQ.error || customerDebtQ.error || customerHistoryQ.error,
+    error: summaryQ.error ?? customerDebtQ.error ?? customerHistoryQ.error,
 
     // Mutations
     createCharge: charge.mutateAsync,

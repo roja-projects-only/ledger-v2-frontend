@@ -25,7 +25,7 @@ export function DebtPaymentForm({ customerId, currentBalance, onSuccess }: DebtP
     e.preventDefault();
     const val = Number(amount);
     setError(null);
-    if (!val || val <= 0) { setError('Enter payment amount > 0'); toast.error('Enter payment amount > 0'); return; }
+    if (!val || val <= 0) { setError('Enter a whole-number payment amount greater than zero'); toast.error('Enter a whole-number payment amount greater than zero'); return; }
     if (val > currentBalance + 0.001) { setError('Overpayment is not allowed'); toast.error('Overpayment is not allowed'); return; }
     setSubmitting(true);
     try {
@@ -52,7 +52,7 @@ export function DebtPaymentForm({ customerId, currentBalance, onSuccess }: DebtP
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="rounded-md border p-2 text-xs text-muted-foreground">
-        This form records a cash payment in PHP. It reduces the customer debt balance.
+        This form records a cash payment in PHP using whole-number pesos. It reduces the customer debt balance.
       </div>
       <div className="space-y-2">
         <Label>Cash Payment (PHP) *</Label>

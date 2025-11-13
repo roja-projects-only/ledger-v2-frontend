@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LocationBadge } from '@/components/shared/LocationBadge';
 import DebtTimeline from '@/components/debts/DebtTimeline';
 import { DebtChargeForm } from '@/components/debts/DebtChargeForm';
@@ -14,7 +15,7 @@ import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { useDebts } from '@/lib/hooks/useDebts';
 import { formatCurrency, cn } from '@/lib/utils';
 import type { Customer, DebtTab, DebtTransaction } from '@/lib/types';
-import { ArrowLeft, CircleDollarSign, Plus, CheckCircle2, Wrench, CircleSlash } from 'lucide-react';
+import { ArrowLeft, CircleDollarSign, Plus, CheckCircle2, Wrench, CircleSlash, Loader2 } from 'lucide-react';
 import { useTodaySalesQuery } from '@/lib/queries/salesQueries';
 
 export default function CustomerDebtPage() {
@@ -23,7 +24,9 @@ export default function CustomerDebtPage() {
   const search = new URLSearchParams(location.search);
   const highlightId = search.get('highlight');
   const highlightTabId = search.get('tabId');
-  const { customerDebt, customerHistory, markPaid, useTransactions } = useDebts(customerId);
+  const { customerDebt, customerHistory, markPaid, useTransactions, loading, error } = useDebts(customerId);
+  const fetchErrorMessage = error instanceof Error ? error.message : error ? String(error) : null;
+  const isInitialLoading = loading && !customerDebt;
 
   const [activeTab, setActiveTab] = useState<'open'|'history'|'notes'>('open');
   const [showCharge, setShowCharge] = useState(false);
@@ -32,27 +35,30 @@ export default function CustomerDebtPage() {
   const [confirmClose, setConfirmClose] = useState(false);
   const { data: todaySales = [], isLoading: todaySalesLoading } = useTodaySalesQuery({ enabled: !!customerId });
 
-  // Cast unknown customer payload to Customer for display
-  const customer = (customerDebt?.customer as unknown as Customer) || undefined;
-  const openTab = (customerDebt?.tab as DebtTab | null) || null;
+  // Customer snapshot provided by API adapter
+  const customer: Customer | null = customerDebt?.customer ?? null;
+  const openTab: DebtTab | null = customerDebt?.tab ?? null;
   // Paginated open-tab transactions (mobile-aware page size)
   const [isMobile, setIsMobile] = useState(false);
   const [page, setPage] = useState(1);
   const limit = isMobile ? 10 : 20;
   useEffect(() => {
     const mql = window.matchMedia('(max-width: 640px)');
-    const onChange = (e: MediaQueryListEvent | MediaQueryList) => setIsMobile('matches' in e ? e.matches : (e as MediaQueryList).matches);
-    onChange(mql as any);
-    mql.addEventListener?.('change', onChange as any); // modern
-    ;(mql as any).addListener?.(onChange);
-    return () => {
-      mql.removeEventListener?.('change', onChange as any);
-      ;(mql as any).removeListener?.(onChange);
-    };
+    const update = (matches: boolean) => setIsMobile(matches);
+    update(mql.matches);
+
+    const listener = (event: MediaQueryListEvent) => update(event.matches);
+    if (typeof mql.addEventListener === 'function') {
+      mql.addEventListener('change', listener);
+      return () => mql.removeEventListener('change', listener);
+    }
+
+    mql.addListener(listener);
+    return () => mql.removeListener(listener);
   }, []);
 
   const openTrxQ = useTransactions({ customerId: customerId, status: 'OPEN', page, limit });
-  const openTransactions = openTrxQ.data?.data || [];
+  const openTransactions = useMemo(() => openTrxQ.data?.data ?? [], [openTrxQ.data]);
   const totalPages = openTrxQ.data?.pagination.totalPages || 1;
 
   // Compute unit price hint from customer
@@ -64,10 +70,10 @@ export default function CustomerDebtPage() {
   }, [customerId, todaySales, todaySalesLoading]);
 
   // Past tabs and map of transactions grouped by tab
-  const closedTabs = useMemo(() => (customerHistory?.tabs || []).filter(t => t.status === 'CLOSED'), [customerHistory]);
+  const closedTabs = useMemo(() => customerHistory.tabs.filter(t => t.status === 'CLOSED'), [customerHistory]);
   const transactionsByTab = useMemo(() => {
     const map = new Map<string, DebtTransaction[]>();
-    const all = customerHistory?.transactions || [];
+    const all = customerHistory.transactions;
     for (const t of all) {
       if (!map.has(t.debtTabId)) map.set(t.debtTabId, []);
       map.get(t.debtTabId)!.push(t);
@@ -101,12 +107,49 @@ export default function CustomerDebtPage() {
   const markPaidNow = async () => {
     if (!customerId) return;
     const remaining = openTab?.totalBalance ?? 0;
-    await markPaid({ customerId, finalPayment: remaining > 0 ? remaining : undefined, transactionDate: new Date().toISOString() });
-    setConfirmClose(false);
+    try {
+      await markPaid({ customerId, finalPayment: remaining > 0 ? remaining : undefined, transactionDate: new Date().toISOString() });
+      setConfirmClose(false);
+    } catch {
+      // Error toast handled by the mutation; keep the dialog open for retry.
+    }
   };
+
+  if (isInitialLoading) {
+    return (
+      <div className="mx-auto max-w-5xl p-4">
+        <div className="flex items-center justify-center py-16 text-sm text-muted-foreground">
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading customer debt...
+        </div>
+      </div>
+    );
+  }
+
+  if (!customer) {
+    return (
+      <div className="mx-auto max-w-5xl p-4 space-y-4">
+        {fetchErrorMessage && (
+          <Alert variant="destructive">
+            <AlertDescription>{fetchErrorMessage}</AlertDescription>
+          </Alert>
+        )}
+        <Alert variant="destructive">
+          <AlertDescription>We could not find a debt record for this customer.</AlertDescription>
+        </Alert>
+        <Button asChild variant="outline">
+          <Link to="/debts">Back to Debts</Link>
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-5xl p-4 space-y-4">
+      {fetchErrorMessage && (
+        <Alert variant="destructive">
+          <AlertDescription>{fetchErrorMessage}</AlertDescription>
+        </Alert>
+      )}
       <div className="flex items-center gap-2">
         <Button asChild variant="ghost" className="-ml-2">
           <Link to="/debts"><ArrowLeft className="h-4 w-4 mr-1" /> Back</Link>
