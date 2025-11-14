@@ -56,15 +56,19 @@ export function KPICard({
   if (loading) {
     return (
       <Card className={cardClasses}>
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-1 sm:pb-2">
           <div className="flex items-center gap-2">
-            <Skeleton className="h-5 w-5 rounded" />
-            <Skeleton className="h-4 w-24" />
+            {Icon && (
+              <div className="p-1.5 sm:p-2 rounded-md bg-muted/50">
+                <Skeleton className="h-3.5 w-3.5 sm:h-4 sm:w-4 rounded" />
+              </div>
+            )}
+            <Skeleton className="h-3 w-20 sm:w-24 flex-1" />
           </div>
         </CardHeader>
-        <CardContent className="pt-0">
-          <Skeleton className="h-8 w-32 mb-2" />
-          {trend && <Skeleton className="h-3 w-16" />}
+        <CardContent className="pt-0 space-y-1">
+          <Skeleton className="h-6 sm:h-8 w-24 sm:w-32" />
+          {trend && <Skeleton className="h-3 w-14 sm:w-16" />}
         </CardContent>
       </Card>
     );
