@@ -35,9 +35,16 @@ export function BalancePreview({ current, after, className }: BalancePreviewProp
         <div className="text-right">
           <div className="flex items-center justify-end gap-2">
             <div className="text-[11px] uppercase tracking-wide text-muted-foreground">After</div>
-            {settled && (
-              <Badge variant="outline" className="h-5 gap-1 px-1.5 text-[11px]"><CircleCheck className="h-3 w-3 text-emerald-600" /> Settled</Badge>
-            )}
+            <Badge
+              variant="outline"
+              aria-hidden={!settled}
+              className={cn(
+                "h-5 gap-1 px-1.5 text-[11px] transition-opacity duration-200",
+                settled ? "opacity-100" : "opacity-0 pointer-events-none"
+              )}
+            >
+              <CircleCheck className="h-3 w-3 text-emerald-600" /> Settled
+            </Badge>
           </div>
           <div className="text-base font-semibold">{formatCurrency(after)}</div>
         </div>
